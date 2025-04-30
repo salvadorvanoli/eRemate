@@ -15,14 +15,15 @@ class Calificacion extends Model
         'compra_id'
     ];
 
-/*    public function usuarioRegistrado()
-{
-    return $this->belongsTo(UsuarioRegistrado::class);
-}*/
+    /*
+    public function usuarioRegistrado()
+    {
+        return $this->belongsTo(UsuarioRegistrado::class);
+    }*/
 
-public function compra()
-{
-    return $this->belongsTo(Compra::class);
-}
+    public function compra()
+    {
+        return $this->belongsTo(Compra::class);
+    }
 
 }

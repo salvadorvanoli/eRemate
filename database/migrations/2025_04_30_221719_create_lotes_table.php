@@ -10,6 +10,7 @@ return new class extends Migration
         Schema::create('lotes', function (Blueprint $table) {
             $table->id();
             $table->foreignId('subasta_id')->constrained()->onDelete('cascade');
+            $table->foreignId('compra_id')->nullable()->constrained()->nullOnDelete();
             $table->timestamps();
             $table->float('valorBase');
             $table->float('pujaMinima');

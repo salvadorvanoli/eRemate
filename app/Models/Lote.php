@@ -11,6 +11,7 @@ class Lote extends Model
 
     protected $fillable = [
         'subasta_id',
+        'compra_id',
         'nombre',
         'descripcion',
         'valorBase',
@@ -22,6 +23,11 @@ class Lote extends Model
     public function subasta()
     {
         return $this->belongsTo(Subasta::class);
+    }
+
+    public function compra()
+    {
+        return $this->belongsTo(Compra::class);
     }
 
     public function articulos()

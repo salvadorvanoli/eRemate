@@ -15,29 +15,26 @@ class Compra extends Model
         'factura_id'
     ];
 
-    /**
-     * relacion OneToOne
-     */
-
     public function factura()
-{
-    return $this->belongsTo(Factura::class);
-}
+    {
+        return $this->belongsTo(Factura::class);
+    }
 
+    /*
+    public function usuarioRegistrado()
+    {
+        return $this->belongsTo(UsuarioRegistrado::class);
+    }
+    */
 
-/*public function usuarioRegistrado()
-{
-    return $this->belongsTo(UsuarioRegistrado::class);
-}*/
+    public function lote()
+    {
+        return $this->hasOne(Lote::class);
+    }
 
-public function lote()
-{
-    return $this->hasOne(Lote::class);
-}
-
-public function calificaciones()
-{
-    return $this->hasMany(Calificacion::class);
-}
+    public function calificaciones()
+    {
+        return $this->hasMany(Calificacion::class);
+    }
 
 }
