@@ -11,16 +11,16 @@ class Puja extends Model
 
     protected $fillable = [
         'monto',
-        #'lote_id',
+        'lote_id',
         #'user_id'
     ];
 
-    /*
-    public function lote()
+    public function lotes()
     {
         return $this->belongsTo(Lote::class);
     }
 
+    /*
     public function user()
     {
         return $this->belongsTo(User::class);
