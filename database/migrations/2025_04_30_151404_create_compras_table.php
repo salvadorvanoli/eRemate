@@ -14,7 +14,8 @@ return new class extends Migration
         Schema::create('compras', function (Blueprint $table) {
             $table->id();
             $table->foreignId('factura_id')->constrained('facturas')->onDelete('cascade');
-            $table->timestamps();
+            /*$table->foreignId('usuarioRegistrado_id')->constrained('usuario_registrados')->onDelete('cascade');*/
+            
         });
     }
 

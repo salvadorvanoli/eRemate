@@ -9,7 +9,11 @@ use Illuminate\Database\Eloquent\Model;
 class Compra extends Model
 {
 
-    protected $fillable = ['id'];
+    protected $fillable = [
+        'id',
+        'usuarioRegistrado_id',
+        'factura_id'
+    ];
 
     /**
      * relacion OneToOne
@@ -20,14 +24,20 @@ class Compra extends Model
     return $this->belongsTo(Factura::class);
 }
 
-/*
-public function usuarioRegistrado()
+
+/*public function usuarioRegistrado()
 {
     return $this->belongsTo(UsuarioRegistrado::class);
-}
+}*/
 
 public function lote()
 {
     return $this->hasOne(Lote::class);
-}*/
+}
+
+public function calificaciones()
+{
+    return $this->hasMany(Calificacion::class);
+}
+
 }

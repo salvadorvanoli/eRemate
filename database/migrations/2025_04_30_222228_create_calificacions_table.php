@@ -11,11 +11,11 @@ return new class extends Migration
      */
     public function up(): void
     {
-        Schema::create('facturas', function (Blueprint $table) {
+        Schema::create('calificacions', function (Blueprint $table) {
             $table->id();
-            $table->float('monto');
-            $table->string('metodoEntrega'); // tiene que ser DtMetodoEntrega
-            $table->string('metodoPago'); // tiene que ser DtMetodoPago
+            $table->integer('puntaje')->notnullable();
+            /*$table->foreignId('usuarioRegistrado_Id')->constrained('usuario_registrados')->onDelete('cascade');*/
+            $table->foreignId('compra_id')->constrained('compras')->onDelete('cascade');
             
         });
     }
@@ -25,6 +25,6 @@ return new class extends Migration
      */
     public function down(): void
     {
-        Schema::dropIfExists('facturas');
+        Schema::dropIfExists('calificacions');
     }
 };
