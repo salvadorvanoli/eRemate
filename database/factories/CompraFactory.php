@@ -14,8 +14,8 @@ class CompraFactory extends Factory
     public function definition(): array
     {
         return [
-            'factura_id' => Factura::factory(),
-            'usuario_registrado_id' => UsuarioRegistrado::factory(), 
+            'factura_id' => Factura::factory() /*,
+            'usuario_registrado_id' => UsuarioRegistrado::factory(),*/ 
         ];
     }
 }
