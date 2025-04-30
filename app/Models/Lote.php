@@ -28,4 +28,11 @@ class Lote extends Model
     {
         return $this->hasMany(Articulo::class);
     }
+
+    /*
+    public function pujas()
+    {
+        return $this->hasMany(Puja::class);
+    }
+    */
 }

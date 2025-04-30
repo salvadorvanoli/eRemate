@@ -10,6 +10,8 @@ class Subasta extends Model
     use HasFactory;
 
     protected $fillable = [
+        'casaDeRemates_id',
+        'rematador_id',
         'mensajes',
         'urlTransmision',
         'tipoSubasta',
@@ -28,4 +30,16 @@ class Subasta extends Model
     {
         return $this->hasMany(Lote::class);
     }
+
+    /*
+    public function rematador()
+    {
+        return $this->belongsTo(Rematador::class, 'rematador_id');
+    }
+
+    public function casaRemates()
+    {
+        return $this->belongsTo(CasaDeRemates::class, 'casaDeRemates_id');
+    }
+    */
 }

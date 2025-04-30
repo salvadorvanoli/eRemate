@@ -15,6 +15,8 @@ return new class extends Migration
             $table->dateTime('fechaInicio');
             $table->dateTime('fechaCierre');
             $table->string('ubicacion');
+            //$table->foreignId('rematador_id')->nullable()->constrained()->onDelete('cascade')->nullOnDelete();
+            //$table->foreignId('casaDeRemates_id')->nullable()->constrained()->onDelete('cascade')->nullOnDelete();
             $table->timestamps();
         });
     }
