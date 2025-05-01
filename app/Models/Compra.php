@@ -20,12 +20,10 @@ class Compra extends Model
         return $this->belongsTo(Factura::class);
     }
 
-    /*
     public function usuarioRegistrado()
     {
         return $this->belongsTo(UsuarioRegistrado::class);
     }
-    */
 
     public function lote()
     {

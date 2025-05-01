@@ -11,8 +11,8 @@ return new class extends Migration
         Schema::create('pujas', function (Blueprint $table) {
             $table->id();
             $table->float('monto');
-            $table->foreignId('lote_id')->constrained()->onDelete('cascade');
-            #$table->foreignId('user_id')->constrained()->onDelete('cascade');
+            $table->foreignId('lote_id')->constrained('lotes')->onDelete('cascade');
+            $table->foreignId('usuarioRegistrado_id')->constrained('usuarios_registrados')->onDelete('cascade');
             $table->timestamps();
         });
     }

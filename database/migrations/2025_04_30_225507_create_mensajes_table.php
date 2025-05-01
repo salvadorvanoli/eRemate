@@ -12,7 +12,7 @@ return new class extends Migration
         Schema::create('mensajes', function (Blueprint $table) {
             $table->id();
             $table->text('contenido');
-            $table->foreignId('chat_id')->constrained()->onDelete('cascade');
+            $table->foreignId('chat_id')->constrained('chats')->onDelete('cascade');
             $table->timestamps();
         });
     }

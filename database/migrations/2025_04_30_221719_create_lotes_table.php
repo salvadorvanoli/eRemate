@@ -9,8 +9,8 @@ return new class extends Migration
     public function up(): void {
         Schema::create('lotes', function (Blueprint $table) {
             $table->id();
-            $table->foreignId('subasta_id')->constrained()->onDelete('cascade');
-            $table->foreignId('compra_id')->nullable()->constrained()->nullOnDelete();
+            $table->foreignId('subasta_id')->constrained('subastas')->onDelete('cascade');
+            $table->foreignId('compra_id')->nullable()->constrained('compras')->nullOnDelete();
             $table->timestamps();
             $table->float('valorBase');
             $table->float('pujaMinima');

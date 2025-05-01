@@ -12,7 +12,7 @@ class Puja extends Model
     protected $fillable = [
         'monto',
         'lote_id',
-        #'user_id'
+        'usuarioRegistrado_id'
     ];
 
     public function lotes()
@@ -20,10 +20,8 @@ class Puja extends Model
         return $this->belongsTo(Lote::class);
     }
 
-    /*
-    public function user()
+    public function usuarioRegistrado()
     {
-        return $this->belongsTo(User::class);
+        return $this->belongsTo(UsuarioRegistrado::class);
     }
-    */
 }

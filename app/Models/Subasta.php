@@ -31,7 +31,6 @@ class Subasta extends Model
         return $this->hasMany(Lote::class);
     }
 
-    /*
     public function rematador()
     {
         return $this->belongsTo(Rematador::class, 'rematador_id');
@@ -41,5 +40,4 @@ class Subasta extends Model
     {
         return $this->belongsTo(CasaDeRemates::class, 'casaDeRemates_id');
     }
-    */
 }

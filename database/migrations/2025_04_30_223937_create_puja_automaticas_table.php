@@ -12,9 +12,9 @@ return new class extends Migration
         Schema::create('puja_automaticas', function (Blueprint $table) {
             $table->id();
             $table->float('presupuesto');
-            $table->foreignId('subasta_id')->constrained()->onDelete('cascade');
-            #$table->foreignId('user_id')->constrained()->onDelete('cascade');
-            $table->foreignId('puja_id')->nullable()->constrained()->onDelete('set null');
+            $table->foreignId('subasta_id')->constrained('subastas')->onDelete('cascade');
+            $table->foreignId('usuarioRegistrado_id')->constrained('usuarios_registrados')->onDelete('cascade');
+            $table->foreignId('puja_id')->nullable()->constrained('pujas')->onDelete('set null');
             $table->timestamps();
         });
     }

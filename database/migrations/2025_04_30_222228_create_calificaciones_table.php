@@ -14,7 +14,7 @@ return new class extends Migration
         Schema::create('calificaciones', function (Blueprint $table) {
             $table->id();
             $table->integer('puntaje')->notnullable();
-            /*$table->foreignId('usuarioRegistrado_Id')->constrained('usuario_registrados')->onDelete('cascade');*/
+            $table->foreignId('usuarioRegistrado_Id')->constrained('usuarios_registrados')->onDelete('cascade');
             $table->foreignId('compra_id')->constrained('compras')->onDelete('cascade');
             
         });

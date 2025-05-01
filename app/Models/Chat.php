@@ -14,17 +14,15 @@ class Chat extends Model
         #'casa_de_remate_id'
     ];
 
-    /*
-    public function user()
+    public function usuarioRegistrado()
     {
-        return $this->belongsTo(User::class);
+        return $this->belongsTo(UsuarioRegistrado::class);
     }
 
-    public function casaDeRemate()
+    public function casaDeRemates()
     {
-        return $this->belongsTo(CasaDeRemate::class);
+        return $this->belongsTo(CasaDeRemates::class);
     }
-    */
 
     public function mensajes()
     {

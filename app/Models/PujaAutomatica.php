@@ -12,7 +12,7 @@ class PujaAutomatica extends Model
     protected $fillable = [
         'presupuesto',
         'subasta_id',
-        #'user_id',
+        'usuarioRegistrado_id',
         'puja_id'
     ];
 
@@ -22,12 +22,10 @@ class PujaAutomatica extends Model
         return $this->belongsTo(Subasta::class);
     }
 
-    /*
-    public function user()
+    public function usuarioRegistrado()
     {
-        return $this->belongsTo(User::class);
+        return $this->belongsTo(usuarioRegistrado::class);
     }
-    */
 
     public function puja()
     {

@@ -9,11 +9,11 @@ return new class extends Migration
     public function up(): void {
         Schema::create('articulos', function (Blueprint $table) {
             $table->id();
-            $table->foreignId('lote_id')->constrained()->onDelete('cascade');
+            $table->foreignId('lote_id')->constrained('lotes')->onDelete('cascade');
             $table->json('imagenes');
             $table->json('especificacionesTecnicas');
             $table->string('estado');
-            $table->foreignId('categoria_id')->nullable()->constrained()->onDelete('set null');
+            $table->foreignId('categoria_id')->nullable()->constrained('categorias')->onDelete('set null');
             $table->timestamps();
         });
     }
