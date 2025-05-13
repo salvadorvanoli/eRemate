@@ -3,14 +3,12 @@
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Route;
 
-/*
-|--------------------------------------------------------------------------
-| API Routes
-|--------------------------------------------------------------------------
-|
-| Here is where you can register API routes for your application. These
-| routes are loaded by the RouteServiceProvider and assigned the "api"
-| middleware group. Enjoy building your API!
-|
-*/
+use App\Http\Controllers\RematadorController;
+
+Route::prefix('auctioneer')->group(function () {
+    Route::post('/', [RematadorController::class, 'store']);
+    Route::get('/{id}', [RematadorController::class, 'show']);
+    Route::put('/{id}', [RematadorController::class, 'update']);
+    Route::get('/{id}/auctions', [RematadorController::class, 'subastas']);
+});
 
