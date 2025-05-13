@@ -18,11 +18,7 @@ class AuthService
             'email' => 'required|email|unique:usuarios,email',
             'contrasenia' => 'required|min:8',
             'telefono' => 'required',
-            'tipo' => 'required|in:rematador,casa,registrado',
-            'nombre' => 'required|string',
-            'apellido' => 'required|string',
-            'numeroMatricula' => 'required_if:tipo,rematador',
-            'direccionFiscal' => 'required_if:tipo,casa',
+            'tipo' => 'required|in:rematador,casa,registrado'
         ]);
 
         if ($validator->fails()) {
