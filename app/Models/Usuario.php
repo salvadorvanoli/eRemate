@@ -3,12 +3,16 @@
 namespace App\Models;
 
 use Illuminate\Database\Eloquent\Model;
+
+use Laravel\Sanctum\HasApiTokens;
 use Illuminate\Notifications\Notifiable;
 
-
 class Usuario extends Model
-{   
+{
+    use HasApiTokens;
     use Notifiable;
+
+
     protected $table = 'usuarios';
 
     protected $fillable = [

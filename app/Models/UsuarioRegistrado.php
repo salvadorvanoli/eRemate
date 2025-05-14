@@ -6,6 +6,9 @@ use Illuminate\Database\Eloquent\Model;
 
 class UsuarioRegistrado extends Model
 {
+    protected $table = 'usuarios_registrados';
+    public $timestamps = false;
+
     protected $fillable = [
         'usuario_id'
     ];

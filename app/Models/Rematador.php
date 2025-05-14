@@ -6,10 +6,11 @@ use Illuminate\Database\Eloquent\Model;
 
 class Rematador extends Model
 {
+  
 
     protected $table = 'rematadores';
     public $timestamps = false;
-    
+
     protected $fillable = [
         'usuario_id',
         'nombre',

@@ -6,6 +6,9 @@ use Illuminate\Database\Eloquent\Model;
 
 class CasaDeRemates extends Model
 {
+    protected $table = 'casas_de_remates';
+    public $timestamps = false;
+
     protected $fillable = [
         'usuario_id',
         'identificacionFiscal',
