@@ -58,6 +58,13 @@ class LoteService
             ], 404);
         }
 
+        if ($lote->compra_id) {
+            return response()->json([
+                'success' => false,
+                'error' => 'No se puede modificar un lote que ya tiene una compra asociada'
+            ], 400);
+        }
+
         return $lote->update($data);    
     }
 
