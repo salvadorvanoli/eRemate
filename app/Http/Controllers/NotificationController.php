@@ -5,6 +5,8 @@ namespace App\Http\Controllers;
 
 use App\Models\Subasta;
 use App\Models\Puja;
+use App\Models\Usuario;
+use App\Models\UsuarioRegistrado;
 use App\Models\Lote;
 use App\Notifications\ComienzoSubastaNotification;
 use App\Notifications\SubastaFinalizadaNotification;
@@ -12,7 +14,9 @@ use App\Notifications\NuevaPujaNotification;
 use Illuminate\Http\Request;
 use Illuminate\Bus\Queueable;
 use Illuminate\Notifications\Messages\MailMessage;
-use Illuminate\Notifications\BienvenidaUsuarioNotification;
+// use Illuminate\Notifications\BienvenidaUsuarioNotification; // Remove this line if it exists
+use Illuminate\Support\Facades\Hash;
+use App\Notifications\BienvenidaUsuarioNotification; // Correct namespace for the notification
 
 
 class NotificationController extends Controller
@@ -137,20 +141,37 @@ public function testBienvenida(Request $request)
 {
     try {
         $request->validate([
-            'usuario_id' => 'required|exists:usuarios,id'
+            'email' => 'required|email|unique:usuarios',
+            'nombre' => 'required|string',
+            'telefono' => 'required|string'
         ]);
 
-        $usuario = Usuario::findOrFail($request->usuario_id);
+        // Crear usuario de prueba
+        $usuario = Usuario::create([
+            'email' => $request->email,
+            'contrasenia' => Hash::make('password123'), // contraseña por defecto
+            'telefono' => $request->telefono,
+            'tipo' => 'registrado'
+        ]);
+
+        // Crear usuario registrado
+        $usuarioRegistrado = UsuarioRegistrado::create([
+            'usuario_id' => $usuario->id,
+            'nombre' => $request->nombre
+        ]);
+
+        // Enviar notificación
         $usuario->notify(new BienvenidaUsuarioNotification());
 
         return response()->json([
-            'message' => 'Notificación de bienvenida enviada',
-            'usuario_id' => $usuario->id
+            'message' => 'Usuario creado y notificación enviada',
+            'usuario' => $usuario,
+            'usuario_registrado' => $usuarioRegistrado
         ]);
 
     } catch (\Exception $e) {
         return response()->json([
-            'message' => 'Error al enviar notificación',
+            'message' => 'Error en el proceso',
             'error' => $e->getMessage()
         ], 500);
     }
