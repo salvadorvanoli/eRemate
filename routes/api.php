@@ -21,7 +21,7 @@ Route::post('/register', [AuthController::class, 'register']);
 Route::post('/login', [AuthController::class, 'login']);
 Route::middleware('auth:sanctum')->post('/logout', [AuthController::class, 'logout']);
 
-
+//testing nitificaciones
 Route::post('/notify/user-register', [NotificationController::class, 'testBienvenida']);
 Route::post('/notify/auction-start', [NotificationController::class, 'notificarInicioSubasta']);
 Route::post('/notify/auction-end', [NotificationController::class, 'notificarFinSubasta']);
