@@ -10,7 +10,12 @@ class UsuarioRegistrado extends Model
     public $timestamps = false;
 
     protected $fillable = [
-        'usuario_id'
+        'usuario_id',
+        'metodos_pago'
+    ];
+
+    protected $casts = [
+        'metodos_pago' => 'array',
     ];
 
     public function usuario()
@@ -25,7 +30,7 @@ class UsuarioRegistrado extends Model
 
     public function compras()   
     {
-        return $this->hasMany(Compra::class);
+        return $this->hasMany(Compra::class, 'usuarioRegistrado_id');
     }
 
     public function chats()   
@@ -44,7 +49,7 @@ class UsuarioRegistrado extends Model
     }
      public function lotesFavoritos()
     {
-        return $this->belongsToMany(Lote::class, 'lote_usuario_registrado')
+        return $this->belongsToMany(Lote::class, 'lote_usuario_registrado_favorito', 'usuario_registrado_id', 'lote_id')
                     ->withTimestamps();
     }
 

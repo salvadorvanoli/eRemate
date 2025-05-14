@@ -33,7 +33,7 @@ class Lote extends Model
 
     public function articulos()
     {
-        return $this->hasMany(Articulo::class);
+        return $this->hasMany(Articulo::class, 'lote_id');
     }
 
     public function pujas()

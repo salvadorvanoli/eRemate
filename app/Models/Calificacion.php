@@ -6,9 +6,11 @@ use Illuminate\Database\Eloquent\Model;
 
 class Calificacion extends Model
 {
+    protected $table = 'calificaciones';
+
+    public $timestamps = false;
 
     protected $fillable = [
-        
         'id',
         'puntaje',
         'usuarioRegistrado_id',
