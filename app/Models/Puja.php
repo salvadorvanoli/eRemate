@@ -15,7 +15,7 @@ class Puja extends Model
         'usuarioRegistrado_id'
     ];
 
-    public function lotes()
+    public function lote()
     {
         return $this->belongsTo(Lote::class);
     }

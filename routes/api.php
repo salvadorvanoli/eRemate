@@ -21,19 +21,11 @@ Route::post('/register', [AuthController::class, 'register']);
 Route::post('/login', [AuthController::class, 'login']);
 Route::middleware('auth:sanctum')->post('/logout', [AuthController::class, 'logout']);
 
-//test notis
-Route::post('/auction-start', [NotificationController::class, 'notificarInicioSubasta'])
-    ->name('notifications.auction.start');
 
-Route::post('/auction-end', [NotificationController::class, 'notificarFinSubasta'])
-    ->name('notifications.auction.end');
-
-Route::post('/auction-bid', [NotificationController::class, 'notificarNuevaPuja'])
-    ->name('notifications.auction.bid');
-
-    //test
-Route::post('/user-register', [NotificationController::class, 'testBienvenida'])
-    ->name('notifications.user.register');
+Route::post('/notify/user-register', [NotificationController::class, 'testBienvenida']);
+Route::post('/notify/auction-start', [NotificationController::class, 'notificarInicioSubasta']);
+Route::post('/notify/auction-end', [NotificationController::class, 'notificarFinSubasta']);
+Route::post('/notify/auction-bid', [NotificationController::class, 'notificarNuevaPuja']);
 
 // Rutas para usuarios
 Route::middleware('auth:sanctum')->group(function () {

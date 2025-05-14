@@ -40,4 +40,6 @@ class Subasta extends Model
     {
         return $this->belongsTo(CasaDeRemates::class, 'casaDeRemates_id');
     }
+
+
 }

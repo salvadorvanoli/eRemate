@@ -14,13 +14,13 @@ use App\Notifications\NuevaPujaNotification;
 use Illuminate\Http\Request;
 use Illuminate\Bus\Queueable;
 use Illuminate\Notifications\Messages\MailMessage;
-// use Illuminate\Notifications\BienvenidaUsuarioNotification; // Remove this line if it exists
 use Illuminate\Support\Facades\Hash;
-use App\Notifications\BienvenidaUsuarioNotification; // Correct namespace for the notification
+use App\Notifications\BienvenidaUsuarioNotification; 
 
 
 class NotificationController extends Controller
 {
+    // recibe id de subasta y manda notificaciones a los usuarios interesados en lotes de la misma
     public function notificarInicioSubasta(Request $request)
     {
         try {
@@ -51,6 +51,7 @@ class NotificationController extends Controller
         }
     }
 
+    // recibe id de subasta y manda notificaciones a los usuarios interesados en lotes de la misma
     public function notificarFinSubasta(Request $request)
     {
         try {
@@ -97,6 +98,8 @@ class NotificationController extends Controller
         }
     }
 
+    // recibe id de puja y manda notificaciones a los usuarios interesados en el lote pujado
+    // (menos al que hizo la puja)
     public function notificarNuevaPuja(Request $request)
     {
         try {
@@ -105,11 +108,19 @@ class NotificationController extends Controller
             ]);
 
             $puja = Puja::with([
-                'lotes.usuariosInteresados.usuario',
+                'lote',
+                'lote.usuariosInteresados.usuario',
                 'usuarioRegistrado.usuario'
             ])->findOrFail($request->puja_id);
 
-            $lote = $puja->lotes;
+            if (!$puja->lote) {
+                return response()->json([
+                    'message' => 'Error: Puja no tiene lote asociado',
+                    'puja_id' => $puja->id
+                ], 404);
+            }
+
+            $lote = $puja->lote;
             
             // notificar (menos al q hizo la puja)
             foreach ($lote->usuariosInteresados as $usuarioRegistrado) {
@@ -127,9 +138,15 @@ class NotificationController extends Controller
             ]);
 
         } catch (\Exception $e) {
+            \Log::error('Error en notificarNuevaPuja:', [
+                'error' => $e->getMessage(),
+                'trace' => $e->getTraceAsString()
+            ]);
+
             return response()->json([
                 'message' => 'Error al enviar notificaciones',
-                'error' => $e->getMessage()
+                'error' => $e->getMessage(),
+                'trace' => $e->getTraceAsString()
             ], 500);
         }
     }
@@ -137,6 +154,7 @@ class NotificationController extends Controller
     
 
 
+    // test que crea un usuario y le manda la notificacion de bienvenida
 public function testBienvenida(Request $request)
 {
     try {
