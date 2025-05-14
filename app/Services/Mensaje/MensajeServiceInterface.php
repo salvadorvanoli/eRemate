@@ -8,5 +8,4 @@ interface MensajeServiceInterface
     public function buscarPorId($id);
     public function crear(array $datos);
     public function eliminar($id);
-    public function obtenerPorChat($chatId);
 }

@@ -28,10 +28,4 @@ class MensajeService implements MensajeServiceInterface
         $mensaje->delete();
     }
     
-    public function obtenerPorChat($chatId)
-    {
-        return Mensaje::where('chat_id', $chatId)
-                    ->orderBy('created_at', 'asc')
-                    ->get();
-    }
 }

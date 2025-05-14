@@ -48,4 +48,9 @@ class UsuarioRegistrado extends Model
     {
         return $this->hasMany(PujaAutomatica::class);
     }
+
+    public function lotesFavoritos()
+    {
+        return $this->belongsToMany(Lote::class, 'lote_usuario_registrado_favorito', 'usuario_registrado_id', 'lote_id');
+    }
 }

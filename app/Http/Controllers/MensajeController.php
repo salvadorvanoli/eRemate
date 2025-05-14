@@ -73,13 +73,4 @@ class MensajeController extends Controller
         }
     }
 
-    // Obtener mensajes por chat
-    public function getMensajesPorChat($chatId)
-    {
-        try {
-            return response()->json($this->mensajeService->obtenerPorChat($chatId));
-        } catch (Exception $e) {
-            return response()->json(['error' => 'Error al obtener los mensajes del chat: ' . $e->getMessage()], 500);
-        }
-    }
 }

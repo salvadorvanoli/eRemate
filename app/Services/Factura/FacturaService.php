@@ -31,8 +31,10 @@ class FacturaService implements FacturaServiceInterface
 
     public function obtenerPorUsuario($usuarioId)
     {
-        return Factura::whereHas('compra.usuario', function ($query) use ($usuarioId) {
-            $query->where('id', $usuarioId);
+        return Factura::whereIn('id', function($query) use ($usuarioId) {
+            $query->select('factura_id')
+                  ->from('compras')
+                  ->where('usuarioRegistrado_id', $usuarioId);
         })->get();
     }
 

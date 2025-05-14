@@ -4,6 +4,7 @@ namespace App\Services\UsuarioRegistrado;
 
 use App\Models\UsuarioRegistrado;
 use App\Enums\MetodoPago;
+use Illuminate\Support\Facades\DB;
 
 class UsuarioRegistradoService implements UsuarioRegistradoServiceInterface
 {
@@ -36,5 +37,66 @@ class UsuarioRegistradoService implements UsuarioRegistradoServiceInterface
     {
         $usuario = UsuarioRegistrado::findOrFail($id);
         return $usuario->compras ?? [];
+    }
+
+    // Agregar un lote a los favoritos del usuario
+    public function agregarLoteFavorito($usuarioId, $loteId)
+    {
+        try {
+            $favoritoExistente = DB::table('lote_usuario_registrado_favorito')
+                ->where('usuario_registrado_id', $usuarioId)
+                ->where('lote_id', $loteId)
+                ->exists();
+            
+            if ($favoritoExistente) {
+                return ['error' => 'Este lote ya está en tus favoritos'];
+            }
+            
+            DB::table('lote_usuario_registrado_favorito')->insert([
+                'usuario_registrado_id' => $usuarioId,
+                'lote_id' => $loteId,
+                'created_at' => now(),
+                'updated_at' => now(),
+            ]);
+            
+            return true;
+        } catch (\Exception $e) {
+            return ['error' => 'No se pudo agregar el lote a favoritos: ' . $e->getMessage()];
+        }
+    }
+
+    // Quitar un lote de los favoritos del usuario
+    public function quitarLoteFavorito($usuarioId, $loteId)
+    {
+        try {
+            $resultado = DB::table('lote_usuario_registrado_favorito')
+                ->where('usuario_registrado_id', $usuarioId)
+                ->where('lote_id', $loteId)
+                ->delete();
+                
+            if ($resultado == 0) {
+                return ['error' => 'Este lote no está en tus favoritos'];
+            }
+            
+            return true;
+        } catch (\Exception $e) {
+            return ['error' => 'No se pudo quitar el lote de favoritos: ' . $e->getMessage()];
+        }
+    }
+
+    // Obtener todos los lotes favoritos de un usuario
+    public function obtenerLotesFavoritos($usuarioId)
+    {
+        try {
+            $lotesFavoritos = DB::table('lotes')
+                ->join('lote_usuario_registrado_favorito', 'lotes.id', '=', 'lote_usuario_registrado_favorito.lote_id')
+                ->where('lote_usuario_registrado_favorito.usuario_registrado_id', $usuarioId)
+                ->select('lotes.*', 'lote_usuario_registrado_favorito.created_at as favorito_desde')
+                ->get();
+                
+            return $lotesFavoritos;
+        } catch (\Exception $e) {
+            return ['error' => 'No se pudieron obtener los lotes favoritos: ' . $e->getMessage()];
+        }
     }
 }

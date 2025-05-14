@@ -85,4 +85,17 @@ class FacturaController extends Controller
             return response()->json(['error' => 'Error al generar el PDF: ' . $e->getMessage()], 500);
         }
     }
+
+    // Obtener facturas por usuario
+    public function getFacturasPorUsuario($userId)
+    {
+        try {
+            $facturas = $this->facturaService->obtenerPorUsuario($userId);
+            return response()->json($facturas);
+        } catch (ModelNotFoundException $e) {
+            return response()->json(['error' => 'Usuario no encontrado'], 404);
+        } catch (Exception $e) {
+            return response()->json(['error' => 'Error al obtener las facturas del usuario: ' . $e->getMessage()], 500);
+        }
+    }
 }
