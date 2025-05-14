@@ -11,11 +11,18 @@ class Mensaje extends Model
 
     protected $fillable = [
         'contenido',
-        'chat_id'
+        'chat_id',
+        'usuario_id'
     ];
 
     public function chat()
     {
         return $this->belongsTo(Chat::class);
     }
+
+    public function usuario()
+    {
+        return $this->belongsTo(Usuario::class);
+    }
+
 }

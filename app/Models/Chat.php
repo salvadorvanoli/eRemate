@@ -10,8 +10,8 @@ class Chat extends Model
     use HasFactory;
 
     protected $fillable = [
-        #'user_id',
-        #'casa_de_remate_id'
+        'usuarioRegistrado_id',
+        'casa_de_remate_id'
     ];
 
     public function usuarioRegistrado()

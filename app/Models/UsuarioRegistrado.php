@@ -6,8 +6,17 @@ use Illuminate\Database\Eloquent\Model;
 
 class UsuarioRegistrado extends Model
 {
+    protected $table = 'usuarios_registrados';
+
+    public $timestamps = false;
+    
     protected $fillable = [
-        'usuario_id'
+        'usuario_id',
+        'metodos_pago'
+    ];
+
+    protected $casts = [
+        'metodos_pago' => 'array',
     ];
 
     public function usuario()
@@ -22,7 +31,7 @@ class UsuarioRegistrado extends Model
 
     public function compras()   
     {
-        return $this->hasMany(Compra::class);
+        return $this->hasMany(Compra::class, 'usuarioRegistrado_id');
     }
 
     public function chats()   
