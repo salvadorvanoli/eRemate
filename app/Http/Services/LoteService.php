@@ -4,13 +4,60 @@
 namespace App\Http\Services;
 use App\Models\CasaDeRemates;
 use App\Models\Lote;
+use App\Models\Rematador;
+use App\Models\Usuario;
 use Illuminate\Support\Facades\Auth;
 use Illuminate\Http\JsonResponse;
 
 class LoteService
 {
-    public function crearLote(array $data): Lote
+
+    private function validarUsuario()
     {
+        $usuarioAutenticado = Auth::user();
+
+        if (!$usuarioAutenticado) {
+            return response()->json(['error' => 'Token no proporcionado o inválido'], 401);
+        }
+
+        $usuario = Usuario::find($usuarioAutenticado)->first();
+        if (!$usuario) {
+            return response()->json(['error' => 'Usuario no encontrado'], 404);
+        }
+
+        $casaDeRemates = CasaDeRemates::where('usuario_id', $usuarioAutenticado->id)->first();
+        $rematador = Rematador::where('usuario_id', $usuarioAutenticado->id)->first();
+
+        if (!$rematador && !$casaDeRemates) {
+            return response()->json(['error' => 'No tienes permiso para acceder a esta información'], 403);
+        }
+
+        return $usuario;
+    }
+
+    private function verificarUsuario($usuario, $lote)
+    {
+        $casaDeRemates = CasaDeRemates::where('usuario_id', $usuario->id)->first();
+        $rematador = Rematador::where('usuario_id', $usuario->id)->first();
+
+        $rematadorLote = $lote->subasta->rematador ?? null;
+        $casaDeRematesLote = $lote->subasta->casaDeRemates ?? null;
+
+        if (($rematador && $rematador->id !== $rematadorLote->id) && ($casaDeRemates && $casaDeRemates->id !== $casaDeRematesLote->id)) {
+            return response()->json(['error' => 'No tienes permiso para acceder a este lote'], 403);
+        }
+
+        return response()->json($usuario);
+    }
+
+    public function crearLote(array $data): mixed
+    {
+        $usuario = $this->validarUsuario();
+        
+        if (!$usuario instanceof Usuario) {
+            return $usuario;
+        }
+
         $lote = Lote::where('subasta_id', $data['subasta_id'])
                     ->where('nombre', $data['nombre'])
                     ->first();
@@ -24,8 +71,8 @@ class LoteService
 
         return Lote::create([
             'subasta_id' => $data['subasta_id'],
-            'compra_id' => $data['compra_id'] ?? null,
-            'ganador_id' => $data['ganador_id'] ?? null,
+            'compra_id' => null,
+            'ganador_id' => null,
             'nombre' => $data['nombre'],
             'descripcion' => $data['descripcion'],
             'valorBase' => $data['valorBase'],
@@ -36,7 +83,7 @@ class LoteService
     }
 
     public function obtenerLote(int $id) {
-        $lote = Lote::find($id);
+        $lote = Lote::find($id)->first();
 
         if (!$lote) {
             return response()->json([
@@ -50,12 +97,23 @@ class LoteService
     
     public function actualizarLote(int $id, array $data): mixed
     {
-        $lote = Lote::find($id);
+
+        $usuario = $this->validarUsuario();
+        if (!$usuario instanceof Usuario) {
+            return $usuario;
+        }
+
+        $lote = Lote::find($id)->first();
         if (!$lote) {
             return response()->json([
                 'success' => false,
                 'error' => 'Lote no encontrado'
             ], 404);
+        }
+
+        $chequeo = $this->verificarUsuario($usuario, $lote);
+        if ($chequeo instanceof JsonResponse) {
+            return $chequeo;
         }
 
         if ($lote->compra_id) {
@@ -84,6 +142,11 @@ class LoteService
 
     public function agregarArticulo(int $id, int $articuloId): mixed
     {
+        $usuario = $this->validarUsuario();
+        if (!$usuario instanceof Usuario) {
+            return $usuario;
+        }
+        
         $lote = Lote::find($id)->first();
 
         if (!$lote) {
@@ -91,6 +154,11 @@ class LoteService
                 'success' => false,
                 'error' => 'Lote no encontrado'
             ], 404);
+        }
+
+        $chequeo = $this->verificarUsuario($usuario, $lote);
+        if ($chequeo instanceof JsonResponse) {
+            return $chequeo;
         }
 
         $lote->articulos()->attach($articuloId);
@@ -103,6 +171,11 @@ class LoteService
 
     public function removerArticulo(int $id, int $articuloId): mixed
     {
+        $usuario = $this->validarUsuario();
+        if (!$usuario instanceof Usuario) {
+            return $usuario;
+        }
+        
         $lote = Lote::find($id)->first();
 
         if (!$lote) {
@@ -110,6 +183,11 @@ class LoteService
                 'success' => false,
                 'error' => 'Lote no encontrado'
             ], 404);
+        }
+
+        $chequeo = $this->verificarUsuario($usuario, $lote);
+        if ($chequeo instanceof JsonResponse) {
+            return $chequeo;
         }
 
         $lote->articulos()->detach($articuloId);

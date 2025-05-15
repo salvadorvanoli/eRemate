@@ -1,5 +1,7 @@
 <?php
 
+use App\Http\Controllers\ArticuloController;
+use App\Http\Controllers\SubastaController;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Route;
 use App\Http\Controllers\AuthController;
@@ -104,6 +106,22 @@ Route::prefix('auction-house')->group(function () {
     Route::post('/{id}/auctioneers/{rematadorId}/remove', [CasaDeRematesController::class, 'quitarRematador']);
 });
 
+Route::prefix('auction')->group(function () {
+    Route::post('/', [SubastaController::class, 'crearSubasta']);
+    Route::get('/{id}', [SubastaController::class, 'obtenerSubasta']);
+    Route::put('/{id}', [SubastaController::class, 'actualizarSubasta']);
+    Route::get('/', [SubastaController::class, 'obtenerSubastas']);
+
+    /* Resto de endpoints de subasta
+    Route::post('/{id}/start', [SubastaController::class, 'iniciarSubasta']);
+    Route::post('/{id}/end', [SubastaController::class, 'finalizarSubasta']);
+    Route::post('/{id}/bid', [SubastaController::class, 'realizarPuja']);
+    Route::get('/{id}/bids', [SubastaController::class, 'obtenerPujas']);
+    Route::post('/{id}/auto-bid', [SubastaController::class, 'realizarPujaAutomatica']);
+    Route::post('/{id}/live-stream', [SubastaController::class, 'obtenerTransmisionEnVivo']);
+    */
+});
+
 Route::prefix('lot')->group(function () {
     Route::post('/', [LoteController::class, 'crearLote']);
     Route::get('/{id}', [LoteController::class, 'obtenerLote']);
@@ -112,5 +130,12 @@ Route::prefix('lot')->group(function () {
     Route::post('/{id}/items/{articuloId}/remove', [LoteController::class, 'removerArticulo']);
     Route::get('/{id}/items', [LoteController::class, 'obtenerArticulos']);
 });
+
+Route::prefix('item')->group(function () {
+    Route::post('/', [ArticuloController::class, 'crearArticulo']);
+    Route::get('/{id}', [ArticuloController::class, 'obtenerArticulo']);
+    Route::put('/{id}', [ArticuloController::class, 'actualizarArticulo']);
+});
+Route::get('/items', [ArticuloController::class, 'obtenerArticulos']);
 
 });
