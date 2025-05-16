@@ -3,8 +3,8 @@
 namespace App\Http\Controllers;
 
 use App\Models\Articulo;
+use App\Services\Articulo\ArticuloServiceInterface;
 use Illuminate\Http\Request;
-use App\Http\Services\ArticuloService;
 use Illuminate\Http\JsonResponse;
 use Illuminate\Support\Facades\Validator;
 
@@ -12,10 +12,12 @@ class ArticuloController extends Controller
 {
     protected $articuloService;
     
-    public function __construct(ArticuloService $articuloService)
+    public function __construct(ArticuloServiceInterface $articuloService)
     {
         $this->articuloService = $articuloService;
-    }    public function crearArticulo(Request $request)
+    }
+    
+    public function crearArticulo(Request $request)
     {
         try {
             $validator = Validator::make($request->all(), [
@@ -55,7 +57,9 @@ class ArticuloController extends Controller
                 'details' => $e->getMessage()
             ], 500);
         }
-    }    public function obtenerArticulo(int $id) {
+    }
+    
+    public function obtenerArticulo(int $id) {
         try {
             $articulo = $this->articuloService->obtenerArticulo($id);
 
@@ -74,7 +78,9 @@ class ArticuloController extends Controller
                 'message' => 'Error al obtener artículo: ' . $e->getMessage()
             ], 500);
         }
-    }    public function actualizarArticulo(Request $request, $id)
+    }
+    
+    public function actualizarArticulo(Request $request, $id)
     {
         try {
             $data = $request->validate([

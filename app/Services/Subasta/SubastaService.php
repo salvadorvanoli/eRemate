@@ -1,7 +1,7 @@
 <?php
 
 
-namespace App\Http\Services;
+namespace App\Services\Subasta;
 use App\Models\Subasta;
 use App\Models\CasaDeRemates;
 use App\Models\Rematador;
@@ -9,7 +9,7 @@ use App\Models\Usuario;
 use Illuminate\Support\Facades\Auth;
 use Illuminate\Http\JsonResponse;
 
-class SubastaService
+class SubastaService implements SubastaServiceInterface
 {
 
     private function validarUsuario()

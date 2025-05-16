@@ -3,7 +3,7 @@
 namespace App\Http\Controllers;
 
 use Illuminate\Http\Request;
-use App\Http\Services\UsuarioService;
+use App\Services\Usuario\UsuarioServiceInterface;
 use Illuminate\Support\Facades\Auth;
 use Illuminate\Http\JsonResponse;
 
@@ -11,7 +11,7 @@ class UsuarioController extends Controller
 {
     protected $usuarioService;
 
-    public function __construct(UsuarioService $usuarioService)
+    public function __construct(UsuarioServiceInterface $usuarioService)
     {
         $this->usuarioService = $usuarioService;
     }

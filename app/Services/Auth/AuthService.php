@@ -1,6 +1,6 @@
 <?php
 
-namespace App\Http\Services;
+namespace App\Services\Auth;
 
 use App\Models\Usuario;
 use App\Models\Rematador;
@@ -9,7 +9,7 @@ use App\Models\UsuarioRegistrado;
 use Illuminate\Support\Facades\Hash;
 use Illuminate\Support\Facades\Validator;
 
-class AuthService
+class AuthService implements AuthServiceInterface
 {
     public function register($request)
     {

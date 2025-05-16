@@ -1,7 +1,7 @@
 <?php
 
 
-namespace App\Http\Services;
+namespace App\Services\Lote;
 use App\Models\CasaDeRemates;
 use App\Models\Lote;
 use App\Models\Rematador;
@@ -9,7 +9,7 @@ use App\Models\Usuario;
 use Illuminate\Support\Facades\Auth;
 use Illuminate\Http\JsonResponse;
 
-class LoteService
+class LoteService implements LoteServiceInterface
 {
 
     private function validarUsuario()

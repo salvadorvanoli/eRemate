@@ -3,7 +3,7 @@
 namespace App\Http\Controllers;
 
 use Illuminate\Http\Request;
-use App\Http\Services\AuthService;
+use App\Services\Auth\AuthServiceInterface;
 use Illuminate\Support\Facades\Hash;
 use App\Models\Usuario;
 
@@ -12,7 +12,7 @@ class AuthController extends Controller
     protected $authService;
 
     // Inyectamos el service por constructor
-    public function __construct(AuthService $authService)
+    public function __construct(AuthServiceInterface $authService)
     {
         $this->authService = $authService;
     }

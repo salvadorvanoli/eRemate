@@ -1,7 +1,7 @@
 <?php
 
 
-namespace App\Http\Services;
+namespace App\Services\Articulo;
 use App\Models\Articulo;
 use App\Models\CasaDeRemates;
 use App\Models\Lote;
@@ -10,7 +10,7 @@ use App\Models\Usuario;
 use Illuminate\Support\Facades\Auth;
 use Illuminate\Http\JsonResponse;
 
-class ArticuloService
+class ArticuloService implements ArticuloServiceInterface
 {
 
     private function validarUsuario()

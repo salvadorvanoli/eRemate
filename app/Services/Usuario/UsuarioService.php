@@ -1,13 +1,13 @@
 <?php
 
-namespace App\Http\Services;
+namespace App\Services\Usuario;
 
 use App\Models\Usuario;
 use App\Models\Rematador;
 use App\Models\CasaDeRemates;
 use App\Models\UsuarioRegistrado;
 
-class UsuarioService
+class UsuarioService implements UsuarioServiceInterface
 {
     public function obtenerUsuarioPorId($id)
     {

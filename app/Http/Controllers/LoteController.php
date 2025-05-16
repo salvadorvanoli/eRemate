@@ -4,13 +4,13 @@ namespace App\Http\Controllers;
 
 use App\Models\Lote;
 use Illuminate\Http\Request;
-use App\Http\Services\LoteService;
+use App\Services\Lote\LoteServiceInterface;
 use Illuminate\Http\JsonResponse;
 use Illuminate\Support\Facades\Validator;
 
 class LoteController extends Controller
 {
-    protected $loteService;    public function __construct(LoteService $loteService)
+    protected $loteService;    public function __construct(LoteServiceInterface $loteService)
     {
         $this->loteService = $loteService;
     }

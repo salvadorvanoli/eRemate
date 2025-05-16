@@ -1,11 +1,11 @@
 <?php
 
-namespace App\Services;
+namespace App\Services\Rematador;
 
 use App\Models\Rematador;
 use Illuminate\Database\Eloquent\Collection;
 
-class RematadorService
+class RematadorService implements RematadorServiceInterface
 {
 
 

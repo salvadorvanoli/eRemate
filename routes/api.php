@@ -99,43 +99,52 @@ Route::middleware('auth:sanctum')->group(function () {
     Route::post('/auction-bid', [NotificationController::class, 'notificarNuevaPuja'])
         ->name('notifications.auction.bid');*/
 
-Route::prefix('auction-house')->group(function () {
-    Route::put('/{id}', [CasaDeRematesController::class, 'actualizarCasaDeRemates']);
-    Route::get('/{id}/auctioneers', [CasaDeRematesController::class, 'obtenerRematadores']);
-    Route::post('/{id}/auctioneers/{rematadorId}/assign', [CasaDeRematesController::class, 'asignarRematador']);
-    Route::post('/{id}/auctioneers/{rematadorId}/remove', [CasaDeRematesController::class, 'quitarRematador']);
+    Route::prefix('auction-house')->group(function () {
+        Route::put('/{id}', [CasaDeRematesController::class, 'actualizarCasaDeRemates']);
+        Route::get('/{id}/auctioneers', [CasaDeRematesController::class, 'obtenerRematadores']);
+        Route::post('/{id}/auctioneers/{rematadorId}/assign', [CasaDeRematesController::class, 'asignarRematador']);
+        Route::post('/{id}/auctioneers/{rematadorId}/remove', [CasaDeRematesController::class, 'desasignarRematador']);
+    });
+
+    Route::prefix('auction')->group(function () {
+        Route::post('/', [SubastaController::class, 'crearSubasta']);
+        Route::put('/{id}', [SubastaController::class, 'actualizarSubasta']);
+
+        /* Resto de endpoints de subasta
+        Route::post('/{id}/start', [SubastaController::class, 'iniciarSubasta']);
+        Route::post('/{id}/end', [SubastaController::class, 'finalizarSubasta']);
+        Route::post('/{id}/bid', [SubastaController::class, 'realizarPuja']);
+        Route::get('/{id}/bids', [SubastaController::class, 'obtenerPujas']);
+        Route::post('/{id}/auto-bid', [SubastaController::class, 'realizarPujaAutomatica']);
+        Route::post('/{id}/live-stream', [SubastaController::class, 'obtenerTransmisionEnVivo']);
+        */
+    });
+
+    Route::prefix('lot')->group(function () {
+        Route::post('/', [LoteController::class, 'crearLote']);
+        Route::put('/{id}', [LoteController::class, 'actualizarLote']);
+        Route::post('/{id}/items/{articuloId}/add', [LoteController::class, 'agregarArticulo']);
+        Route::post('/{id}/items/{articuloId}/remove', [LoteController::class, 'removerArticulo']);
+    });
+
+    Route::prefix('item')->group(function () {
+        Route::post('/', [ArticuloController::class, 'crearArticulo']);
+        Route::put('/{id}', [ArticuloController::class, 'actualizarArticulo']);
+    });
+
 });
 
 Route::prefix('auction')->group(function () {
-    Route::post('/', [SubastaController::class, 'crearSubasta']);
-    Route::get('/{id}', [SubastaController::class, 'obtenerSubasta']);
-    Route::put('/{id}', [SubastaController::class, 'actualizarSubasta']);
     Route::get('/', [SubastaController::class, 'obtenerSubastas']);
-
-    /* Resto de endpoints de subasta
-    Route::post('/{id}/start', [SubastaController::class, 'iniciarSubasta']);
-    Route::post('/{id}/end', [SubastaController::class, 'finalizarSubasta']);
-    Route::post('/{id}/bid', [SubastaController::class, 'realizarPuja']);
-    Route::get('/{id}/bids', [SubastaController::class, 'obtenerPujas']);
-    Route::post('/{id}/auto-bid', [SubastaController::class, 'realizarPujaAutomatica']);
-    Route::post('/{id}/live-stream', [SubastaController::class, 'obtenerTransmisionEnVivo']);
-    */
+    Route::get('/{id}', [SubastaController::class, 'obtenerSubasta']);
 });
 
 Route::prefix('lot')->group(function () {
-    Route::post('/', [LoteController::class, 'crearLote']);
     Route::get('/{id}', [LoteController::class, 'obtenerLote']);
-    Route::put('/{id}', [LoteController::class, 'actualizarLote']);
-    Route::post('/{id}/items/{articuloId}/add', [LoteController::class, 'agregarArticulo']);
-    Route::post('/{id}/items/{articuloId}/remove', [LoteController::class, 'removerArticulo']);
     Route::get('/{id}/items', [LoteController::class, 'obtenerArticulos']);
 });
 
 Route::prefix('item')->group(function () {
-    Route::post('/', [ArticuloController::class, 'crearArticulo']);
     Route::get('/{id}', [ArticuloController::class, 'obtenerArticulo']);
-    Route::put('/{id}', [ArticuloController::class, 'actualizarArticulo']);
-});
-Route::get('/items', [ArticuloController::class, 'obtenerArticulos']);
-
+    Route::get('/', [ArticuloController::class, 'obtenerArticulos']);
 });

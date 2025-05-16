@@ -4,14 +4,14 @@ namespace App\Http\Controllers;
 
 use App\Models\CasaDeRemates;
 use Illuminate\Http\Request;
-use App\Http\Services\CasaDeRematesService;
+use App\Services\CasaDeRemates\CasaDeRematesServiceInterface;
 use Illuminate\Http\JsonResponse;
 
 class CasaDeRematesController extends Controller
 {
     protected $casaDeRematesService;
 
-    public function __construct(CasaDeRematesService $casaDeRematesService)
+    public function __construct(CasaDeRematesServiceInterface $casaDeRematesService)
     {
         $this->casaDeRematesService = $casaDeRematesService;
     }

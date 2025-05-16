@@ -1,12 +1,15 @@
 <?php
 
 
-namespace App\Http\Services;
+namespace App\Services\CasaDeRemates;
 use App\Models\CasaDeRemates;
+use App\Models\Usuario;
+use App\Models\Rematador;
 use Illuminate\Support\Facades\Auth;
 use Illuminate\Http\JsonResponse;
+use Illuminate\Support\Facades\Log;
 
-class CasaDeRematesService
+class CasaDeRematesService implements CasaDeRematesServiceInterface
 {
 
     private function obtenerCasaDeRematesActual(int $id): mixed
@@ -27,7 +30,7 @@ class CasaDeRematesService
             ], 403);
         }
 
-        $casaDeRemates = CasaDeRemates::where('usuario_id', $id)->first();
+        $casaDeRemates = Usuario::where('usuario_id', $id)->first();
 
         if (!$casaDeRemates) {
             return response()->json([

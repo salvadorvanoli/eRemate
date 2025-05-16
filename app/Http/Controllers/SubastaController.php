@@ -4,7 +4,7 @@ namespace App\Http\Controllers;
 
 use App\Models\Subasta;
 use Illuminate\Http\Request;
-use App\Http\Services\SubastaService;
+use App\Services\Subasta\SubastaServiceInterface;
 use Illuminate\Http\JsonResponse;
 use Illuminate\Support\Facades\Validator;
 
@@ -12,7 +12,7 @@ class SubastaController extends Controller
 {
     protected $subastaService;
     
-    public function __construct(SubastaService $subastaService)
+    public function __construct(SubastaServiceInterface $subastaService)
     {
         $this->subastaService = $subastaService;
     }

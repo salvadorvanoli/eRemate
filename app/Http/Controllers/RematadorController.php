@@ -1,7 +1,7 @@
 <?php
 
 namespace App\Http\Controllers;
-use App\Services\RematadorService;
+use App\Services\Rematador\RematadorServiceInterface;
 use Illuminate\Support\Facades\Validator;
 use Illuminate\Http\Request;
 
@@ -9,7 +9,7 @@ class RematadorController extends Controller
 {
     protected $rematadorService;
 
-    public function __construct(RematadorService $rematadorService)
+    public function __construct(RematadorServiceInterface $rematadorService)
     {
         $this->rematadorService = $rematadorService;
     }
