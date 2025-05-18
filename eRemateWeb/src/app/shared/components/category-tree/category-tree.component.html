@@ -1,0 +1,4 @@
+<div class="card w-full">
+    <p class="text-2xl font-semibold mb-4 ml-8 mt-3">Categorías</p>
+    <p-tree [value]="categories" selectionMode="checkbox" styleClass="w-full" [(selection)]="selectedCategories" (onNodeSelect)="changedSelectedCategories()" (onNodeUnselect)="changedSelectedCategories()" />
+</div>

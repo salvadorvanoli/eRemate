@@ -1,0 +1,45 @@
+<div class="card flex justify-center">
+    <p-dialog 
+        [(visible)]="visible"
+        [modal]="true"
+        [closable]="false"
+        [style]="{ width: '466px', maxWidth: '600px' }"
+        [contentStyle]="{ padding: '0' }"
+        [baseZIndex]="10000"
+        [draggable]="false"
+        [resizable]="false"
+        [showHeader]="false"
+    >
+        <div class="p-8 bg-Background-Default-Default relative">
+            <!-- Título -->
+            <div class="self-stretch flex flex-col justify-start items-start gap-3">
+                <div class="self-stretch justify-start text-Text-Default-Default text-2xl font-semibold font-['Inter'] leading-7">
+                    <ng-content select="[modal-title]"></ng-content>
+                </div>
+            </div>
+            
+            <!-- Contenido principal -->
+            <div class="mt-4">
+                <ng-content></ng-content>
+            </div>
+            
+            <!-- Botón de acción -->
+            <div class="self-stretch flex justify-end items-center gap-4 mt-6">
+                <ng-content select="[modal-action]"></ng-content>
+            </div>
+            
+            <!-- Botón de cerrar (cruz) -->
+            <button 
+                (click)="close()" 
+                aria-label="Cerrar"
+                class="p-2 right-[8px] top-[8px] absolute rounded-[32px] inline-flex justify-center items-center overflow-hidden hover:bg-gray-100"
+                type="button"
+            >
+                <span class="sr-only">Cerrar</span>
+                <svg xmlns="http://www.w3.org/2000/svg" class="h-5 w-5" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12" />
+                </svg>
+            </button>
+        </div>
+    </p-dialog>
+</div>

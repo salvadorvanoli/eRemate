@@ -1,0 +1,49 @@
+<div class="min-w-60 p-4 md:p-8 lg:p-16 bg-Background-Default-Default">
+    <div class="flex flex-col md:flex-row gap-6 md:gap-8 h-full items-stretch">
+        <div class="w-full md:w-1/2 lg:flex-1">
+            <app-carousel class="w-full"></app-carousel>
+        </div>
+
+        <div class="w-full md:w-1/2 lg:flex-1 flex flex-col justify-between mt-6 md:mt-0">
+            <div class="flex flex-col gap-4">
+                <div class="text-Text-Default-Default text-xl md:text-2xl font-semibold font-['Inter'] leading-7">
+                    {{ producto?.nombre }}
+                </div>
+                
+                <div class="flex items-end">
+                    <div class="flex">
+                        <div class="text-Text-Default-Default text-xl md:text-2xl font-bold font-['Inter'] leading-normal">$</div>
+                        <div class="text-Text-Default-Default text-4xl md:text-5xl font-bold font-['Inter'] leading-[48px]">{{ producto?.precio }}</div>
+                    </div>
+                </div>
+                
+                <div class="w-full md:w-[484px]">
+                    <div class="text-Text-Default-Default text-sm md:text-base font-normal font-['Inter'] leading-snug">
+                       {{producto?.descripcion}}
+                    </div>
+                </div>
+            </div>
+
+            <div 
+                class="p-3 bg-gray-900 hover:bg-gray-600 transition-colors rounded-lg outline outline-1 outline-offset-[-1px] outline-gray-700 flex justify-center items-center cursor-pointer mt-6 md:mt-auto"
+                (click)="modalVisible = true"
+            >
+                <div class="text-white text-base font-normal font-['Inter'] leading-none">
+                    Agregar a pedido
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+<!-- Modal -->
+<app-modal [visible]="modalVisible" (closed)="modalVisible = false">
+    <div modal-title>Producto agregado a su pedido</div>
+    <div modal-action>
+        <button 
+            class="p-3 bg-gray-900 rounded-lg outline outline-1 outline-offset-[-1px] outline-gray-700 flex justify-center items-center gap-2"
+        >
+            <span class="text-white text-base font-normal font-['Inter'] leading-none">Ver pedido</span>
+        </button>
+    </div>
+</app-modal>

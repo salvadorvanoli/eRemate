@@ -43,7 +43,7 @@ class UsuarioRegistradoService implements UsuarioRegistradoServiceInterface
     public function agregarLoteFavorito($usuarioId, $loteId)
     {
         try {
-            $favoritoExistente = DB::table('lote_usuario_registrado_favorito')
+            $favoritoExistente = DB::table('lote_usuario_registrado')
                 ->where('usuario_registrado_id', $usuarioId)
                 ->where('lote_id', $loteId)
                 ->exists();
@@ -52,7 +52,7 @@ class UsuarioRegistradoService implements UsuarioRegistradoServiceInterface
                 return ['error' => 'Este lote ya está en tus favoritos'];
             }
             
-            DB::table('lote_usuario_registrado_favorito')->insert([
+            DB::table('lote_usuario_registrado')->insert([
                 'usuario_registrado_id' => $usuarioId,
                 'lote_id' => $loteId,
                 'created_at' => now(),
@@ -69,7 +69,7 @@ class UsuarioRegistradoService implements UsuarioRegistradoServiceInterface
     public function quitarLoteFavorito($usuarioId, $loteId)
     {
         try {
-            $resultado = DB::table('lote_usuario_registrado_favorito')
+            $resultado = DB::table('lote_usuario_registrado')
                 ->where('usuario_registrado_id', $usuarioId)
                 ->where('lote_id', $loteId)
                 ->delete();
@@ -89,9 +89,9 @@ class UsuarioRegistradoService implements UsuarioRegistradoServiceInterface
     {
         try {
             $lotesFavoritos = DB::table('lotes')
-                ->join('lote_usuario_registrado_favorito', 'lotes.id', '=', 'lote_usuario_registrado_favorito.lote_id')
-                ->where('lote_usuario_registrado_favorito.usuario_registrado_id', $usuarioId)
-                ->select('lotes.*', 'lote_usuario_registrado_favorito.created_at as favorito_desde')
+                ->join('lote_usuario_registrado', 'lotes.id', '=', 'lote_usuario_registrado.lote_id')
+                ->where('lote_usuario_registrado.usuario_registrado_id', $usuarioId)
+                ->select('lotes.*', 'lote_usuario_registrado.created_at as favorito_desde')
                 ->get();
                 
             return $lotesFavoritos;

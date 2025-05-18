@@ -1,0 +1,33 @@
+<p-carousel 
+  [value]="items" 
+  [numVisible]="itemsPerPage" 
+  [numScroll]="scrollsPerScroll" 
+  [circular]="true" 
+  [responsiveOptions]="responsiveOptions">
+
+  <ng-template let-item pTemplate="item">
+    <div class="border-none rounded m-2 p-4 text-center break-all">
+      <div class="mb-3 relative mx-auto">
+        <img 
+          [src]="getImageUrl ? getImageUrl(item) : 'https://developers.elementor.com/docs/assets/img/elementor-placeholder-image.png'" 
+          alt="Imagen de la publicación" 
+          class="mx-auto rounded" />
+      </div>
+      <div class="font-medium text-lg">
+        {{ getTitle(item) }}
+      </div>
+
+      @if(showPrice && getPrice) {
+        <div>
+            <span class="text-green-600 font-bold">{{ getPrice(item) }}</span>
+        </div>
+      }
+
+      @if(showLink) {
+        <a [routerLink]="getLink(item)" class="block mt-2 text-blue-500 hover:underline">
+            Ver publicación
+        </a>
+      }
+    </div>
+  </ng-template>
+</p-carousel>

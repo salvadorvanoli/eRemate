@@ -1,0 +1,21 @@
+<div class="card">
+    <p-carousel 
+        [value]="products" 
+        [numVisible]="1" 
+        [numScroll]="1" 
+        [circular]="true"
+        [showIndicators]="false"
+        [showNavigators]="true">
+        <ng-template let-product pTemplate="item">
+            <div class="p-2">
+                <div class="relative mx-auto">
+                    <img 
+                        src="https://primefaces.org/cdn/primeng/images/demo/product/{{ product.image }}" 
+                        [alt]="product.name" 
+                        class="w-full rounded-lg"
+                        style="max-height: 400px; object-fit: contain;" />
+                </div>
+            </div>
+        </ng-template>
+    </p-carousel>
+</div>

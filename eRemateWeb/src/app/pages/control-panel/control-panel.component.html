@@ -1,0 +1,9 @@
+<app-title-and-description title="Panel de control" description="Gestiona los datos de la aplicación" />
+<div class="p-4 grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-4">
+    <div class="col-span-1">
+        <app-options-panel (dataType)="selectedDataType = $event" />
+    </div>
+    <div class="col-span-1 md:col-span-2 lg:col-span-3">
+        <app-data-panel [itemType]="selectedDataType" />
+    </div>
+</div>

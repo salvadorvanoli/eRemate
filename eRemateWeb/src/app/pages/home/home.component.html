@@ -1,0 +1,22 @@
+<app-title-with-background-image-and-buttons
+  [title]="'Bienvenido a eLibreriaAlfa'"
+  [description]="'Tu biblioteca digital'">
+</app-title-with-background-image-and-buttons>
+
+<app-title-and-description
+  [title]="'Noticias y anuncios'"
+  [description]="'Mantente al día'">
+</app-title-and-description>
+
+@if (publicaciones.length > 0) {
+  <app-dynamic-carousel
+    [items]="publicaciones"
+    [showLink]="true"
+    [getLink]="getLink"
+    [getTitle]="getTitle">
+  </app-dynamic-carousel>
+} @else {
+  <div class="text-center mt-4 text-gray-600">
+    No hay publicaciones en este momento.
+  </div>
+}

@@ -1,0 +1,5 @@
+@media screen and (min-width: 1128px) {
+    ::ng-deep .p-menubar-end:empty {
+        display: none !important;
+    }
+}
