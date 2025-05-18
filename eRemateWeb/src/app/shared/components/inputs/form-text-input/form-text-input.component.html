@@ -1,0 +1,12 @@
+<input
+    pInputText
+    [ngModel]="text()"
+    (ngModelChange)="text.set($event); textValue.emit($event);"
+    [ngModelOptions]="{standalone: true}"
+    type="text"
+    [placeholder]="placeholder"
+    class="w-full"
+/>
+@if (showErrorMessage()) {
+    <p-message class="w-full" severity="error" variant="simple" size="small">{{ errorMessage }}</p-message>
+}

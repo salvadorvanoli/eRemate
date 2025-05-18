@@ -1,0 +1,34 @@
+.background-container {
+    background-image: url('../../../../../public/libreria.jpg');
+}
+
+.overlay {
+    background-color: rgba(255, 255, 255, 0.7);
+}
+
+// Todos los scss de los botones van a ser eliminados cuando se creen los componentes
+
+.button-group {
+    display: flex;
+    justify-content: center;
+    gap: 1rem;
+}
+
+.btn {
+    padding: 0.5rem 1.5rem;
+    border: none;
+    cursor: pointer;
+    font-size: 1rem;
+    border-radius: 0.25rem;
+}
+
+.light-btn {
+    background-color: white;
+    border: 1px solid #ccc;
+}
+
+.dark-btn {
+    background-color: #333;
+    color: white;
+}
+  

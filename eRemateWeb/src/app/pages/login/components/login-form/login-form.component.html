@@ -1,0 +1,30 @@
+<div class="card md:w-150 sm:w-100 w-70 p-10 my-10 mx-auto rounded-md border-solid border-gray-200 border-2">
+    <p-toast />
+    <form novalidate action="" method="post" class="mx-auto flex flex-col items-center gap-4 w-full max-w-md">
+        <app-form-text-input 
+            class="w-full"
+            placeholder="Email"
+            [formSubmitted]="formSubmitted"
+            [textPattern]="emailPattern"
+            errorMessage="Correo electrónico inválido"
+            (textValue)="email = $event"
+            (isInputInvalid)="isEmailInvalid = $event"
+        />
+        <app-form-password-input
+            class="w-full" 
+            placeholder="Contraseña"
+            [formSubmitted]="formSubmitted"
+            errorMessage="Contraseña incorrecta"
+            (passwordValue)="password = $event;"
+            [resetErrorMessageOnChange]="true"
+            [isPasswordWrong]="isPasswordInvalid"
+        />
+        <app-primary-button
+            class="w-full"
+            styleClass="w-full"
+            [classes]="'w-full'"
+            [label]="'Iniciar sesión'"
+            (onClick)="login()"
+        />
+    </form>
+</div>

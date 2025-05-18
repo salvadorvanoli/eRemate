@@ -1,0 +1,8 @@
+<p-accordion>
+  <p-accordion-panel *ngFor="let item of items" [value]="item.id">
+    <p-accordion-header class="center">{{ item.title }}</p-accordion-header>
+    <p-accordion-content>
+      <p class="m-0">{{ item.description }}</p>
+    </p-accordion-content>
+  </p-accordion-panel>
+</p-accordion>

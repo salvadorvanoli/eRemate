@@ -1,0 +1,62 @@
+<div class="card md:w-150 sm:w-100 w-70 p-10 my-10 mx-auto rounded-md border-solid border-gray-200 border-2">
+    <p-toast />
+    <form novalidate action="" method="post" class="mx-auto flex flex-col items-center gap-4 w-full max-w-md">
+        <app-form-text-input 
+            class="w-full"
+            placeholder="Email"
+            [formSubmitted]="formSubmitted"
+            [textPattern]="emailPattern"
+            errorMessage="Correo electrónico inválido"
+            (textValue)="email = $event"
+            (isInputInvalid)="isEmailInvalid = $event"
+        />
+
+        <app-form-select-input
+            class="w-full"
+            [options]="[
+            { label: 'Consulta general', value: 'general' },
+            { label: 'Soporte técnico', value: 'soporte' },
+            { label: 'Sugerencias', value: 'sugerencias' },
+            { label: 'Problema con la compra', value: 'compra' },
+            { label: 'Problema con el acceso', value: 'acceso' },
+            { label: 'Problema con el contenido', value: 'contenido' },
+            { label: 'Problema con la cuenta', value: 'cuenta' },
+            { label: 'Problema con el pago', value: 'pago' },
+            { label: 'Otro', value: 'otro' }
+            ]"
+            placeholder="Selecciona una opción"
+            errorMessage="No seleccionaste una opción"
+            (isInputInvalid)="isOptionInvalid = $event"
+            (textValue)="selectedOption = $event"
+            [formSubmitted]="formSubmitted"
+        />
+
+        <app-form-text-input
+            class="w-full"
+            placeholder="Asunto"
+            [formSubmitted]="formSubmitted"
+            [textPattern]="textAreaPattern"
+            errorMessage="Asunto inválido"
+            (textValue)="asunto = $event"
+            (isInputInvalid)="isHeaderInvalid = $event"
+        />
+
+        <app-form-text-input
+            class="w-full"
+            placeholder="Consulta"
+            [formSubmitted]="formSubmitted"
+            [textPattern]="textAreaPattern"
+            errorMessage="Consulta inválida"
+            (textValue)="message = $event"
+            (isInputInvalid)="isMessageInvalid = $event"
+        />
+
+        <app-primary-button
+            class="w-full"
+            styleClass="w-full"
+            [classes]="'w-full'"
+            [label]="'Enviar consulta'"
+            (onClick)="enviarConsulta()"
+        />
+    </form>
+</div>

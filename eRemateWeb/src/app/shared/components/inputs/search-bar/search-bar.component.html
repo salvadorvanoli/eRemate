@@ -1,0 +1,12 @@
+<p-iconfield>
+    <input
+        pInputText
+        [ngModel]="text()"
+        (ngModelChange)="text.set($event); textValue.emit($event);"
+        [ngModelOptions]="{standalone: true}"
+        type="text"
+        placeholder="Buscar"
+        class="w-full"
+    />
+    <p-inputicon styleClass="pi pi-search" />
+</p-iconfield>

@@ -1,0 +1,13 @@
+<div class="card" class="w-full">
+    <p-menubar [model]="items" styleClass="w-full flex justify-between" breakpoint="1127px">
+        <ng-template #start>
+            <a routerLink="/"><img src="logo-alfa.jpg" alt="Logo Alfa" style="height: 35px;"/></a>
+        </ng-template>
+        <ng-template #item let-item let-root="root">
+            <a pRipple class="flex items-center p-menubar-item-link item" [routerLink]="item.routerLink" [class]="item.classes">
+                <span [class]="item.icon"></span>
+                <span>{{ item.label }}</span>
+            </a>
+        </ng-template>
+    </p-menubar>
+</div>

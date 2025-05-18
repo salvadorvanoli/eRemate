@@ -1,0 +1,15 @@
+<select
+    [ngModel]="value()"
+    (ngModelChange)="value.set($event); textValue.emit($event);"
+    [ngModelOptions]="{standalone: true}"
+    class="w-full"
+>
+    <option *ngIf="placeholder" [value]="''" disabled selected>{{ placeholder }}</option>
+    <option *ngFor="let option of options" [value]="option.value">
+        {{ option.label }}
+    </option>
+</select>
+
+@if (showErrorMessage()) {
+    <p-message class="w-full" severity="error" variant="simple" size="small">{{ errorMessage }}</p-message>
+}

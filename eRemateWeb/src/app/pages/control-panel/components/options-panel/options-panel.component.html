@@ -1,0 +1,15 @@
+<div class="card">
+    <p-menu [model]="items" class="flex justify-center" styleClass="w-full">
+        <ng-template #start>
+            <span class="w-full inline-flex items-center gap-1 px-2 py-2">
+                <span class="w-full text-xl text-center font-semibold">¿Con qué desea trabajar?</span>
+            </span>
+        </ng-template>
+        <ng-template #item let-item>
+            <a pRipple class="flex items-center p-menu-item-link">
+                <span [class]="item.icon"></span>
+                <span class="ml-2">{{ item.label }}</span>
+            </a>
+        </ng-template>
+    </p-menu>
+</div>
