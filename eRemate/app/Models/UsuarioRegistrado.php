@@ -49,7 +49,7 @@ class UsuarioRegistrado extends Model
     }
      public function lotesFavoritos()
     {
-        return $this->belongsToMany(Lote::class, 'lote_usuario_registrado_favorito', 'usuario_registrado_id', 'lote_id')
+        return $this->belongsToMany(Lote::class, 'lote_usuario_registrado', 'usuario_registrado_id', 'lote_id')
                     ->withTimestamps();
     }
 
