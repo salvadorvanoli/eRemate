@@ -17,6 +17,7 @@ use App\Http\Controllers\FacturaController;
 use App\Http\Controllers\CompraController;
 use App\Http\Controllers\CalificacionController;
 use App\Http\Controllers\UsuarioRegistradoController;
+use App\Http\Controllers\ContactoController;
 
 // Rutas de Chat
 Route::get('chats', [ChatController::class, 'index']);
@@ -148,3 +149,5 @@ Route::prefix('item')->group(function () {
     Route::get('/{id}', [ArticuloController::class, 'obtenerArticulo']);
     Route::get('/', [ArticuloController::class, 'obtenerArticulos']);
 });
+
+Route::post('/contacto', [ContactoController::class, 'enviarFormulario']);

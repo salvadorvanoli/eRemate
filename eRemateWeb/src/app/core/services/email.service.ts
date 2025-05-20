@@ -9,15 +9,15 @@ import { Observable, tap } from 'rxjs';
 })
 export class EmailService extends BaseHttpService<EmailRequest, EmailResponse> {
 
-  private apiUrl = '/email';
+  private apiUrl = '/api/contacto';
 
   constructor(http: HttpClient) {
-    super(http, '/email');
+    super(http, '/api/contacto');
   }
 
-  sendEmail(emailRequest: EmailRequest): Observable<string> {
-    return this.http.post<string>(`${this.baseUrl + this.apiUrl}/send`, emailRequest, { responseType: 'text' as 'json' }).pipe(
+  sendEmail(emailRequest: EmailRequest): Observable<any> {
+    return this.http.post<any>(`${this.baseUrl + this.apiUrl}`, emailRequest).pipe(
         tap(response => console.log('Respuesta del backend:', response))
     );
-}
+  }
 }

@@ -3,7 +3,7 @@ import { Observable } from 'rxjs';
 
 export abstract class BaseHttpService<TRequest, TResponse> {
 
-  protected baseUrl = 'http://localhost:8080/elibreriaalfa';
+  protected baseUrl = 'http://localhost:8000';
 
   constructor(
     protected http: HttpClient,
