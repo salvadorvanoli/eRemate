@@ -4,7 +4,7 @@ import { Component } from '@angular/core';
 import { MenubarModule } from 'primeng/menubar';
 import { SecurityService } from '../../../core/services/security.service';
 import { Observable } from 'rxjs';
-import { UsuarioSimple } from '../../../core/models/usuario';
+import { UsuarioCasaDeRemates, UsuarioRegistrado, UsuarioRematador } from '../../../core/models/usuario';
 import { NavbarItem } from '../../../core/models/navbar-item';
 
 @Component({
@@ -20,7 +20,7 @@ import { NavbarItem } from '../../../core/models/navbar-item';
 })
 export class NavbarComponent {
 
-  user!: Observable<UsuarioSimple | null>;
+  user!: Observable<UsuarioRegistrado | UsuarioRematador | UsuarioCasaDeRemates | null>;
   items!: NavbarItem[];
 
   constructor(private securityService: SecurityService) {}
@@ -43,7 +43,7 @@ export class NavbarComponent {
           { label: 'Mi cuenta', icon: 'pi pi-user', routerLink: '/perfil' }
         );
 
-        if (userEntity.rol === "ADMINISTRADOR") {
+        if (userEntity.tipo === "ADMINISTRADOR") {
           this.items.push({ label: 'Panel de control', icon: 'pi pi-cog', routerLink: '/panel' });
         }
 

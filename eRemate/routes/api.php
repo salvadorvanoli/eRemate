@@ -78,6 +78,7 @@ Route::prefix('auctioneer')->group(function () {
 Route::post('/register', [AuthController::class, 'register']);
 Route::post('/login', [AuthController::class, 'login']);
 Route::middleware('auth:sanctum')->post('/logout', [AuthController::class, 'logout']);
+Route::middleware('auth:sanctum')->get('/me', [AuthController::class, 'getAuthenticatedUser']);
 
 //testing nitificaciones
 Route::post('/notify/user-register', [NotificationController::class, 'testBienvenida']);

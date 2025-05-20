@@ -34,9 +34,7 @@ class AuthController extends Controller
         $token = $usuario->createToken('auth_token')->plainTextToken;
 
         return response()->json([
-            'access_token' => $token,
-            'token_type' => 'Bearer',
-            'usuario' => $usuario,
+            'access_token' => $token
         ]);
     }
 
@@ -45,5 +43,17 @@ class AuthController extends Controller
         $request->user()->tokens()->delete();
 
     return response()->json(['message' => 'Sesión cerrada correctamente']);
+    }
+
+    public function getAuthenticatedUser(Request $request)
+    {
+        $usuario = Usuario::with(['rematador', 'casaDeRemates', 'usuarioRegistrado'])
+        ->find($request->user()->id);
+
+        if (!$usuario) {
+            return response()->json(['error' => 'Usuario no encontrado'], 404);
+        }
+
+        return response()->json($usuario);
     }
 }

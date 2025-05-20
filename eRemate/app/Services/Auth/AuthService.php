@@ -53,9 +53,7 @@ class AuthService implements AuthServiceInterface
         $token = $usuario->createToken('auth_token')->plainTextToken;
 
         return response()->json([
-            'access_token' => $token,
-            'token_type' => 'Bearer',
-            'usuario' => $usuario,
+            'access_token' => $token
         ]);
     }
 

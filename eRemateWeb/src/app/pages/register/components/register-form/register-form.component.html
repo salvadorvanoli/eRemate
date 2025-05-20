@@ -10,6 +10,15 @@
             (textValue)="email = $event"
             (isInputInvalid)="isEmailInvalid = $event"
         />
+        <app-form-text-input 
+            class="w-full" 
+            placeholder="Teléfono"
+            [formSubmitted]="formSubmitted"
+            [textPattern]="phonePattern"
+            errorMessage="Teléfono inválido"
+            (textValue)="phone = $event"
+            (isInputInvalid)="isPhoneInvalid = $event"
+        />
         <app-interactive-password-input
             class="w-full" 
             placeholder="Contraseña"
@@ -26,6 +35,114 @@
             (passwordValue)="confirmPassword.set($event);"
             [isPasswordWrong]="arePasswordsDifferent()"
         />
+        <app-form-select-input
+            class="w-full"
+            [options]="[
+            { label: 'Usuario normal', value: 'registrado' },
+            { label: 'Usuario Rematador', value: 'rematador' },
+            { label: 'Usuario Casa de Remates', value: 'casa' }
+            ]"
+            placeholder="Selecciona qué tipo de usuario eres"
+            errorMessage="No seleccionaste una opción"
+            (isInputInvalid)="isOptionInvalid = $event"
+            (textValue)="selectedOption = $event"
+            [formSubmitted]="formSubmitted"
+        />
+
+        @if(selectedOption === 'rematador') {
+            <app-form-text-input 
+                class="w-full" 
+                placeholder="Nombre"
+                [formSubmitted]="formSubmitted"
+                [textPattern]="namePattern"
+                errorMessage="Nombre inválido"
+                (textValue)="name = $event"
+                (isInputInvalid)="isNameInvalid = $event"
+            />
+
+            <app-form-text-input 
+                class="w-full" 
+                placeholder="Apellido"
+                [formSubmitted]="formSubmitted"
+                [textPattern]="namePattern"
+                errorMessage="Apellido inválido"
+                (textValue)="lastname = $event"
+                (isInputInvalid)="isLastnameInvalid = $event"
+            />
+
+            <app-form-text-input 
+                class="w-full" 
+                placeholder="Número de matrícula"
+                [formSubmitted]="formSubmitted"
+                [textPattern]="registrationNumberPattern"
+                errorMessage="Matrícula inválida"
+                (textValue)="registrationNumber = $event"
+                (isInputInvalid)="isRegistrationNumberInvalid = $event"
+            />
+
+            <app-form-text-input 
+                class="w-full" 
+                placeholder="Dirección fiscal"
+                [formSubmitted]="formSubmitted"
+                [textPattern]="fiscalAddressPattern"
+                errorMessage="Dirección fiscal inválida"
+                (textValue)="fiscalAddress = $event"
+                (isInputInvalid)="isFiscalAddressInvalid = $event"
+            />
+
+            <app-form-text-input 
+                class="w-full" 
+                placeholder="URL de tu imagen"
+                [formSubmitted]="formSubmitted"
+                [textPattern]="imagePattern"
+                errorMessage="Imagen inválida"
+                (textValue)="image = $event"
+                (isInputInvalid)="isImageInvalid = $event"
+            />
+        }
+
+        @if(selectedOption === 'casa') {
+            <app-form-text-input 
+                class="w-full" 
+                placeholder="Dirección fiscal"
+                [formSubmitted]="formSubmitted"
+                [textPattern]="fiscalAddressPattern"
+                errorMessage="Dirección fiscal inválida"
+                (textValue)="fiscalAddressHouse = $event"
+                (isInputInvalid)="isFiscalAddressHouseInvalid = $event"
+            />
+
+            <app-form-text-input 
+                class="w-full" 
+                placeholder="Identificación fiscal"
+                [formSubmitted]="formSubmitted"
+                [textPattern]="taxIdentificationNumberPattern"
+                errorMessage="Identificación fiscal inválida"
+                (textValue)="taxIdentificationNumber = $event"
+                (isInputInvalid)="isTaxIdentificationNumberInvalid = $event"
+            />
+
+            <app-form-text-input 
+                class="w-full" 
+                placeholder="Nombre legal"
+                [formSubmitted]="formSubmitted"
+                [textPattern]="namePattern"
+                errorMessage="Nombre legal inválido"
+                (textValue)="legalName = $event"
+                (isInputInvalid)="isLegalNameInvalid = $event"
+            />
+
+            <app-form-text-input 
+                class="w-full" 
+                placeholder="Domicilio legal"
+                [formSubmitted]="formSubmitted"
+                [textPattern]="addressPattern"
+                errorMessage="Dirección legal inválida"
+                (textValue)="legalAddress = $event"
+                (isInputInvalid)="isLegalAddressInvalid = $event"
+            />
+        }
+
         <app-primary-button
             class="w-full"
             styleClass="w-full"
