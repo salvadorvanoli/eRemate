@@ -1,22 +1,23 @@
 <app-title-with-background-image-and-buttons
-  [title]="'Bienvenido a eLibreriaAlfa'"
-  [description]="'Tu biblioteca digital'">
+  [title]="'Bienvenido a RematesGo'"
+  [description]="'Tu plataforma de remates en línea'">
 </app-title-with-background-image-and-buttons>
 
 <app-title-and-description
-  [title]="'Noticias y anuncios'"
-  [description]="'Mantente al día'">
+  [title]="'Subastas próximas'"
+  [description]="''">
 </app-title-and-description>
 
-@if (publicaciones.length > 0) {
+@if (subastas.length > 0) {
   <app-dynamic-carousel
-    [items]="publicaciones"
+    [items]="subastas"
     [showLink]="true"
     [getLink]="getLink"
-    [getTitle]="getTitle">
+    [getTitle]="getTitle"
+    [getCountdown]="getCountdown">
   </app-dynamic-carousel>
 } @else {
   <div class="text-center mt-4 text-gray-600">
-    No hay publicaciones en este momento.
+    No hay subastas publicadas en este momento.
   </div>
 }

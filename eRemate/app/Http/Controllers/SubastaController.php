@@ -144,4 +144,31 @@ class SubastaController extends Controller
             ], 500);
         }
     }
+
+
+public function obtenerSubastasOrdenadasPorCierre(Request $request)
+{
+    $pagina = $request->query('pagina', 1);
+    $cantidad = $request->query('cantidad', 10);
+
+    try {
+        $subastas = $this->subastaService->obtenerSubastasOrdenadasPorCierre($pagina, $cantidad);
+
+        if ($subastas instanceof JsonResponse) {
+            return $subastas;
+        }
+
+        return response()->json([
+            'success' => true,
+            'data' => $subastas,
+            'message' => 'Subastas ordenadas por cierre obtenidas correctamente'
+        ], 200);
+
+    } catch (\Exception $e) {
+        return response()->json([
+            'success' => false,
+            'message' => 'Error al obtener subastas ordenadas: ' . $e->getMessage()
+        ], 500);
+    }
+}
 }

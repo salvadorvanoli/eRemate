@@ -17,6 +17,12 @@
         {{ getTitle(item) }}
       </div>
 
+      @if(getCountdown) {
+        <div class="text-red-600 font-bold mt-2">
+          Cierra en: {{ getCountdown(item) }}
+        </div>
+      }
+      
       @if(showPrice && getPrice) {
         <div>
             <span class="text-green-600 font-bold">{{ getPrice(item) }}</span>

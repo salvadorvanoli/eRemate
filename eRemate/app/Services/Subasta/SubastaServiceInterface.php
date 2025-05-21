@@ -8,4 +8,5 @@ interface SubastaServiceInterface
     public function obtenerSubasta(int $id);
     public function actualizarSubasta(int $id, array $data);
     public function obtenerSubastas();
+    public function obtenerSubastasOrdenadasPorCierre($pagina = 1, $cantidad = 10);
 }

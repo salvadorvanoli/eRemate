@@ -20,6 +20,7 @@ export class DynamicCarouselComponent implements OnInit {
   @Input() getTitle!: (item: any) => string;
   @Input() getImageUrl?: (item: any) => string;
   @Input() getPrice?: (item: any) => string | number;
+  @Input() getCountdown?: (item: any) => string;
 
   responsiveOptions: any;
   itemsPerPage: number = 3; // Modificar esta variable para cambiar el número de elementos por página
