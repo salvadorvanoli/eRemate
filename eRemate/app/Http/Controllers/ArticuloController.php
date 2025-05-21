@@ -22,6 +22,21 @@ class ArticuloController extends Controller
         try {
             $validator = Validator::make($request->all(), [
                 'lote_id' => 'required|exists:lotes,id',
+                'nombre' => [
+                    'required',
+                    'string',
+                    'max:255',
+                    function ($attribute, $value, $fail) use ($request) {
+                        // Verificar si ya existe un artículo con el mismo nombre en este lote
+                        $existe = Articulo::where('lote_id', $request->lote_id)
+                                          ->where('nombre', $value)
+                                          ->exists();
+                        
+                        if ($existe) {
+                            $fail('Ya existe un artículo con este nombre en el lote seleccionado.');
+                        }
+                    }
+                ],
                 'imagenes' => 'required|array',
                 'especificacionesTecnicas' => 'required|array',
                 'estado' => 'required|string|max:255',
@@ -85,6 +100,21 @@ class ArticuloController extends Controller
         try {
             $data = $request->validate([
                 'lote_id' => 'sometimes|required|exists:lotes,id',
+                'nombre' => [
+                    'sometimes',
+                    'required',
+                    'string',
+                    'max:255',
+                    function ($attribute, $value, $fail) use ($request, $id) {
+                        $query = Articulo::where('lote_id', $request->lote_id ?? Articulo::findOrFail($id)->lote_id)
+                                        ->where('nombre', $value)
+                                        ->where('id', '!=', $id);
+                        
+                        if ($query->exists()) {
+                            $fail('Ya existe otro artículo con este nombre en el mismo lote.');
+                        }
+                    }
+                ],
                 'imagenes' => 'sometimes|required|array',
                 'especificacionesTecnicas' => 'sometimes|required|array',
                 'estado' => 'sometimes|required|string|max:255',

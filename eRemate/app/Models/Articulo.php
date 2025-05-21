@@ -11,6 +11,7 @@ class Articulo extends Model
 
     protected $fillable = [
         'lote_id',
+        'nombre',
         'imagenes',
         'especificacionesTecnicas',
         'estado'

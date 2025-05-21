@@ -30,7 +30,7 @@ class CasaDeRematesService implements CasaDeRematesServiceInterface
             ], 403);
         }
 
-        $casaDeRemates = Usuario::where('usuario_id', $id)->first();
+        $casaDeRemates = Usuario::where('id', operator: $casaAutenticada->id)->where('tipo', 'casa')->first();
 
         if (!$casaDeRemates) {
             return response()->json([
@@ -63,6 +63,17 @@ class CasaDeRematesService implements CasaDeRematesServiceInterface
         }
 
         return $casaDeRemates->rematadores()->get();
+    }
+
+    public function obtenerSubastas(int $id): mixed
+    {
+        $casaDeRemates = $this->obtenerCasaDeRematesActual($id);
+
+        if (!$casaDeRemates instanceof CasaDeRemates) {
+            return $casaDeRemates;
+        }
+
+        return $casaDeRemates->subastas()->get();
     }
 
     public function asignarRematador(int $id, int $rematadorId): mixed

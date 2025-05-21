@@ -4,7 +4,6 @@
 namespace App\Services\Lote;
 use App\Models\CasaDeRemates;
 use App\Models\Lote;
-use App\Models\Rematador;
 use App\Models\Usuario;
 use Illuminate\Support\Facades\Auth;
 use Illuminate\Http\JsonResponse;
@@ -25,25 +24,22 @@ class LoteService implements LoteServiceInterface
             return response()->json(['error' => 'Usuario no encontrado'], 404);
         }
 
-        $casaDeRemates = CasaDeRemates::where('usuario_id', $usuarioAutenticado->id)->first();
-        $rematador = Rematador::where('usuario_id', $usuarioAutenticado->id)->first();
+        $casaDeRemates = Usuario::where('id', operator: $usuarioAutenticado->id)->where('tipo', 'casa')->first();
 
-        if (!$rematador && !$casaDeRemates) {
+        if (!$casaDeRemates) {
             return response()->json(['error' => 'No tienes permiso para acceder a esta información'], 403);
         }
 
         return $usuario;
     }
 
-    private function verificarUsuario($usuario, $lote)
+    private function verificarUsuario($usuario, $subasta)
     {
-        $casaDeRemates = CasaDeRemates::where('usuario_id', $usuario->id)->first();
-        $rematador = Rematador::where('usuario_id', $usuario->id)->first();
+        $casaDeRemates = Usuario::where('id', operator: $usuario->id)->where('tipo', 'casa')->first();
 
-        $rematadorLote = $lote->subasta->rematador ?? null;
-        $casaDeRematesLote = $lote->subasta->casaDeRemates ?? null;
+        $casaDeRematesSubasta = $subasta->casaDeRemates ?? null;
 
-        if (($rematador && $rematador->id !== $rematadorLote->id) && ($casaDeRemates && $casaDeRemates->id !== $casaDeRematesLote->id)) {
+        if ($casaDeRemates && $casaDeRemates->id !== $casaDeRematesSubasta->id) {
             return response()->json(['error' => 'No tienes permiso para acceder a este lote'], 403);
         }
 
@@ -111,7 +107,7 @@ class LoteService implements LoteServiceInterface
             ], 404);
         }
 
-        $chequeo = $this->verificarUsuario($usuario, $lote);
+        $chequeo = $this->verificarUsuario($usuario, $lote->subasta);
         if ($chequeo instanceof JsonResponse) {
             return $chequeo;
         }
@@ -147,7 +143,7 @@ class LoteService implements LoteServiceInterface
             return $usuario;
         }
         
-        $lote = Lote::find($id)->first();
+        $lote = Lote::find($id);
 
         if (!$lote) {
             return response()->json([
@@ -156,7 +152,7 @@ class LoteService implements LoteServiceInterface
             ], 404);
         }
 
-        $chequeo = $this->verificarUsuario($usuario, $lote);
+        $chequeo = $this->verificarUsuario($usuario, $lote->subasta);
         if ($chequeo instanceof JsonResponse) {
             return $chequeo;
         }
@@ -185,7 +181,7 @@ class LoteService implements LoteServiceInterface
             ], 404);
         }
 
-        $chequeo = $this->verificarUsuario($usuario, $lote);
+        $chequeo = $this->verificarUsuario($usuario, $lote->subasta);
         if ($chequeo instanceof JsonResponse) {
             return $chequeo;
         }

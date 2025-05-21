@@ -4,7 +4,6 @@
 namespace App\Services\Subasta;
 use App\Models\Subasta;
 use App\Models\CasaDeRemates;
-use App\Models\Rematador;
 use App\Models\Usuario;
 use Illuminate\Support\Facades\Auth;
 use Illuminate\Http\JsonResponse;
@@ -25,10 +24,9 @@ class SubastaService implements SubastaServiceInterface
             return response()->json(['error' => 'Usuario no encontrado'], 404);
         }
 
-        $casaDeRemates = CasaDeRemates::where('usuario_id', $usuarioAutenticado->id)->first();
-        $rematador = Rematador::where('usuario_id', $usuarioAutenticado->id)->first();
+        $casaDeRemates = Usuario::where('id', operator: $usuarioAutenticado->id)->where('tipo', 'casa')->first();
 
-        if (!$rematador && !$casaDeRemates) {
+        if (!$casaDeRemates) {
             return response()->json(['error' => 'No tienes permiso para acceder a esta información'], 403);
         }
 
@@ -37,14 +35,11 @@ class SubastaService implements SubastaServiceInterface
     
     private function verificarUsuario($usuario, $subasta)
     {
-        $casaDeRemates = CasaDeRemates::where('usuario_id', $usuario->id)->first();
-        $rematador = Rematador::where('usuario_id', $usuario->id)->first();
-        
-        $rematadorSubasta = $subasta->rematador ?? null;
+        $casaDeRemates = Usuario::where('id', $usuario->id)->where('tipo', 'casa')->first();
+
         $casaDeRematesSubasta = $subasta->casaDeRemates ?? null;
 
-        if (($rematador && $rematador->id !== $rematadorSubasta?->id) && 
-            ($casaDeRemates && $casaDeRemates->id !== $casaDeRematesSubasta?->id)) {
+        if (($casaDeRemates && $casaDeRemates->id !== $casaDeRematesSubasta?->id)) {
             return response()->json(['error' => 'No tienes permiso para acceder a esta subasta'], 403);
         }
 
@@ -59,10 +54,25 @@ class SubastaService implements SubastaServiceInterface
             return $usuario;
         }
 
+        /*
+        $casaDeRemates = CasaDeRemates::where('usuario_id', $usuario->id)->first();
+        
+        if (isset($data['rematador_id']) && $data['rematador_id'] !== null) {
+            $rematadorPertenece = $casaDeRemates->rematadores()->where('id', $data['rematador_id'])->exists();
+            
+            if (!$rematadorPertenece) {
+                return response()->json([
+                    'success' => false,
+                    'error' => 'El rematador especificado no pertenece a esta casa de remates'
+                ], 422);
+            }
+        }
+            */
+
         return Subasta::create([
-            'casaDeRemates_id' => $data['casaDeRemates_id'] ?? null,
+            'casaDeRemates_id' => $usuario->id,
             'rematador_id' => $data['rematador_id'] ?? null,
-            'mensajes' => $data['mensajes'] ?? [],
+            'mensajes' => [],
             'urlTransmision' => $data['urlTransmision'],
             'tipoSubasta' => $data['tipoSubasta'],
             'fechaInicio' => $data['fechaInicio'],
@@ -105,14 +115,33 @@ class SubastaService implements SubastaServiceInterface
             return $chequeo;
         }
 
-        /* Falta chequear si la subasta ya ha finalizado (u otras condiciones) para no modificarla
-        if ($subasta) {
+        if ($subasta->fechaInicio < now()) {
             return response()->json([
                 'success' => false,
-                'error' => 'No se puede modificar una subasta que ya haya finalizado'
+                'error' => 'No se puede actualizar una subasta que ya ha finalizado'
             ], 400);
         }
-        */
+
+        /*
+        
+        if (isset($data['rematador_id']) && $data['rematador_id'] !== null) {
+            $casaDeRemates = CasaDeRemates::find($subasta->casaDeRemates_id);
+            if ($casaDeRemates) {
+                $rematadorPertenece = $casaDeRemates->rematadores()->where('id', $data['rematador_id'])->exists();
+                
+                if (!$rematadorPertenece) {
+                    return response()->json([
+                        'success' => false,
+                        'error' => 'El rematador especificado no pertenece a la casa de remates de esta subasta'
+                    ], 422);
+                }
+            }
+        }
+            */
+        
+        if (isset($data['casaDeRemates_id'])) {
+            unset($data['casaDeRemates_id']);
+        }
 
         return $subasta->update($data);    
     }
@@ -129,5 +158,75 @@ class SubastaService implements SubastaServiceInterface
         }
 
         return $subastas;
+    }
+
+    public function obtenerLotes(int $id)
+    {
+        $subasta = Subasta::find($id);
+
+        if (!$subasta) {
+            return response()->json([
+                'success' => false,
+                'message' => 'Subasta no encontrada'
+            ], 404);
+        }
+
+        return $subasta->lotes;
+    }
+
+    public function iniciarSubasta(int $id)
+    {
+
+    }
+
+    public function cerrarSubasta(int $id)
+    {
+
+    }
+
+    public function realizarPuja(int $id)
+    {
+
+    }
+
+    public function obtenerPujas(int $id)
+    {
+        $subasta = Subasta::find($id);
+
+        if (!$subasta) {
+            return response()->json([
+                'success' => false,
+                'message' => 'Subasta no encontrada'
+            ], 404);
+        }
+
+        $loteActual = $subasta->loteActual;
+        if (!$loteActual) {
+            return response()->json([
+                'success' => false,
+                'message' => 'No hay un lote siendo subastado actualmente'
+            ], 404);
+        }
+
+        return $loteActual->pujas;
+    }
+
+    public function realizarPujaAutomatica(int $id)
+    {
+        
+    }
+    
+    public function obtenerTransmisionEnVivo(int $id)
+    {
+        $subasta = Subasta::find($id);
+
+        if (!$subasta) {
+            return response()->json([
+                'success' => false,
+                'message' => 'Subasta no encontrada'
+            ], 404);
+        }
+
+        return $subasta->urlTransmision;
     }
 }

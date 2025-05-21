@@ -21,8 +21,7 @@ class SubastaController extends Controller
     {
         try {
             $validator = Validator::make($request->all(), [
-                'casaDeRemates_id' => 'nullable|exists:casas_de_remates,id',
-                'rematador_id' => 'nullable|exists:rematadores,id',
+                'rematador_id' => 'nullable|exists:usuarios,id',
                 'mensajes' => 'nullable|array',
                 'urlTransmision' => 'required|string',
                 'tipoSubasta' => 'required|string',
@@ -36,7 +35,9 @@ class SubastaController extends Controller
                     'error' => 'Error de validación',
                     'details' => $validator->errors()
                 ], 422);
-            }            $data = $validator->validated();
+            }
+            
+            $data = $validator->validated();
             
             $subasta = $this->subastaService->crearSubasta($data);
 
@@ -85,8 +86,7 @@ class SubastaController extends Controller
     {
         try {
             $data = $request->validate([
-                'casaDeRemates_id' => 'sometimes|nullable|exists:casas_de_remates,id',
-                'rematador_id' => 'sometimes|nullable|exists:rematadores,id',
+                'rematador_id' => 'sometimes|nullable|exists:usuarios,id',
                 'mensajes' => 'sometimes|nullable|array',
                 'urlTransmision' => 'sometimes|required|string',
                 'tipoSubasta' => 'sometimes|required|string',
@@ -141,6 +141,29 @@ class SubastaController extends Controller
             return response()->json([
                 'success' => false,
                 'message' => 'Error al obtener subastas: ' . $e->getMessage()
+            ], 500);
+        }
+    }
+
+    public function obtenerLotes($id)
+    {
+        try {
+            $lotes = $this->subastaService->obtenerLotes($id);
+
+            if ($lotes instanceof JsonResponse) {
+                return $lotes;
+            }
+
+            return response()->json([
+                'success' => true,
+                'data' => $lotes,
+                'message' => 'Lotes obtenidos correctamente'
+            ], 200);
+        
+        } catch (\Exception $e) {
+            return response()->json([
+                'success' => false,
+                'message' => 'Error al obtener lotes: ' . $e->getMessage()
             ], 500);
         }
     }

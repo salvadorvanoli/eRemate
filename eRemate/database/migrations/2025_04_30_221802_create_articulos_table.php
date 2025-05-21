@@ -10,6 +10,7 @@ return new class extends Migration
         Schema::create('articulos', function (Blueprint $table) {
             $table->id();
             $table->foreignId('lote_id')->constrained('lotes')->onDelete('cascade');
+            $table->string('nombre');
             $table->json('imagenes');
             $table->json('especificacionesTecnicas');
             $table->string('estado');

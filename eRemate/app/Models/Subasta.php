@@ -15,6 +15,7 @@ class Subasta extends Model
         'mensajes',
         'urlTransmision',
         'tipoSubasta',
+        'pujaHabilitada',
         'fechaInicio',
         'fechaCierre',
         'ubicacion'
@@ -22,6 +23,7 @@ class Subasta extends Model
 
     protected $casts = [
         'mensajes' => 'array',
+        'pujaHabilitada' => 'boolean',
         'fechaInicio' => 'datetime',
         'fechaCierre' => 'datetime',
     ];
@@ -29,6 +31,11 @@ class Subasta extends Model
     public function lotes()
     {
         return $this->hasMany(Lote::class);
+    }
+
+    public function loteActual()
+    {
+        return $this->hasOne(Lote::class, 'loteActual_id');
     }
 
     public function rematador()
