@@ -9,10 +9,10 @@ import { Observable, tap } from 'rxjs';
 })
 export class EmailService extends BaseHttpService<EmailRequest, EmailResponse> {
 
-  private apiUrl = '/api/contacto';
+  private apiUrl = '/contacto';
 
   constructor(http: HttpClient) {
-    super(http, '/api/contacto');
+    super(http, '/contacto');
   }
 
   sendEmail(emailRequest: EmailRequest): Observable<any> {

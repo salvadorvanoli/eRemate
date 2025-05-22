@@ -53,19 +53,22 @@ class LoteService implements LoteServiceInterface
     public function crearLote(array $data): mixed
     {
         $usuario = $this->validarUsuario();
-        
+
         if (!$usuario instanceof Usuario) {
             return $usuario;
         }
 
         $lote = Lote::where('subasta_id', $data['subasta_id'])
-                    ->where('nombre', $data['nombre'])
-                    ->first();
+            ->where('nombre', $data['nombre'])
+            ->first();
 
         if ($lote) {
-            return response()->json([
-                'success' => false,
-                'error' => 'Ya existe un lote con ese nombre dentro de la subasta especificada'], 404
+            return response()->json(
+                [
+                    'success' => false,
+                    'error' => 'Ya existe un lote con ese nombre dentro de la subasta especificada'
+                ],
+                404
             );
         }
 
@@ -82,7 +85,8 @@ class LoteService implements LoteServiceInterface
         ]);
     }
 
-    public function obtenerLote(int $id) {
+    public function obtenerLote(int $id)
+    {
         $lote = Lote::find($id)->first();
 
         if (!$lote) {
@@ -94,7 +98,7 @@ class LoteService implements LoteServiceInterface
 
         return $lote;
     }
-    
+
     public function actualizarLote(int $id, array $data): mixed
     {
 
@@ -123,7 +127,7 @@ class LoteService implements LoteServiceInterface
             ], 400);
         }
 
-        return $lote->update($data);    
+        return $lote->update($data);
     }
 
     public function obtenerArticulos(int $id): mixed
@@ -146,7 +150,7 @@ class LoteService implements LoteServiceInterface
         if (!$usuario instanceof Usuario) {
             return $usuario;
         }
-        
+
         $lote = Lote::find($id)->first();
 
         if (!$lote) {
@@ -175,7 +179,7 @@ class LoteService implements LoteServiceInterface
         if (!$usuario instanceof Usuario) {
             return $usuario;
         }
-        
+
         $lote = Lote::find($id)->first();
 
         if (!$lote) {
@@ -196,6 +200,20 @@ class LoteService implements LoteServiceInterface
             'success' => true,
             'message' => 'Artículo removido correctamente'
         ], 200);
+    }
+
+    public function obtenerLotesPorSubasta(int $subastaId)
+    {
+        $lotes = Lote::where('subasta_id', $subastaId)->get();
+
+        if ($lotes->isEmpty()) {
+            return response()->json([
+                'success' => false,
+                'message' => 'No hay lotes para esta subasta'
+            ], 404);
+        }
+
+        return $lotes;
     }
 
 }

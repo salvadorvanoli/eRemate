@@ -17,6 +17,12 @@
         {{ getTitle(item) }}
       </div>
 
+      @if(getCountdown) {
+        <div class="text-red-600 font-bold mt-2">
+          Cierra en: {{ getCountdown(item) }}
+        </div>
+      }
+
       @if(showPrice && getPrice) {
         <div>
             <span class="text-green-600 font-bold">{{ getPrice(item) }}</span>
@@ -24,9 +30,17 @@
       }
 
       @if(showLink) {
-        <a [routerLink]="getLink(item)" class="block mt-2 text-blue-500 hover:underline">
-            Ver publicación
-        </a>
+        @if(usarModal) {
+          <a (click)="onItemClick(item)" 
+             class="block mt-2 text-blue-500 hover:underline cursor-pointer">
+            Ver detalles
+          </a>
+        } @else {
+          <a [routerLink]="getLink(item)" 
+             class="block mt-2 text-blue-500 hover:underline">
+            Ver detalles
+          </a>
+        }
       }
     </div>
   </ng-template>

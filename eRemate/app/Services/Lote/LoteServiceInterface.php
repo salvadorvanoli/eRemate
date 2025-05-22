@@ -10,4 +10,5 @@ interface LoteServiceInterface
     public function obtenerArticulos(int $id);
     public function agregarArticulo(int $id, int $articuloId);
     public function removerArticulo(int $id, int $articuloId);
+    public function obtenerLotesPorSubasta(int $subastaId);
 }

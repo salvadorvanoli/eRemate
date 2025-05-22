@@ -130,4 +130,21 @@ class SubastaService implements SubastaServiceInterface
 
         return $subastas;
     }
+
+    public function obtenerSubastasOrdenadasPorCierre($pagina = 1, $cantidad = 10)
+{
+    $subastas = Subasta::where('fechaCierre', '>', now())
+        ->orderBy('fechaCierre', 'asc')
+        ->paginate($cantidad, ['*'], 'page', $pagina);
+
+
+    if ($subastas->total() === 0) {
+        return response()->json([
+            'success' => false,
+            'message' => 'No hay subastas disponibles'
+        ], 404);
+    }
+
+    return $subastas;
+}
 }

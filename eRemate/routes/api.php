@@ -86,6 +86,8 @@ Route::post('/notify/auction-start', [NotificationController::class, 'notificarI
 Route::post('/notify/auction-end', [NotificationController::class, 'notificarFinSubasta']);
 Route::post('/notify/auction-bid', [NotificationController::class, 'notificarNuevaPuja']);
 
+Route::get('/auction/page', [SubastaController::class, 'obtenerSubastasOrdenadasPorCierre']);
+
 // Rutas para usuarios
 Route::middleware('auth:sanctum')->group(function () {
     Route::get('/usuarios/{id}', [UsuarioController::class, 'obtenerUsuario']);
@@ -111,7 +113,7 @@ Route::middleware('auth:sanctum')->group(function () {
     Route::prefix('auction')->group(function () {
         Route::post('/', [SubastaController::class, 'crearSubasta']);
         Route::put('/{id}', [SubastaController::class, 'actualizarSubasta']);
-
+       
         /* Resto de endpoints de subasta
         Route::post('/{id}/start', [SubastaController::class, 'iniciarSubasta']);
         Route::post('/{id}/end', [SubastaController::class, 'finalizarSubasta']);
@@ -139,11 +141,13 @@ Route::middleware('auth:sanctum')->group(function () {
 Route::prefix('auction')->group(function () {
     Route::get('/', [SubastaController::class, 'obtenerSubastas']);
     Route::get('/{id}', [SubastaController::class, 'obtenerSubasta']);
+
 });
 
 Route::prefix('lot')->group(function () {
     Route::get('/{id}', [LoteController::class, 'obtenerLote']);
     Route::get('/{id}/items', [LoteController::class, 'obtenerArticulos']);
+    Route::get('/auction/{id}', [LoteController::class, 'obtenerLotesPorSubasta']);
 });
 
 Route::prefix('item')->group(function () {
