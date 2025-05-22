@@ -2,6 +2,7 @@ import { Component, computed, EventEmitter, Input, Output, signal } from '@angul
 import { InputTextModule } from 'primeng/inputtext';
 import { FormsModule, ReactiveFormsModule  } from '@angular/forms';
 import { Message } from 'primeng/message';
+import { FloatLabelModule } from 'primeng/floatlabel';
 
 @Component({
   selector: 'app-form-text-input',
@@ -10,7 +11,8 @@ import { Message } from 'primeng/message';
     InputTextModule,
     FormsModule,
     ReactiveFormsModule,
-    Message
+    Message,
+    FloatLabelModule
   ],
   templateUrl: './form-text-input.component.html',
   styleUrl: './form-text-input.component.scss'

@@ -2,6 +2,7 @@ import { Component, computed, EventEmitter, Input, Output, Signal, signal, Simpl
 import { PasswordModule } from 'primeng/password';
 import { FormsModule, ReactiveFormsModule  } from '@angular/forms';
 import { Message } from 'primeng/message';
+import { FloatLabelModule } from 'primeng/floatlabel';
 
 @Component({
   selector: 'app-form-password-input',
@@ -10,7 +11,8 @@ import { Message } from 'primeng/message';
     PasswordModule,
     FormsModule,
     ReactiveFormsModule,
-    Message
+    Message,
+    FloatLabelModule
   ],
   templateUrl: './form-password-input.component.html',
   styleUrl: './form-password-input.component.scss'

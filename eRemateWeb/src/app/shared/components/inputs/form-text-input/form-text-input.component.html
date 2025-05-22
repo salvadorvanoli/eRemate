@@ -1,12 +1,16 @@
-<input
-    pInputText
-    [ngModel]="text()"
-    (ngModelChange)="text.set($event); textValue.emit($event);"
-    [ngModelOptions]="{standalone: true}"
-    type="text"
-    [placeholder]="placeholder"
-    class="w-full"
-/>
+<p-floatLabel variant="on" class="w-full">
+    <input
+        pInputText
+        [ngModel]="text()"
+        (ngModelChange)="text.set($event); textValue.emit($event);"
+        [ngModelOptions]="{standalone: true}"
+        type="text"
+        id="float_label"
+        autocomplete="off"
+        class="w-full"
+    />
+    <label for="float_label">{{ placeholder }}</label>
+</p-floatLabel>
 @if (showErrorMessage()) {
     <p-message class="w-full" severity="error" variant="simple" size="small">{{ errorMessage }}</p-message>
 }

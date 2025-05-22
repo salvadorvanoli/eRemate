@@ -2,7 +2,7 @@
     [ngModel]="value()"
     (ngModelChange)="value.set($event); textValue.emit($event);"
     [ngModelOptions]="{standalone: true}"
-    class="w-full p-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500"
+    class="w-full p-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500 font-semibold"
 >
     <option *ngIf="placeholder" [value]="''" disabled selected>{{ placeholder }}</option>
     <option *ngFor="let option of options" [value]="option.value">
