@@ -10,7 +10,8 @@ use Illuminate\Support\Facades\Validator;
 
 class LoteController extends Controller
 {
-    protected $loteService;    public function __construct(LoteServiceInterface $loteService)
+    protected $loteService;
+    public function __construct(LoteServiceInterface $loteService)
     {
         $this->loteService = $loteService;
     }
@@ -19,37 +20,37 @@ class LoteController extends Controller
     {
         try {
             $validator = Validator::make($request->all(), [
-            'subasta_id' => 'required|exists:subastas,id',
-            'compra_id' => 'nullable|exists:compras,id',
-            'ganador_id' => 'nullable|exists:usuarios_registrados,id',
-            'nombre' => 'required|string|max:255',
-            'descripcion' => 'required|string',
-            'valorBase' => 'required|numeric|min:0',
-            'pujaMinima' => 'required|numeric|min:0',
-            'disponibilidad' => 'required|string|max:255',
-            'condicionesDeEntrega' => 'required|string|max:255'
-        ]);
+                'subasta_id' => 'required|exists:subastas,id',
+                'compra_id' => 'nullable|exists:compras,id',
+                'ganador_id' => 'nullable|exists:usuarios_registrados,id',
+                'nombre' => 'required|string|max:255',
+                'descripcion' => 'required|string',
+                'valorBase' => 'required|numeric|min:0',
+                'pujaMinima' => 'required|numeric|min:0',
+                'disponibilidad' => 'required|string|max:255',
+                'condicionesDeEntrega' => 'required|string|max:255'
+            ]);
 
-        if ($validator->fails()) {
+            if ($validator->fails()) {
+                return response()->json([
+                    'error' => 'Error de validación',
+                    'details' => $validator->errors()
+                ], 422);
+            }
+
+            $data = $validator->validated();
+
+            $lote = $this->loteService->crearLote($data);
+
+            if (!$lote instanceof Lote) {
+                return $lote;
+            }
+
             return response()->json([
-                'error' => 'Error de validación',
-                'details' => $validator->errors()
-            ], 422);
-        }
-
-        $data = $validator->validated();
-        
-        $lote = $this->loteService->crearLote($data);
-
-        if (!$lote instanceof Lote) {
-            return $lote;
-        }
-        
-        return response()->json([
-            'success' => true,
-            'message' => 'Lote creado exitosamente',
-            'data' => $lote
-        ], 201);
+                'success' => true,
+                'message' => 'Lote creado exitosamente',
+                'data' => $lote
+            ], 201);
 
         } catch (\Exception $e) {
             \Log::error('Error al crear lote: ' . $e->getMessage());
@@ -61,7 +62,8 @@ class LoteController extends Controller
         }
     }
 
-    public function obtenerLote(int $id) {
+    public function obtenerLote(int $id)
+    {
         try {
             $lote = $this->loteService->obtenerLote($id);
 
@@ -115,7 +117,7 @@ class LoteController extends Controller
                 'errors' => $e->errors(),
                 'message' => 'Error de validación'
             ], 422);
-            
+
         } catch (\Exception $e) {
             return response()->json([
                 'success' => false,
@@ -140,11 +142,11 @@ class LoteController extends Controller
             ], 200);
 
         } catch (\Illuminate\Database\Eloquent\ModelNotFoundException $e) {
-        return response()->json([
-            'success' => false,
-            'message' => 'Lote no encontrado'
-        ], 404);
-        
+            return response()->json([
+                'success' => false,
+                'message' => 'Lote no encontrado'
+            ], 404);
+
         } catch (\Exception $e) {
             return response()->json([
                 'success' => false,
@@ -172,7 +174,7 @@ class LoteController extends Controller
                     'message' => 'El artículo especificado no existe'
                 ], 404);
             }
-            
+
         } catch (\Exception $e) {
             return response()->json([
                 'success' => false,
@@ -184,7 +186,7 @@ class LoteController extends Controller
     public function removerArticulo($id, $articuloId)
     {
         try {
-            
+
             return $this->loteService->removerArticulo($id, $articuloId);
 
         } catch (\Illuminate\Database\Eloquent\ModelNotFoundException $e) {
@@ -205,6 +207,29 @@ class LoteController extends Controller
             return response()->json([
                 'success' => false,
                 'message' => 'Error al remover artículo: ' . $e->getMessage()
+            ], 500);
+        }
+    }
+
+    public function obtenerLotesPorSubasta($subastaId)
+    {
+        try {
+            $lotes = $this->loteService->obtenerLotesPorSubasta($subastaId);
+
+            if ($lotes instanceof JsonResponse) {
+                return $lotes;
+            }
+
+            return response()->json([
+                'success' => true,
+                'data' => $lotes,
+                'message' => 'Lotes obtenidos correctamente'
+            ], 200);
+
+        } catch (\Exception $e) {
+            return response()->json([
+                'success' => false,
+                'message' => 'Error al obtener lotes: ' . $e->getMessage()
             ], 500);
         }
     }

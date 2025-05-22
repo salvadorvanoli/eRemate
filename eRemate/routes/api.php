@@ -145,6 +145,7 @@ Route::prefix('auction')->group(function () {
 Route::prefix('lot')->group(function () {
     Route::get('/{id}', [LoteController::class, 'obtenerLote']);
     Route::get('/{id}/items', [LoteController::class, 'obtenerArticulos']);
+    Route::get('/auction/{id}', [LoteController::class, 'obtenerLotesPorSubasta']);
 });
 
 Route::prefix('item')->group(function () {

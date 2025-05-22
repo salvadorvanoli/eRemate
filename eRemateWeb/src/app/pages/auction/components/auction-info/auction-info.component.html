@@ -1,0 +1,53 @@
+<div class="relative h-screen bg-cover bg-center">
+    <div class="container mx-auto px-4 py-8">
+        <div class="flex flex-col md:flex-row gap-8">
+            <!-- imagen -->
+            <div class="w-full md:w-1/2">
+                <div class="relative aspect-video bg-gray-200">
+                    <img 
+                        [src]="getImageUrl ? getImageUrl(item) : 'https://developers.elementor.com/docs/assets/img/elementor-placeholder-image.png'" 
+                        alt="Imagen de la publicación" 
+                        class="mx-auto rounded" />
+                </div>
+            </div>
+
+            <!-- lado derecho -->
+            <div class="w-full md:w-1/2 flex flex-col">
+
+                <!-- countdown -->
+                <div class="flex justify-between items-center mb-4">
+                    <span class="text-sm text-gray-600 mb-2">
+                        @if (countdown) {
+                        Cierra en: {{ countdown }}
+                        } @else {
+                        Calculando tiempo restante...
+                        }
+                    </span>
+
+                </div>
+
+
+                <app-title-and-description title="Subasta #{{ item?.id || 'Sin número' }}"
+                    description="{{ item?.tipoSubasta || 'Tipo de Subasta' }}" />
+
+                @if (item2) {
+                <div class="mt-auto flex items-center justify-between pt-4">
+                    <div class="flex items-center">
+                        <img [src]="getImageUrl ? getImageUrl(item2) : 'https://developers.elementor.com/docs/assets/img/elementor-placeholder-image.png'"
+                            alt="Lote" class="w-25 h-30 rounded-lg object-cover" />
+                        <span class="ml-2 text-sm font-medium">Lote #{{ item2?.id || 'Sin número' }}</span>
+                    </div>
+                    <app-primary-button 
+                        label="Pujar por el lote en vivo"
+                        (onClick)="pujar()"> 
+                    </app-primary-button>
+                </div>
+                }
+                @else {
+                <div class="mt-auto pt-4 text-center">
+                    <p class="text-gray-600">Actualmente no hay un lote siendo subastado</p>
+                </div>
+                }
+            </div>
+        </div>
+    </div>

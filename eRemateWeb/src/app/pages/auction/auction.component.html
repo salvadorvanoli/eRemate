@@ -1,0 +1,61 @@
+<app-auction-info
+    [item]="subasta"
+    [item2]="loteSeleccionado"
+    [getImageUrl]="getImageUrl"
+    (onPuja)="verPuja()">
+</app-auction-info>
+
+<app-title-and-description 
+[title]="'Lotes disponibles'" 
+[description]="''">
+</app-title-and-description>
+
+@if (lotes.length > 0) {
+    <app-dynamic-carousel
+        [items]="lotes"
+        [showLink]="true"
+        [usarModal]="true"
+        [showPrice]="true"
+        [getLink]="getLink"
+        [getTitle]="getTitle"
+        [getPrice]="getPrice"
+        [getImageUrl]="getImageUrl"
+        (itemClick)="verDetalles($event)">
+    </app-dynamic-carousel>
+} @else {
+    <div class="text-center mt-4 text-gray-600">
+        No hay lotes disponibles para esta subasta.
+    </div>
+}
+
+<!-- Modal de Detalles -->
+<app-modal [visible]="showDetallesModal" (closed)="onModalClose()">
+    <div modal-title>
+        Detalles del Lote
+    </div>
+    <div>
+        <p>Contenido del modal de detalles</p>
+    </div>
+    <div modal-action>
+        <app-primary-button 
+            label="Cerrar" 
+            (onClick)="onModalClose()">
+        </app-primary-button>
+    </div>
+</app-modal>
+
+<!-- Modal de Puja -->
+<app-modal [visible]="showPujaModal" (closed)="onModalClose()">
+    <div modal-title>
+        Realizar Puja
+    </div>
+    <div>
+        <p>Contenido del modal de puja</p>
+    </div>
+    <div modal-action>
+        <app-primary-button 
+            label="Cerrar" 
+            (onClick)="onModalClose()">
+        </app-primary-button>
+    </div>
+</app-modal>
