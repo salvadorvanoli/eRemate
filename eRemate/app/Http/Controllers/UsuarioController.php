@@ -37,16 +37,7 @@ class UsuarioController extends Controller
 
     public function obtenerPerfil($id)
     {
-        $usuarioAutenticado = Auth::user();
-
-        if (!$usuarioAutenticado) {
-            return response()->json(['error' => 'Token no proporcionado o inválido'], 401);
-        }
-
-        if ($usuarioAutenticado->id !== (int) $id) {
-            return response()->json(['error' => 'No tienes permiso para acceder a esta información'], 403);
-        }
-
+        
         $usuario = $this->usuarioService->obtenerUsuarioPorId($id);
         if (!$usuario) {
             return response()->json(['error' => 'Usuario no encontrado'], 404);

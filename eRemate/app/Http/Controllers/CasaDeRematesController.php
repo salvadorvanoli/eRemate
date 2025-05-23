@@ -83,26 +83,21 @@ class CasaDeRematesController extends Controller
         
     }
 
-    public function asignarRematador($id, $rematadorId)
+    public function asignarRematador($id, Request $request)
     {
         try {
+            $data = $request->validate([
+                'email' => 'required|email|exists:usuarios,email'
+            ]);
+                
+            return $this->casaDeRematesService->asignarRematador($id, $data['email']);
 
-            return $this->casaDeRematesService->asignarRematador($id, $rematadorId);
-
-        } catch (\Illuminate\Database\Eloquent\ModelNotFoundException $e) {
+        } catch (\Illuminate\Validation\ValidationException $e) {
             return response()->json([
                 'success' => false,
-                'message' => 'Casa de remates o rematador no encontrado'
-            ], 404);
-
-        } catch (\Illuminate\Database\QueryException $e) {
-            if (strpos($e->getMessage(), 'foreign key constraint fails') !== false) {
-                return response()->json([
-                    'success' => false,
-                    'message' => 'El rematador especificado no existe'
-                ], 404);
-            }
-            
+                'errors' => $e->errors(),
+                'message' => 'Error de validación'
+            ], 422);
         } catch (\Exception $e) {
             return response()->json([
                 'success' => false,

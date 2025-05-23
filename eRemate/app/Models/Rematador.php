@@ -27,7 +27,7 @@ class Rematador extends Model
 
     public function casasDeRemates()
     {
-        return $this->belongsToMany(CasaDeRemates::class, 'casa_remates_rematador');
+        return $this->belongsToMany(CasaDeRemates::class, 'casa_remates_rematador', 'rematador_id', 'casaDeRemates_id');
     }
 
     public function subastas()

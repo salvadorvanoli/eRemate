@@ -23,7 +23,7 @@ class CasaDeRemates extends Model
 
     public function rematadores()
     {
-        return $this->belongsToMany(Rematador::class, 'casa_remates_rematador');
+        return $this->belongsToMany(Rematador::class, 'casa_remates_rematador', 'casaDeRemates_id', 'rematador_id');
     }
 
     public function chats()   

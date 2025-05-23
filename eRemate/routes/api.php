@@ -87,24 +87,16 @@ Route::post('/notify/auction-end', [NotificationController::class, 'notificarFin
 Route::post('/notify/auction-bid', [NotificationController::class, 'notificarNuevaPuja']);
 
 // Rutas para usuarios
-Route::middleware('auth:sanctum')->group(function () {
-    Route::get('/usuarios/{id}', [UsuarioController::class, 'obtenerUsuario']);
-    Route::get('/usuarios/{id}/perfil', [UsuarioController::class, 'obtenerPerfil']);
+Route::get('/usuarios/{id}', [UsuarioController::class, 'obtenerUsuario']);
+Route::get('/usuarios/{id}/perfil', [UsuarioController::class, 'obtenerPerfil']);
 
-    /*// Notificaciones de subastas
-    Route::post('/auction-start', [NotificationController::class, 'notificarInicioSubasta'])
-        ->name('notifications.auction.start');
-    
-    Route::post('/auction-end', [NotificationController::class, 'notificarFinSubasta'])
-        ->name('notifications.auction.end');
-    
-    Route::post('/auction-bid', [NotificationController::class, 'notificarNuevaPuja'])
-        ->name('notifications.auction.bid');*/
+Route::middleware('auth:sanctum')->group(function () {
+    // ...resto de rutas que sí necesitan autenticación...
 
     Route::prefix('auction-house')->group(function () {
         Route::put('/{id}', [CasaDeRematesController::class, 'actualizarCasaDeRemates']);
         Route::get('/{id}/auctioneers', [CasaDeRematesController::class, 'obtenerRematadores']);
-        Route::post('/{id}/auctioneers/{rematadorId}/assign', [CasaDeRematesController::class, 'asignarRematador']);
+        Route::post('/{id}/auctioneers/assign', [CasaDeRematesController::class, 'asignarRematador']);
         Route::post('/{id}/auctioneers/{rematadorId}/remove', [CasaDeRematesController::class, 'desasignarRematador']);
     });
 
@@ -134,6 +126,14 @@ Route::middleware('auth:sanctum')->group(function () {
         Route::put('/{id}', [ArticuloController::class, 'actualizarArticulo']);
     });
 
+});
+
+// Rutas de Casa de Remates sin necesidad de autorización
+Route::prefix('auction-house')->group(function () {
+    Route::put('/{id}', [CasaDeRematesController::class, 'actualizarCasaDeRemates']);
+    Route::get('/{id}/auctioneers', [CasaDeRematesController::class, 'obtenerRematadores']);
+    Route::post('/{id}/auctioneers/assign', [CasaDeRematesController::class, 'asignarRematador']);
+    Route::post('/{id}/auctioneers/{rematadorId}/remove', [CasaDeRematesController::class, 'desasignarRematador']);
 });
 
 Route::prefix('auction')->group(function () {
