@@ -1,0 +1,135 @@
+<div class="table-container" style="width: 1040px; margin: 0 auto; margin-bottom: 40px;">
+  <div *ngIf="loading" class="flex justify-content-center my-3">
+    <p-progressSpinner strokeWidth="4" [style]="{'width': '50px', 'height': '50px'}" />
+  </div>
+
+  <p-table
+    #dt
+    [value]="lots"
+    [rows]="5"
+    [columns]="cols"
+    [paginator]="lots.length > 0"
+    [globalFilterFields]="globalFilterFields"
+    [tableStyle]="{ width: '100%', marginBottom: '1rem' }"
+    [(selection)]="selectedLots"
+    [rowHover]="true"
+    dataKey="id"
+    currentPageReportTemplate="Mostrando {first} a {last} de {totalRecords} elementos"
+    [showCurrentPageReport]="lots.length > 0"
+    [loading]="loading"
+  >
+    <ng-template pTemplate="caption">
+      <div class="flex items-center" style="gap: 10px;">
+        <!-- Barra de búsqueda -->
+        <p-iconfield>
+            <p-inputicon styleClass="pi pi-search" />
+            <input pInputText type="text" (input)="onFilterGlobal($event)" placeholder="Buscar..." />
+        </p-iconfield>
+        
+        <!-- Botón para agregar lote con color verde -->
+        <p-button 
+            label="Agregar Lote" 
+            icon="pi pi-plus" 
+            class="mr-2" 
+            (onClick)="openNew()" 
+            [style]="{'background-color': '#22C55E', 'border-color': '#22C55E'}" 
+        />
+
+      </div>
+    </ng-template>
+    
+    <ng-template pTemplate="header">
+      <tr style="background-color: rgba(0, 0, 0, 0.04);">
+        <th style="width: 5%; background-color: rgba(0, 0, 0, 0.04);">
+          <p-tableHeaderCheckbox />
+        </th>
+        <th *ngFor="let col of cols" [style.width]="'calc(84% / ' + cols.length + ')'" style="background-color: rgba(0, 0, 0, 0.04);">
+          {{ col.header }}
+        </th>
+        <th style="width: 11%; background-color: rgba(0, 0, 0, 0.04);">Acciones</th>
+      </tr>
+    </ng-template>
+    
+    <ng-template pTemplate="body" let-lot>
+      <tr>
+        <td style="width: 5%">
+          <p-tableCheckbox [value]="lot" />
+        </td>
+        
+        <td [style.width]="'calc(84% / ' + cols.length + ')'" *ngFor="let col of cols">
+          <span *ngIf="col.field === 'valorBase' || col.field === 'incrementoMinimo'">
+            {{ formatCurrency(lot[col.field]) }}
+          </span>
+          <span *ngIf="col.field !== 'valorBase' && col.field !== 'incrementoMinimo'">
+            {{ lot[col.field] }}
+          </span>
+        </td>
+        
+        <td style="width: 11%">
+          <div class="flex gap-2 justify-center">
+            <p-button icon="pi pi-trash" severity="danger" [rounded]="true" [outlined]="true" (click)="deleteLot(lot)" pTooltip="Eliminar lote" />
+          </div>
+        </td>
+      </tr>
+    </ng-template>
+    
+    <ng-template pTemplate="emptymessage">
+      <tr>
+        <td colspan="7" class="text-center p-4">
+          No hay lotes disponibles
+        </td>
+      </tr>
+    </ng-template>
+  </p-table>
+
+  <p-dialog [(visible)]="lotDialog" [style]="{ width: '500px' }" header="Detalles del Lote" [modal]="true">
+    <ng-template pTemplate="content">
+      <div class="flex flex-col gap-4">
+        <div>
+          <label for="subasta" class="block font-bold mb-2">Subasta</label>
+          <input type="text" pInputText id="subasta" [(ngModel)]="lot.subasta" />
+        </div>
+        
+        <div>
+          <label for="lote" class="block font-bold mb-2">Nombre del Lote</label>
+          <input type="text" pInputText id="lote" [(ngModel)]="lot.lote" required autofocus />
+          <small class="text-red-500" *ngIf="submitted && !lot.lote?.trim()">El nombre del lote es requerido.</small>
+        </div>
+        
+        <div>
+          <label for="vendedorExterno" class="block font-bold mb-2">Vendedor Externo</label>
+          <input type="text" pInputText id="vendedorExterno" [(ngModel)]="lot.vendedorExterno" />
+        </div>
+        
+        <div>
+          <label for="valorBase" class="block font-bold mb-2">Valor Base ($)</label>
+          <p-inputNumber id="valorBase" [(ngModel)]="lot.valorBase" mode="currency" currency="UYU" locale="es-UY" [minFractionDigits]="0" />
+        </div>
+        
+        <div>
+          <label for="incrementoMinimo" class="block font-bold mb-2">Incremento Mínimo ($)</label>
+          <p-inputNumber id="incrementoMinimo" [(ngModel)]="lot.incrementoMinimo" mode="currency" currency="UYU" locale="es-UY" [minFractionDigits]="0" />
+        </div>
+      </div>
+    </ng-template>
+
+    <ng-template pTemplate="footer">
+      <div class="flex justify-content-end gap-2">
+        <p-button 
+            label="Cancelar" 
+            icon="pi pi-times" 
+            (onClick)="hideDialog()" 
+            [style]="{'background-color': '#000000', 'border-color': '#000000', 'color': '#FFFFFF'}" 
+        />
+        <p-button 
+            label="Guardar" 
+            icon="pi pi-check" 
+            (onClick)="saveLot()" 
+            [style]="{'background-color': '#6334E3', 'border-color': '#6334E3'}" 
+        />
+      </div>
+    </ng-template>
+  </p-dialog>
+
+  <p-confirmDialog [style]="{ width: '450px' }" />
+</div>

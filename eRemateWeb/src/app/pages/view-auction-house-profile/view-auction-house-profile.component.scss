@@ -1,0 +1,17 @@
+@import url('https://fonts.googleapis.com/css2?family=Montserrat:wght@400;500;600;700;800&display=swap');
+
+:host ::ng-deep .p-dialog .product-image {
+    width: 150px;
+    margin: 0 auto 2rem auto;
+    display: block;
+}
+
+.titulos {
+  width: 185px;
+  height: 36px;
+  color: #232323;
+  font-family: "Montserrat";
+  font-weight: 800;
+  font-size: 26px;
+  text-align: left;
+}

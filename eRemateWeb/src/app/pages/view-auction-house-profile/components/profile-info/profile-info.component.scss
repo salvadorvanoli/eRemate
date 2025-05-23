@@ -1,0 +1,108 @@
+.rectangle-6 {
+  width: 986px;
+  height: 600px;
+  padding: 8px 8px 8px 8px;
+  background: #FAFAFA;
+  border-radius: 24px 24px 24px 24px;
+  margin: 0 auto;
+  box-sizing: border-box;
+}
+
+.profile-container {
+  display: flex;
+  height: 100%;
+  flex-direction: row-reverse; /* Cambiado: Ahora el avatar aparecerá a la derecha */
+}
+
+/* Renombramos las columnas para evitar confusión */
+.right-column {
+  width: 260px;
+  padding: 20px 0px; /* Eliminado el padding lateral */
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  margin-left: -50px; /* Aumentado considerablemente: acerca mucho más la columna derecha */
+}
+
+.left-column {
+  flex: 1;
+  padding: 20px 0px; /* Eliminado el padding lateral */
+  margin-right: -60px; /* Aumentado considerablemente: acerca mucho más la columna izquierda */
+  display: flex;
+  flex-direction: column;
+  gap: 12px;
+}
+
+.avatar-container {
+  margin-bottom: 20px;
+}
+
+.avatar-2 {
+  width: 245px;
+  height: 245px;
+  background: #FFFFFF;
+  border-color: #444444;
+  border-width: 1px;
+  border-style: solid;
+  border-radius: 1px 1px 1px 1px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+
+.upload-button-container {
+  width: 100%;
+  display: flex;
+  justify-content: center;
+  margin-top: 15px;
+}
+
+.nombre-legal {
+  width: 189px;
+  height: 24px;
+  color: #444444;
+  font-family: "Source Sans 3", Arial, sans-serif;
+  font-weight: 600;
+  font-size: 14px;
+  line-height: 1.3;
+  text-align: left;
+  display: block;
+  margin-bottom: 4px; /* Reducido: Menos espacio entre label e input */
+}
+
+.text-input-1 {
+  width: 457px;
+  height: 48px;
+  padding: 10px 10px 10px 10px;
+  background: #FFFFFF;
+  color: #AAAAAA;
+  border-color: #D6D6D6;
+  border-width: 2px;
+  border-style: solid;
+  border-radius: 4px 4px 4px 4px;
+  font-family: "Source Sans 3", Arial, sans-serif;
+  font-weight: 400;
+  font-size: 16px;
+  text-align: left;
+}
+
+.input-group {
+  margin-bottom: 10px; /* Reducido: Menos espacio entre grupos de inputs */
+}
+
+// Sobreescribir estilos de PrimeNG para que coincidan
+:host ::ng-deep {
+  .p-button.upload-button {
+    width: 200px;
+  }
+  
+  .p-inputtext {
+    width: 457px;
+    height: 48px;
+    padding: 10px;
+    border: 2px solid #D6D6D6;
+    border-radius: 4px;
+    font-family: "Source Sans 3", Arial, sans-serif;
+    font-size: 16px;
+  }
+}

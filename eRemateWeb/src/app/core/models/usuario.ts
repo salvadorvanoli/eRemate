@@ -29,6 +29,7 @@ export interface UsuarioRematador {
 }
 
 export interface UsuarioCasaDeRemates {
+     id: number;
     email: string;
     contrasenia: string;
     telefono: string;
