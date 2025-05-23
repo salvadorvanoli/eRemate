@@ -6,13 +6,13 @@ use Illuminate\Database\Eloquent\Model;
 
 class Rematador extends Model
 {
-  
-
     protected $table = 'rematadores';
+    protected $primaryKey = 'id';
+    public $incrementing = false;
     public $timestamps = false;
 
     protected $fillable = [
-        'usuario_id',
+        'id',
         'nombre',
         'apellido',
         'numeroMatricula',
@@ -27,7 +27,7 @@ class Rematador extends Model
 
     public function casasDeRemates()
     {
-        return $this->belongsToMany(CasaDeRemates::class, 'casa_remates_rematador');
+        return $this->belongsToMany(CasaDeRemates::class, 'casa_remates_rematador', 'rematador_id', 'casaDeRemates_id');
     }
 
     public function subastas()

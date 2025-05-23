@@ -7,10 +7,12 @@ use Illuminate\Database\Eloquent\Model;
 class UsuarioRegistrado extends Model
 {
     protected $table = 'usuarios_registrados';
+    protected $primaryKey = 'id';
+    public $incrementing = false;
     public $timestamps = false;
 
     protected $fillable = [
-        'usuario_id',
+        'id',
         'metodos_pago'
     ];
 

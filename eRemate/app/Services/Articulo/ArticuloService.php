@@ -4,8 +4,6 @@
 namespace App\Services\Articulo;
 use App\Models\Articulo;
 use App\Models\CasaDeRemates;
-use App\Models\Lote;
-use App\Models\Rematador;
 use App\Models\Usuario;
 use Illuminate\Support\Facades\Auth;
 use Illuminate\Http\JsonResponse;
@@ -26,26 +24,22 @@ class ArticuloService implements ArticuloServiceInterface
             return response()->json(['error' => 'Usuario no encontrado'], 404);
         }
 
-        $casaDeRemates = CasaDeRemates::where('usuario_id', $usuarioAutenticado->id)->first();
-        $rematador = Rematador::where('usuario_id', $usuarioAutenticado->id)->first();
+        $casaDeRemates = CasaDeRemates::where('id', $usuarioAutenticado->id)->first();
 
-        if (!$rematador && !$casaDeRemates) {
+        if (!$casaDeRemates) {
             return response()->json(['error' => 'No tienes permiso para acceder a esta información'], 403);
         }
 
         return $usuario;
     }
     
-    private function verificarUsuario($usuario, $lote)
+    private function verificarUsuario($usuario, $subasta)
     {
-        $casaDeRemates = CasaDeRemates::where('usuario_id', $usuario->id)->first();
-        $rematador = Rematador::where('usuario_id', $usuario->id)->first();
+        $casaDeRemates = CasaDeRemates::where('id', $usuario->id)->first();
 
-        $rematadorLote = $lote->subasta->rematador ?? null;
-        $casaDeRematesLote = $lote->subasta->casaDeRemates ?? null;
+        $casaDeRematesSubasta = $subasta->casaRemates ?? null;
 
-        if (($rematador && $rematador->id !== $rematadorLote?->id) && 
-            ($casaDeRemates && $casaDeRemates->id !== $casaDeRematesLote?->id)) {
+        if (($casaDeRemates && $casaDeRemates->id !== $casaDeRematesSubasta?->id)) {
             return response()->json(['error' => 'No tienes permiso para acceder a este artículo'], 403);
         }
 
@@ -59,18 +53,6 @@ class ArticuloService implements ArticuloServiceInterface
         if (!$usuario instanceof Usuario) {
             return $usuario;
         }
-
-        /*
-        $articulo = Articulo::where('lote_id', $data['lote_id'])
-                    ->where('categoria_id', $data['categoria_id'])
-                    ->first();
-        if ($articulo) {
-            return response()->json([
-                'success' => false,
-                'error' => 'Ya existe un artículo con la misma categoría en este lote'
-            ], 404);
-        }
-        */
 
         return Articulo::create([
             'lote_id' => $data['lote_id'],
@@ -110,7 +92,7 @@ class ArticuloService implements ArticuloServiceInterface
             ], 404);
         }
 
-        $chequeo = $this->verificarUsuario($usuario, $articulo->lote);
+        $chequeo = $this->verificarUsuario($usuario, $articulo->lote->subasta);
         if ($chequeo instanceof JsonResponse) {
             return $chequeo;
         }
@@ -122,7 +104,9 @@ class ArticuloService implements ArticuloServiceInterface
             ], 400);
         }
 
-        return $articulo->update($data);    
+        $articulo->update($data);
+        
+        return Articulo::find($id)->first();
     }
     
     public function obtenerArticulos() 

@@ -174,7 +174,7 @@ public function testBienvenida(Request $request)
 
         // Crear usuario registrado
         $usuarioRegistrado = UsuarioRegistrado::create([
-            'usuario_id' => $usuario->id,
+            'id' => $usuario->id,
             'nombre' => $request->nombre
         ]);
 

@@ -27,7 +27,7 @@ class RematadorController extends Controller
     try {
         // Validación más explícita
         $validator = Validator::make($request->all(), [
-            'usuario_id' => 'required|integer',
+            'id' => 'required|integer',
             'nombre' => 'required|string|max:255',
             'apellido' => 'required|string|max:255',
             'numeroMatricula' => 'required|string|max:255|unique:rematadores,numeroMatricula',
@@ -83,7 +83,7 @@ class RematadorController extends Controller
 {
     try {
         $data = $request->validate([
-            'usuario_id' => 'sometimes|integer|exists:usuarios,id',
+            'id' => 'sometimes|integer|exists:usuarios,id',
             'nombre' => 'sometimes|string|max:255',
             'apellido' => 'sometimes|string|max:255',
             'numeroMatricula' => 'sometimes|string|max:255|unique:rematadores,numeroMatricula,' . $id,

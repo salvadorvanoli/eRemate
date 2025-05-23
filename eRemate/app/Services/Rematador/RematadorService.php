@@ -20,7 +20,7 @@ class RematadorService implements RematadorServiceInterface
 
     // si no existe
     return Rematador::create([
-        'usuario_id' => $data['usuario_id'],
+        'id' => $data['id'],
         'nombre' => $data['nombre'],
         'apellido' => $data['apellido'],
         'numeroMatricula' => $data['numeroMatricula'],

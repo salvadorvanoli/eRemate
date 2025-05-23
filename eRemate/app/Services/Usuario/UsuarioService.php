@@ -16,16 +16,16 @@ class UsuarioService implements UsuarioServiceInterface
 
     public function obtenerPerfilRematador($usuarioId)
     {
-        return Rematador::where('usuario_id', $usuarioId)->first();
+        return Rematador::where('id', $usuarioId)->first();
     }
 
     public function obtenerPerfilCasaDeRemates($usuarioId)
     {
-        return CasaDeRemates::where('usuario_id', $usuarioId)->first();
+        return CasaDeRemates::where('id', $usuarioId)->first();
     }
 
     public function obtenerPerfilUsuarioRegistrado($usuarioId)
     {
-        return UsuarioRegistrado::where('usuario_id', $usuarioId)->first();
+        return UsuarioRegistrado::where('id', $usuarioId)->first();
     }
 }

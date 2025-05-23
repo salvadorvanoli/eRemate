@@ -36,7 +36,9 @@ class SubastaController extends Controller
                     'error' => 'Error de validación',
                     'details' => $validator->errors()
                 ], 422);
-            }            $data = $validator->validated();
+            }
+            
+            $data = $validator->validated();
             
             $subasta = $this->subastaService->crearSubasta($data);
 
@@ -84,17 +86,25 @@ class SubastaController extends Controller
     public function actualizarSubasta(Request $request, $id)
     {
         try {
-            $data = $request->validate([
-                'casaDeRemates_id' => 'sometimes|nullable|exists:casas_de_remates,id',
+            $validator = Validator::make($request->all(), [
                 'rematador_id' => 'sometimes|nullable|exists:rematadores,id',
                 'mensajes' => 'sometimes|nullable|array',
                 'urlTransmision' => 'sometimes|required|string',
                 'tipoSubasta' => 'sometimes|required|string',
                 'fechaInicio' => 'sometimes|required|date',
                 'fechaCierre' => 'sometimes|required|date|after:fechaInicio',
-                'ubicacion' => 'sometimes|required|string'
+                'ubicacion' => 'sometimes|required|string',
             ]);
 
+            if ($validator->fails()) {
+                return response()->json([
+                    'error' => 'Error de validación',
+                    'details' => $validator->errors()
+                ], 422);
+            }
+            
+            $data = $validator->validated();
+            
             $subasta = $this->subastaService->actualizarSubasta($id, $data);
 
             if (!$subasta instanceof Subasta) {
@@ -145,30 +155,98 @@ class SubastaController extends Controller
         }
     }
 
+    public function obtenerSubastasOrdenadasPorCierre(Request $request)
+    {
+        $pagina = $request->query('pagina', 1);
+        $cantidad = $request->query('cantidad', 10);
 
-public function obtenerSubastasOrdenadasPorCierre(Request $request)
-{
-    $pagina = $request->query('pagina', 1);
-    $cantidad = $request->query('cantidad', 10);
+        try {
+            $subastas = $this->subastaService->obtenerSubastasOrdenadasPorCierre($pagina, $cantidad);
 
-    try {
-        $subastas = $this->subastaService->obtenerSubastasOrdenadasPorCierre($pagina, $cantidad);
+            if ($subastas instanceof JsonResponse) {
+                return $subastas;
+            }
 
-        if ($subastas instanceof JsonResponse) {
-            return $subastas;
+            return response()->json([
+                'success' => true,
+                'data' => $subastas,
+                'message' => 'Subastas ordenadas por cierre obtenidas correctamente'
+            ], 200);
+
+        } catch (\Exception $e) {
+            return response()->json([
+                'success' => false,
+                'message' => 'Error al obtener subastas ordenadas: ' . $e->getMessage()
+            ], 500);
         }
-
-        return response()->json([
-            'success' => true,
-            'data' => $subastas,
-            'message' => 'Subastas ordenadas por cierre obtenidas correctamente'
-        ], 200);
-
-    } catch (\Exception $e) {
-        return response()->json([
-            'success' => false,
-            'message' => 'Error al obtener subastas ordenadas: ' . $e->getMessage()
-        ], 500);
     }
-}
+
+    public function obtenerLotes($id)
+    {
+        try {
+            $lotes = $this->subastaService->obtenerLotes($id);
+
+            if ($lotes instanceof JsonResponse) {
+                return $lotes;
+            }
+
+            return response()->json([
+                'success' => true,
+                'data' => $lotes,
+                'message' => 'Lotes obtenidos correctamente'
+            ], 200);
+        
+        } catch (\Exception $e) {
+            return response()->json([
+                'success' => false,
+                'message' => 'Error al obtener lotes: ' . $e->getMessage()
+            ], 500);
+        }
+    }
+
+    public function iniciarSubasta($id)
+    {
+        try {
+            $resultado = $this->subastaService->iniciarSubasta($id);
+
+            if ($resultado instanceof JsonResponse) {
+                return $resultado;
+            }
+
+            return response()->json([
+                'success' => true,
+                'data' => $resultado,
+                'message' => 'Subasta iniciada correctamente'
+            ], 200);
+        
+        } catch (\Exception $e) {
+            return response()->json([
+                'success' => false,
+                'message' => 'Error al iniciar la subasta: ' . $e->getMessage()
+            ], 500);
+        }
+    }
+
+    public function cerrarSubasta($id)
+    {
+        try {
+            $resultado = $this->subastaService->cerrarSubasta($id);
+
+            if ($resultado instanceof JsonResponse) {
+                return $resultado;
+            }
+
+            return response()->json([
+                'success' => true,
+                'data' => $resultado,
+                'message' => 'Subasta cerrada correctamente'
+            ], 200);
+        
+        } catch (\Exception $e) {
+            return response()->json([
+                'success' => false,
+                'message' => 'Error al cerrar la subasta: ' . $e->getMessage()
+            ], 500);
+        }
+    }
 }

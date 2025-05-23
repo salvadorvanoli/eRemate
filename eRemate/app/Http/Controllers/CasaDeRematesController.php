@@ -20,7 +20,6 @@ class CasaDeRematesController extends Controller
     {
         try {
             $data = $request->validate([
-                'usuario_id' => 'sometimes|required|integer|exists:usuarios,id',
                 'identificacionFiscal' => 'sometimes|required|string|max:255|unique:casas_de_remates,identificacionFiscal,' . $id,
                 'nombreLegal' => 'sometimes|required|string|max:255|unique:casas_de_remates,identificacionFiscal,' . $id,
                 'domicilio' => 'sometimes|nullable|string|max:255'
@@ -77,7 +76,37 @@ class CasaDeRematesController extends Controller
         } catch (\Exception $e) {
             return response()->json([
                 'success' => false,
-                'message' => 'Error al obtener remates: ' . $e->getMessage()
+                'message' => 'Error al obtener rematadores: ' . $e->getMessage()
+            ], 500);
+        }
+        
+    }
+
+    public function obtenerSubastas($id)
+    {
+        try {
+            $subastas = $this->casaDeRematesService->obtenerSubastas($id);
+
+            if ($subastas instanceof JsonResponse) {
+                return $subastas;
+            }
+
+            return response()->json([
+                'success' => true,
+                'data' => $subastas,
+                'message' => 'Subastas obtenidas correctamente'
+            ], 200);
+
+        } catch (\Illuminate\Database\Eloquent\ModelNotFoundException $e) {
+        return response()->json([
+            'success' => false,
+            'message' => 'Casa de remates no encontrada'
+        ], 404);
+        
+        } catch (\Exception $e) {
+            return response()->json([
+                'success' => false,
+                'message' => 'Error al obtener subastas: ' . $e->getMessage()
             ], 500);
         }
         

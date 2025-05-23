@@ -12,8 +12,9 @@ return new class extends Migration
     public function up(): void
     {
         Schema::create('casas_de_remates', function (Blueprint $table) {
-            $table->id();
-            $table->foreignId('usuario_id')->constrained('usuarios')->onDelete('cascade');
+            $table->unsignedBigInteger('id');
+            $table->primary('id');
+            $table->foreign('id')->references('id')->on('usuarios')->onDelete('cascade');
             $table->string('identificacionFiscal');
             $table->string('nombreLegal');
             $table->string('domicilio')->nullable();
@@ -25,6 +26,6 @@ return new class extends Migration
      */
     public function down(): void
     {
-        Schema::dropIfExists('casa_de_remates');
+        Schema::dropIfExists('casas_de_remates');
     }
 };

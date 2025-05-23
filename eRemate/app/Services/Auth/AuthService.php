@@ -67,7 +67,7 @@ class AuthService implements AuthServiceInterface
         ])->validate();
 
         Rematador::create([
-            'usuario_id' => $usuarioId,
+            'id' => $usuarioId,
             'nombre' => $request->nombre,
             'apellido' => $request->apellido,
             'numeroMatricula' => $request->numeroMatricula,
@@ -85,7 +85,7 @@ class AuthService implements AuthServiceInterface
         ])->validate();
 
         CasaDeRemates::create([
-            'usuario_id' => $usuarioId,
+            'id' => $usuarioId,
             'identificacionFiscal' => $request->identificacionFiscal,
             'nombreLegal' => $request->nombreLegal,
             'domicilio' => $request->domicilio,
@@ -95,7 +95,7 @@ class AuthService implements AuthServiceInterface
     private function registrarUsuarioComun($usuarioId)
     {
         UsuarioRegistrado::create([
-            'usuario_id' => $usuarioId,
+            'id' => $usuarioId,
         ]);
     }
 }
