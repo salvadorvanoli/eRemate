@@ -10,9 +10,10 @@ return new class extends Migration
         Schema::create('subastas', function (Blueprint $table) {
             $table->id();
             $table->json('mensajes');
-            $table->foreignId('loteActual_id')->nullable()->constrained('lotes')->nullOnDelete()->default(null);
+            $table->unsignedBigInteger('loteActual_id')->nullable()->default(null);
             $table->string('urlTransmision');
             $table->string('tipoSubasta');
+            $table->string('estado')->default('Pendiente');
             $table->dateTime('fechaInicio');
             $table->dateTime('fechaCierre');
             $table->string('ubicacion');

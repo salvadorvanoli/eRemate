@@ -30,7 +30,7 @@ class CasaDeRematesService implements CasaDeRematesServiceInterface
             ], 403);
         }
 
-        $casaDeRemates = Usuario::where('id', operator: $casaAutenticada->id)->where('tipo', 'casa')->first();
+        $casaDeRemates = CasaDeRemates::where('id', $casaAutenticada->id)->first();
 
         if (!$casaDeRemates) {
             return response()->json([
@@ -50,16 +50,23 @@ class CasaDeRematesService implements CasaDeRematesServiceInterface
             return $casaDeRemates;
         }
 
-        return $casaDeRemates->update($data);
-        
+        if (isset($data['id'])) {
+            unset($data['id']);
+        }
+
+        $casaDeRemates->update($data);
+
+        return CasaDeRemates::find($id)->first();
     }
 
     public function obtenerRematadores(int $id): mixed
     {
-        $casaDeRemates = $this->obtenerCasaDeRematesActual($id);
-
-        if (!$casaDeRemates instanceof CasaDeRemates) {
-            return $casaDeRemates;
+        $casaDeRemates = CasaDeRemates::where('id', $id)->first();
+        if (!$casaDeRemates) {
+            return response()->json([
+                'success' => false,
+                'message' => 'Casa de remates no encontrada'
+            ], 404);
         }
 
         return $casaDeRemates->rematadores()->get();
@@ -67,10 +74,12 @@ class CasaDeRematesService implements CasaDeRematesServiceInterface
 
     public function obtenerSubastas(int $id): mixed
     {
-        $casaDeRemates = $this->obtenerCasaDeRematesActual($id);
-
-        if (!$casaDeRemates instanceof CasaDeRemates) {
-            return $casaDeRemates;
+        $casaDeRemates = CasaDeRemates::where('id', $id)->first();
+        if (!$casaDeRemates) {
+            return response()->json([
+                'success' => false,
+                'message' => 'Casa de remates no encontrada'
+            ], 404);
         }
 
         return $casaDeRemates->subastas()->get();
@@ -82,6 +91,21 @@ class CasaDeRematesService implements CasaDeRematesServiceInterface
 
         if (!$casaDeRemates instanceof CasaDeRemates) {
             return $casaDeRemates;
+        }
+
+        $rematador = Rematador::find($rematadorId);
+        if (!$rematador) {
+            return response()->json([
+                'success' => false,
+                'message' => 'Rematador no encontrado'
+            ], 404);
+        }
+
+        if ($casaDeRemates->rematadores()->where('rematador_id', $rematadorId)->exists()) {
+            return response()->json([
+                'success' => false,
+                'message' => 'El rematador ya está asignado a esta casa de remates'
+            ], 422);
         }
 
         $casaDeRemates->rematadores()->attach($rematadorId);
@@ -98,6 +122,21 @@ class CasaDeRematesService implements CasaDeRematesServiceInterface
 
         if (!$casaDeRemates instanceof CasaDeRemates) {
             return $casaDeRemates;
+        }
+
+        $rematador = Rematador::find($rematadorId);
+        if (!$rematador) {
+            return response()->json([
+                'success' => false,
+                'message' => 'Rematador no encontrado'
+            ], 404);
+        }
+
+        if (!$casaDeRemates->rematadores()->where('rematador_id', $rematadorId)->exists()) {
+            return response()->json([
+                'success' => false,
+                'message' => 'El rematador no está asignado a esta casa de remates'
+            ], 422);
         }
 
         $casaDeRemates->rematadores()->detach($rematadorId);

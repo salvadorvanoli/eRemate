@@ -2,6 +2,7 @@
 
 namespace App\Models;
 
+use App\Enums\EstadoSubasta;
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\Factories\HasFactory;
 
@@ -15,6 +16,7 @@ class Subasta extends Model
         'mensajes',
         'urlTransmision',
         'tipoSubasta',
+        'estado',
         'pujaHabilitada',
         'fechaInicio',
         'fechaCierre',
@@ -26,6 +28,7 @@ class Subasta extends Model
         'pujaHabilitada' => 'boolean',
         'fechaInicio' => 'datetime',
         'fechaCierre' => 'datetime',
+        'estado' => EstadoSubasta::class,
     ];
 
     public function lotes()

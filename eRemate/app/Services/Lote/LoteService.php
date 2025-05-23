@@ -24,7 +24,7 @@ class LoteService implements LoteServiceInterface
             return response()->json(['error' => 'Usuario no encontrado'], 404);
         }
 
-        $casaDeRemates = Usuario::where('id', operator: $usuarioAutenticado->id)->where('tipo', 'casa')->first();
+        $casaDeRemates = CasaDeRemates::where('id', $usuarioAutenticado->id)->first();
 
         if (!$casaDeRemates) {
             return response()->json(['error' => 'No tienes permiso para acceder a esta información'], 403);
@@ -35,9 +35,9 @@ class LoteService implements LoteServiceInterface
 
     private function verificarUsuario($usuario, $subasta)
     {
-        $casaDeRemates = Usuario::where('id', operator: $usuario->id)->where('tipo', 'casa')->first();
+        $casaDeRemates = CasaDeRemates::where('id', $usuario->id)->first();
 
-        $casaDeRematesSubasta = $subasta->casaDeRemates ?? null;
+        $casaDeRematesSubasta = $subasta->casaRemates ?? null;
 
         if ($casaDeRemates && $casaDeRemates->id !== $casaDeRematesSubasta->id) {
             return response()->json(['error' => 'No tienes permiso para acceder a este lote'], 403);
@@ -119,7 +119,9 @@ class LoteService implements LoteServiceInterface
             ], 400);
         }
 
-        return $lote->update($data);    
+        $lote->update($data);
+
+        return Lote::find($id)->first();
     }
 
     public function obtenerArticulos(int $id): mixed

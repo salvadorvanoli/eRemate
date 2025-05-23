@@ -21,7 +21,8 @@ class SubastaController extends Controller
     {
         try {
             $validator = Validator::make($request->all(), [
-                'rematador_id' => 'nullable|exists:usuarios,id',
+                'casaDeRemates_id' => 'nullable|exists:casas_de_remates,id',
+                'rematador_id' => 'nullable|exists:rematadores,id',
                 'mensajes' => 'nullable|array',
                 'urlTransmision' => 'required|string',
                 'tipoSubasta' => 'required|string',
@@ -85,16 +86,25 @@ class SubastaController extends Controller
     public function actualizarSubasta(Request $request, $id)
     {
         try {
-            $data = $request->validate([
-                'rematador_id' => 'sometimes|nullable|exists:usuarios,id',
+            $validator = Validator::make($request->all(), [
+                'rematador_id' => 'sometimes|nullable|exists:rematadores,id',
                 'mensajes' => 'sometimes|nullable|array',
                 'urlTransmision' => 'sometimes|required|string',
                 'tipoSubasta' => 'sometimes|required|string',
                 'fechaInicio' => 'sometimes|required|date',
                 'fechaCierre' => 'sometimes|required|date|after:fechaInicio',
-                'ubicacion' => 'sometimes|required|string'
+                'ubicacion' => 'sometimes|required|string',
             ]);
 
+            if ($validator->fails()) {
+                return response()->json([
+                    'error' => 'Error de validación',
+                    'details' => $validator->errors()
+                ], 422);
+            }
+            
+            $data = $validator->validated();
+            
             $subasta = $this->subastaService->actualizarSubasta($id, $data);
 
             if (!$subasta instanceof Subasta) {
@@ -164,6 +174,64 @@ class SubastaController extends Controller
             return response()->json([
                 'success' => false,
                 'message' => 'Error al obtener lotes: ' . $e->getMessage()
+            ], 500);
+        }
+    }
+
+    /**
+     * Inicia una subasta (cambia su estado a INICIADA)
+     * 
+     * @param int $id ID de la subasta
+     * @return \Illuminate\Http\JsonResponse
+     */
+    public function iniciarSubasta($id)
+    {
+        try {
+            $resultado = $this->subastaService->iniciarSubasta($id);
+
+            if ($resultado instanceof JsonResponse) {
+                return $resultado;
+            }
+
+            return response()->json([
+                'success' => true,
+                'data' => $resultado,
+                'message' => 'Subasta iniciada correctamente'
+            ], 200);
+        
+        } catch (\Exception $e) {
+            return response()->json([
+                'success' => false,
+                'message' => 'Error al iniciar la subasta: ' . $e->getMessage()
+            ], 500);
+        }
+    }
+
+    /**
+     * Cierra una subasta (cambia su estado a CERRADA)
+     * 
+     * @param int $id ID de la subasta
+     * @return \Illuminate\Http\JsonResponse
+     */
+    public function cerrarSubasta($id)
+    {
+        try {
+            $resultado = $this->subastaService->cerrarSubasta($id);
+
+            if ($resultado instanceof JsonResponse) {
+                return $resultado;
+            }
+
+            return response()->json([
+                'success' => true,
+                'data' => $resultado,
+                'message' => 'Subasta cerrada correctamente'
+            ], 200);
+        
+        } catch (\Exception $e) {
+            return response()->json([
+                'success' => false,
+                'message' => 'Error al cerrar la subasta: ' . $e->getMessage()
             ], 500);
         }
     }

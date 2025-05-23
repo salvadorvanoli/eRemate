@@ -12,9 +12,13 @@ return new class extends Migration
     public function up(): void
     {
         Schema::create('casa_remates_rematador', function (Blueprint $table) {
-            $table->id();
-            $table->foreignId('rematador_id')->constrained('rematadores')->onDelete('cascade');
-            $table->foreignId('casaDeRemates_id')->constrained('casas_de_remates')->onDelete('cascade');
+            $table->unsignedBigInteger('rematador_id');
+            $table->unsignedBigInteger('casaDeRemates_id');
+            $table->primary(['rematador_id', 'casaDeRemates_id']);
+            
+            // Referencias a las nuevas claves primarias
+            $table->foreign('rematador_id')->references('id')->on('rematadores')->onDelete('cascade');
+            $table->foreign('casaDeRemates_id')->references('id')->on('casas_de_remates')->onDelete('cascade');
             $table->timestamps();
         });
     }

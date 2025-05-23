@@ -103,8 +103,6 @@ Route::middleware('auth:sanctum')->group(function () {
 
     Route::prefix('auction-house')->group(function () {
         Route::put('/{id}', [CasaDeRematesController::class, 'actualizarCasaDeRemates']);
-        Route::get('/{id}/auctioneers', [CasaDeRematesController::class, 'obtenerRematadores']);
-        Route::get('/{id}/auctions', [CasaDeRematesController::class, 'obtenerSubastas']);
         Route::post('/{id}/auctioneers/{rematadorId}/assign', [CasaDeRematesController::class, 'asignarRematador']);
         Route::post('/{id}/auctioneers/{rematadorId}/remove', [CasaDeRematesController::class, 'desasignarRematador']);
     });
@@ -112,11 +110,10 @@ Route::middleware('auth:sanctum')->group(function () {
     Route::prefix('auction')->group(function () {
         Route::post('/', [SubastaController::class, 'crearSubasta']);
         Route::put('/{id}', [SubastaController::class, 'actualizarSubasta']);
-        Route::post('/{id}/lots', [SubastaController::class, 'agregarLote']);
-
-        /* Resto de endpoints de subasta
         Route::post('/{id}/start', [SubastaController::class, 'iniciarSubasta']);
         Route::post('/{id}/end', [SubastaController::class, 'cerrarSubasta']);
+
+        /* Resto de endpoints de subasta
         Route::post('/{id}/bid', [SubastaController::class, 'realizarPuja']);
         Route::get('/{id}/bids', [SubastaController::class, 'obtenerPujas']);
         Route::post('/{id}/auto-bid', [SubastaController::class, 'realizarPujaAutomatica']);
@@ -136,6 +133,11 @@ Route::middleware('auth:sanctum')->group(function () {
         Route::put('/{id}', [ArticuloController::class, 'actualizarArticulo']);
     });
 
+});
+
+Route::prefix('auction-house')->group(function () {
+    Route::get('/{id}/auctioneers', [CasaDeRematesController::class, 'obtenerRematadores']);
+    Route::get('/{id}/auctions', [CasaDeRematesController::class, 'obtenerSubastas']);
 });
 
 Route::prefix('auction')->group(function () {
