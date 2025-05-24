@@ -12,7 +12,6 @@
         "laravel/framework": "^12.0",
         "laravel/sanctum": "^4.1",
         "laravel/tinker": "^2.10.1",
-        "paypal/paypal-checkout-sdk": "^1.0",
         "paypal/paypal-server-sdk": "^1.0"
     },
     "require-dev": {
@@ -73,7 +72,8 @@
         "allow-plugins": {
             "pestphp/pest-plugin": true,
             "php-http/discovery": true
-        }
+        },
+        "process-timeout": 2000
     },
     "minimum-stability": "stable",
     "prefer-stable": true
