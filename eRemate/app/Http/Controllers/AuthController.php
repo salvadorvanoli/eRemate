@@ -42,7 +42,7 @@ class AuthController extends Controller
     {
         $request->user()->tokens()->delete();
 
-    return response()->json(['message' => 'Sesión cerrada correctamente']);
+        return response()->json(['message' => 'Sesión cerrada correctamente']);
     }
 
     public function getAuthenticatedUser(Request $request)

@@ -43,4 +43,11 @@ export class InteractivePasswordInputComponent {
     this.isPasswordInvalid.emit(isInvalid);
     return isInvalid;
   }
+
+  reset() {
+    this.password.set('');
+    this.formSubmitted.set(false);
+    this.passwordValue.emit('');
+    this.isPasswordInvalid.emit(false);
+  }
 }

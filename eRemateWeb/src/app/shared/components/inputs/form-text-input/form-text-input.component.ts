@@ -38,4 +38,10 @@ export class FormTextInputComponent {
     this.isInputInvalid.emit(isInvalid);
     return isInvalid;
   }
+
+  reset() {
+    this.text.set('');
+    this.isInputInvalid.emit(false);
+    this.textValue.emit('');
+  }
 }
