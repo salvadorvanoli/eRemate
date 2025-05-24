@@ -18,6 +18,7 @@ use App\Http\Controllers\CompraController;
 use App\Http\Controllers\CalificacionController;
 use App\Http\Controllers\UsuarioRegistradoController;
 use App\Http\Controllers\ContactoController;
+use App\Http\Controllers\PayPalController;
 
 // Rutas de Chat
 Route::get('chats', [ChatController::class, 'index']);
@@ -135,6 +136,15 @@ Route::middleware('auth:sanctum')->group(function () {
         Route::put('/{id}', [ArticuloController::class, 'actualizarArticulo']);
     });
 
+});
+
+// Rutas de PayPal
+Route::prefix('paypal')->group(function () {
+    Route::post('/create-payment', [PayPalController::class, 'crearPago']);
+    Route::post('/execute-payment', [PayPalController::class, 'ejecutarPago']);
+    Route::get('/success', [PayPalController::class, 'pagoExitoso']);
+    Route::get('/cancel', [PayPalController::class, 'pagoCancelado']);
+    Route::get('/payment-status/{paymentId}', [PayPalController::class, 'obtenerEstadoPago']);
 });
 
 Route::prefix('auction-house')->group(function () {
