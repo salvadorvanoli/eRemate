@@ -7,6 +7,7 @@ import { CatalogComponent } from './pages/catalog/catalog.component';
 import { ViewProductComponent } from './pages/view-product/view-product.component';
 import { ContactUsComponent } from './pages/contact-us/contact-us.component';
 import { AuctionComponent } from './pages/auction/auction.component';
+import { NotFoundComponent } from './pages/not-found/not-found.component';
 
 export const routes: Routes = [
     { path: 'inicio', component: HomeComponent },
@@ -17,7 +18,8 @@ export const routes: Routes = [
     { path: 'producto/:id', component: ViewProductComponent },
     { path: 'contacto', component: ContactUsComponent },
     { path: 'subasta/:id', component: AuctionComponent },
+    { path: '404', component: NotFoundComponent },
     { path: '', redirectTo: '/inicio', pathMatch: 'full' },
-    { path: '**', redirectTo: '/inicio' }
+    { path: '**', redirectTo: '/404' }
 
 ];
