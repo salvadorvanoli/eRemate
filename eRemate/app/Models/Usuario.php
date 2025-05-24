@@ -22,19 +22,19 @@ class Usuario extends Model
         'tipo'
     ];
 
+    public function usuarioRegistrado()
+    {
+        return $this->hasOne(UsuarioRegistrado::class, 'id', 'id');
+    }
+
     public function rematador()
     {
-        return $this->hasOne(Rematador::class);
+        return $this->hasOne(Rematador::class, 'id', 'id');
     }
 
     public function casaDeRemates()
     {
-        return $this->hasOne(CasaDeRemates::class);
-    }
-
-    public function usuarioRegistrado()
-    {
-        return $this->hasOne(UsuarioRegistrado::class);
+        return $this->hasOne(CasaDeRemates::class, 'id', 'id');
     }
 
     public function esRematador()
