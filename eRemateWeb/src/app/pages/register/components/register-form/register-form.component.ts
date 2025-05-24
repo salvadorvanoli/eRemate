@@ -2,6 +2,7 @@ import { Component, computed, signal } from '@angular/core';
 import { Toast } from 'primeng/toast';
 import { MessageService } from 'primeng/api';
 import { SecurityService } from '../../../../core/services/security.service';
+import { ViewChild } from '@angular/core';
 
 import { FormTextInputComponent } from '../../../../shared/components/inputs/form-text-input/form-text-input.component';
 import { InteractivePasswordInputComponent } from '../interactive-password-input/interactive-password-input.component';
@@ -28,6 +29,25 @@ import { FormSelectInputComponent } from '../../../../shared/components/inputs/f
   styleUrl: './register-form.component.scss'
 })
 export class RegisterFormComponent {
+
+  // Campos de usuario compartidos
+  @ViewChild('emailInput') emailInput: any;
+  @ViewChild('phoneInput') phoneInput: any;
+  @ViewChild('passwordInput') passwordInput: any;
+  @ViewChild('confirmPasswordInput') confirmPasswordInput: any;
+
+  // Campos de rematador
+  @ViewChild('nameInput') nameInput: any;
+  @ViewChild('lastnameInput') lastnameInput: any;
+  @ViewChild('registrationNumberInput') registrationNumberInput: any;
+  @ViewChild('fiscalAddressInput') fiscalAddressInput: any;
+  @ViewChild('imageInput') imageInput: any;
+
+  // Campos de casa de remates
+  @ViewChild('fiscalAddressHouseInput') fiscalAddressHouseInput: any;
+  @ViewChild('taxIdInput') taxIdInput: any;
+  @ViewChild('legalNameInput') legalNameInput: any;
+  @ViewChild('legalAddressInput') legalAddressInput: any;
 
   email: string = '';
   phone: string = '';
@@ -111,6 +131,7 @@ export class RegisterFormComponent {
       this.SecurityService.register(usuario).subscribe({
         next: () => {
           this.messageService.add({ severity: 'success', summary: 'Operación exitosa', detail: '¡Usuario creado exitosamente!', life: 4000 });
+          this.resetForm();
         },
         error: (err: any) => {
           if (err.error.errors) {
@@ -160,5 +181,62 @@ export class RegisterFormComponent {
     } else {
       return true
     }
+  }
+
+  resetForm() {
+    // Resetear inputs básicos
+    this.emailInput?.reset();
+    this.phoneInput?.reset();
+    this.passwordInput?.reset();
+    this.confirmPasswordInput?.reset();
+
+    // Resetear inputs de rematador
+    this.nameInput?.reset();
+    this.lastnameInput?.reset();
+    this.registrationNumberInput?.reset();
+    this.fiscalAddressInput?.reset();
+    this.imageInput?.reset();
+
+    // Resetear inputs de casa de remates
+    this.fiscalAddressHouseInput?.reset();
+    this.taxIdInput?.reset();
+    this.legalNameInput?.reset();
+    this.legalAddressInput?.reset();
+
+    // Resetear variables locales
+    this.email = '';
+    this.phone = '';
+    this.password.set('');
+    this.confirmPassword.set('');
+
+    this.name = '';
+    this.lastname = '';
+    this.registrationNumber = '';
+    this.fiscalAddress = '';
+    this.image = '';
+
+    this.fiscalAddressHouse = '';
+    this.taxIdentificationNumber = '';
+    this.legalName = '';
+    this.legalAddress = '';
+
+    // Resetear estado del formulario
+    this.formSubmitted.set(false);
+
+    // Resetear estados de validación
+    this.isEmailInvalid = false;
+    this.isPasswordInvalid = false;
+    this.isPhoneInvalid = false;
+
+    this.isNameInvalid = false;
+    this.isLastnameInvalid = false;
+    this.isRegistrationNumberInvalid = false;
+    this.isFiscalAddressInvalid = false;
+    this.isImageInvalid = false;
+
+    this.isFiscalAddressHouseInvalid = false;
+    this.isTaxIdentificationNumberInvalid = false;
+    this.isLegalNameInvalid = false;
+    this.isLegalAddressInvalid = false;
   }
 }

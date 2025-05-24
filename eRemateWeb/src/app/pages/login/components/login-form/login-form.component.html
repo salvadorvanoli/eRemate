@@ -2,6 +2,7 @@
     <p-toast />
     <form novalidate action="" method="post" class="mx-auto flex flex-col items-center gap-4 w-full max-w-md">
         <app-form-text-input 
+            #emailInput
             class="w-full"
             placeholder="Email"
             [formSubmitted]="formSubmitted"
@@ -11,6 +12,7 @@
             (isInputInvalid)="isEmailInvalid = $event"
         />
         <app-form-password-input
+            #passwordInput
             class="w-full" 
             placeholder="Contraseña"
             [formSubmitted]="formSubmitted"

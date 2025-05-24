@@ -7,6 +7,7 @@ import { MessageService } from 'primeng/api';
 import { FormSelectInputComponent } from '../../../../shared/components/inputs/form-select-input/form-select-input.component';
 import { EmailService } from '../../../../core/services/email.service';
 import { EmailRequest } from '../../../../core/models/email';
+import { ViewChild } from '@angular/core';
 
 @Component({
   selector: 'app-contact-us-form',
@@ -24,6 +25,10 @@ import { EmailRequest } from '../../../../core/models/email';
 })
 export class ContactUsFormComponent {
     
+    @ViewChild('emailInput') emailInput: any;
+    @ViewChild('asuntoInput') asuntoInput: any;
+    @ViewChild('messageInput') messageInput: any;
+
     email: string = '';
     asunto: string = '';
     question: string = '';
@@ -63,7 +68,7 @@ export class ContactUsFormComponent {
         this.emailService.sendEmail(emailData).subscribe({
             next: () => {
                 this.messageService.add({ severity: 'success', summary: 'Éxito', detail: 'El correo fue enviado correctamente.' });
-                this.resetForm();
+                this.clearForm();
             },
             error: () => {
                 this.messageService.add({ severity: 'error', summary: 'Error', detail: 'Hubo un problema al enviar el correo.' });
@@ -75,11 +80,19 @@ export class ContactUsFormComponent {
         return this.isEmailInvalid && this.isHeaderInvalid && this.isMessageInvalid && this.isOptionInvalid;
     }
 
-    resetForm() {
+    clearForm() {
+        
+        this.emailInput?.reset();
+        this.asuntoInput?.reset();
+        this.messageInput?.reset();
+        
         this.email = '';
         this.asunto = '';
         this.message = '';
-        this.selectedOption = '';
         this.formSubmitted.set(false);
+        
+        this.isEmailInvalid = false;
+        this.isHeaderInvalid = false;
+        this.isMessageInvalid = false;
     }
 }

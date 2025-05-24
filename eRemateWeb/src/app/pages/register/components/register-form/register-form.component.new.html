@@ -1,8 +1,9 @@
+<!-- filepath: c:\laragon\www\eRemate\eRemateWeb\src\app\pages\register\components\register-form\register-form.component.html -->
 <div class="card md:w-150 sm:w-100 w-70 p-10 my-10 mx-auto rounded-md border-solid border-gray-200 border-2">
     <p-toast />
     <form novalidate action="" method="post" class="mx-auto flex flex-col items-center gap-4 w-full max-w-md">
-        <app-form-text-input
-            #emailInput
+        <app-form-text-input 
+            #emailinput
             class="w-full" 
             placeholder="Email"
             [formSubmitted]="formSubmitted"
@@ -11,8 +12,8 @@
             (textValue)="email = $event"
             (isInputInvalid)="isEmailInvalid = $event"
         />
-        <app-form-text-input
-            #phoneInput
+        <app-form-text-input 
+            #phoneinput
             class="w-full" 
             placeholder="Teléfono"
             [formSubmitted]="formSubmitted"
@@ -22,7 +23,7 @@
             (isInputInvalid)="isPhoneInvalid = $event"
         />
         <app-interactive-password-input
-            #passwordInput
+            #passwordinput
             class="w-full" 
             placeholder="Contraseña"
             [formSubmitted]="formSubmitted"
@@ -31,7 +32,7 @@
             (isPasswordInvalid)="isPasswordInvalid = $event"
         />
         <app-form-password-input
-            #confirmPasswordInput
+            #confirmpasswordinput
             class="w-full" 
             placeholder="Confirmar contraseña"
             [formSubmitted]="formSubmitted"
@@ -40,6 +41,7 @@
             [isPasswordWrong]="arePasswordsDifferent()"
         />
         <app-form-select-input
+            #selectinput
             class="w-full"
             [options]="[
             { label: 'Usuario normal', value: 'registrado' },
@@ -54,8 +56,8 @@
         />
 
         @if(selectedOption === 'rematador') {
-            <app-form-text-input
-                #nameInput
+            <app-form-text-input 
+                #nameinput
                 class="w-full" 
                 placeholder="Nombre"
                 [formSubmitted]="formSubmitted"
@@ -65,8 +67,8 @@
                 (isInputInvalid)="isNameInvalid = $event"
             />
 
-            <app-form-text-input
-                #lastnameInput
+            <app-form-text-input 
+                #lastnameinput
                 class="w-full" 
                 placeholder="Apellido"
                 [formSubmitted]="formSubmitted"
@@ -76,8 +78,8 @@
                 (isInputInvalid)="isLastnameInvalid = $event"
             />
 
-            <app-form-text-input
-                #registrationNumberInput
+            <app-form-text-input 
+                #registrationnumberinput
                 class="w-full" 
                 placeholder="Número de matrícula"
                 [formSubmitted]="formSubmitted"
@@ -87,8 +89,8 @@
                 (isInputInvalid)="isRegistrationNumberInvalid = $event"
             />
 
-            <app-form-text-input
-                #fiscalAddressInput
+            <app-form-text-input 
+                #fiscaladdressinput
                 class="w-full" 
                 placeholder="Dirección fiscal"
                 [formSubmitted]="formSubmitted"
@@ -98,8 +100,8 @@
                 (isInputInvalid)="isFiscalAddressInvalid = $event"
             />
 
-            <app-form-text-input
-                #imageInput
+            <app-form-text-input 
+                #imageinput
                 class="w-full" 
                 placeholder="URL de tu imagen"
                 [formSubmitted]="formSubmitted"
@@ -111,8 +113,8 @@
         }
 
         @if(selectedOption === 'casa') {
-            <app-form-text-input
-                #fiscalAddressHouseInput
+            <app-form-text-input 
+                #fiscaladdresshouseinput
                 class="w-full" 
                 placeholder="Dirección fiscal"
                 [formSubmitted]="formSubmitted"
@@ -122,8 +124,8 @@
                 (isInputInvalid)="isFiscalAddressHouseInvalid = $event"
             />
 
-            <app-form-text-input
-                #TaxIdInput
+            <app-form-text-input 
+                #taxidinput
                 class="w-full" 
                 placeholder="Identificación fiscal"
                 [formSubmitted]="formSubmitted"
@@ -133,8 +135,8 @@
                 (isInputInvalid)="isTaxIdentificationNumberInvalid = $event"
             />
 
-            <app-form-text-input
-                #legalNameInput
+            <app-form-text-input 
+                #legalnameinput
                 class="w-full" 
                 placeholder="Nombre legal"
                 [formSubmitted]="formSubmitted"
@@ -144,8 +146,8 @@
                 (isInputInvalid)="isLegalNameInvalid = $event"
             />
 
-            <app-form-text-input
-                #legalAddressInput
+            <app-form-text-input 
+                #legaladdressinput
                 class="w-full" 
                 placeholder="Domicilio legal"
                 [formSubmitted]="formSubmitted"
