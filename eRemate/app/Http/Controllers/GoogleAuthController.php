@@ -76,20 +76,18 @@ class GoogleAuthController extends Controller
             $name = $payload['name'] ?? '';
             $picture = $payload['picture'] ?? '';
 
-            // Verificar si el usuario ya existe
             $existingUser = Usuario::where('email', $email)->orWhere('google_id', $googleId)->first();
 
             if ($existingUser) {
                 return response()->json(['error' => 'El usuario ya existe'], 409);
             }
 
-            // Crear usuario con datos mínimos de Google y perfil incompleto
             $usuario = Usuario::create([
                 'email' => $email,
                 'google_id' => $googleId,
-                'telefono' => '', // Se completará después
-                'tipo' => '', // Se completará después
-                'contrasenia' => '', // No necesaria para Google
+                'telefono' => '',
+                'tipo' => '',
+                'contrasenia' => '',
                 'perfil_completo' => false
             ]);
 
@@ -136,14 +134,12 @@ class GoogleAuthController extends Controller
                 'domicilio' => 'required_if:tipo,casa|string|max:255'
             ]);
 
-            // Actualizar usuario base
             $user->update([
                 'telefono' => $request->telefono,
                 'tipo' => $request->tipo,
                 'perfil_completo' => true
             ]);
 
-            // Crear registros específicos según el tipo
             if ($request->tipo === 'registrado') {
                 UsuarioRegistrado::create([
                     'id' => $user->id
@@ -166,7 +162,6 @@ class GoogleAuthController extends Controller
                 ]);
             }
 
-            // Recargar usuario con relaciones
             $user->refresh();
 
             return response()->json([

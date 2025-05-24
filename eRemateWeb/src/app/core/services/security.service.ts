@@ -82,6 +82,7 @@ export class SecurityService {
       })
     );
   }
+
   googleRegister(googleToken: string, additionalData?: any): Observable<any> {
     return this.http.post<any>(`${this.apiUrl}/register/google`, { 
       token: googleToken,
@@ -105,7 +106,6 @@ export class SecurityService {
       }
     }).pipe(
       tap(() => {
-        // Actualizar el usuario después de completar el perfil
         this.getActualUser().subscribe();
       })
     );

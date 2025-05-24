@@ -18,16 +18,14 @@ export class GoogleAuthService {
   private isGoogleLoaded = false;
   private credentialSubject = new Subject<string>();  constructor() {
     console.log('GoogleAuthService initialized');
-    // Hacer la función global para que Google la encuentre
+
     (window as any).handleCredentialResponse = this.handleCredentialResponse.bind(this);
     
-    // Verificar si Google ya está disponible o esperar a que se cargue
     if (typeof google !== 'undefined') {
       console.log('Google already available, initializing...');
       this.initializeGoogleAuth();
       this.isGoogleLoaded = true;
     } else {
-      // Esperar a que el script se cargue
       this.waitForGoogleScript();
     }
   }
