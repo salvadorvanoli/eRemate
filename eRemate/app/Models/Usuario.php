@@ -19,7 +19,8 @@ class Usuario extends Model
         'email',
         'contrasenia',
         'telefono',
-        'tipo'
+        'tipo',
+        'google_id'
     ];
 
     public function usuarioRegistrado()

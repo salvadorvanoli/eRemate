@@ -2,12 +2,14 @@ import { Component, signal } from '@angular/core';
 import { Toast } from 'primeng/toast';
 import { MessageService } from 'primeng/api';
 import { SecurityService } from '../../../../core/services/security.service';
+import { GoogleAuthService } from '../../../../core/services/google-auth.service';
 import { AccesoUsuario } from '../../../../core/models/usuario';
 import { ViewChild } from '@angular/core';
 
 import { FormTextInputComponent } from "../../../../shared/components/inputs/form-text-input/form-text-input.component";
 import { FormPasswordInputComponent } from "../../../../shared/components/inputs/form-password-input/form-password-input.component";
 import { PrimaryButtonComponent } from "../../../../shared/components/buttons/primary-button/primary-button.component";
+import { GoogleSigninComponent } from "../../../../shared/components/google-signin/google-signin.component";
 
 @Component({
   selector: 'app-login-form',
@@ -15,7 +17,8 @@ import { PrimaryButtonComponent } from "../../../../shared/components/buttons/pr
     Toast,
     FormTextInputComponent,
     FormPasswordInputComponent,
-    PrimaryButtonComponent
+    PrimaryButtonComponent,
+    GoogleSigninComponent
   ],
   providers: [MessageService],
   templateUrl: './login-form.component.html',
@@ -34,10 +37,10 @@ export class LoginFormComponent {
   isPasswordInvalid: boolean = false;
 
   emailPattern = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
-
   constructor(
     private messageService: MessageService,
-    private securityService: SecurityService
+    private securityService: SecurityService,
+    private googleAuthService: GoogleAuthService
   ) {}
 
   login() { // TODO: Realizar la lógica de login
@@ -75,7 +78,6 @@ export class LoginFormComponent {
   validateForm() {
     return this.isEmailInvalid;
   }
-
   clearForm() {
     this.emailInput?.reset();
     this.passwordInput?.reset();
@@ -83,5 +85,31 @@ export class LoginFormComponent {
     this.email = '';
     this.password = '';
     this.formSubmitted.set(false);
+  }
+
+  onGoogleAuth(credential: any) {
+    this.securityService.googleAuth(credential.token).subscribe({
+      next: (response: any) => {
+        this.messageService.add({ 
+          severity: 'success', 
+          summary: 'Operación exitosa', 
+          detail: '¡Has iniciado sesión con Google exitosamente!', 
+          life: 4000 
+        });
+        this.clearForm();
+      },
+      error: (err) => {
+        let errorMessage = 'Error en autenticación con Google';
+        if (err.error?.error) {
+          errorMessage = err.error.error;
+        }
+        this.messageService.add({ 
+          severity: 'error', 
+          summary: 'Error', 
+          detail: errorMessage, 
+          life: 4000 
+        });
+      }
+    });
   }
 }

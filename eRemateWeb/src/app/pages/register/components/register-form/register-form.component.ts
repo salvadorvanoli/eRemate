@@ -10,6 +10,9 @@ import { FormPasswordInputComponent } from '../../../../shared/components/inputs
 import { PrimaryButtonComponent } from '../../../../shared/components/buttons/primary-button/primary-button.component';
 import { FormSelectInputComponent } from '../../../../shared/components/inputs/form-select-input/form-select-input.component';
 
+import { GoogleSigninComponent } from '../../../../shared/components/google-signin/google-signin.component';
+import { GoogleAuthService } from '../../../../core/services/google-auth.service';
+
 @Component({
   selector: 'app-register-form',
   standalone: true,
@@ -19,7 +22,8 @@ import { FormSelectInputComponent } from '../../../../shared/components/inputs/f
     InteractivePasswordInputComponent,
     FormPasswordInputComponent,
     PrimaryButtonComponent,
-    FormSelectInputComponent
+    FormSelectInputComponent,
+    GoogleSigninComponent
   ],
   providers: [
     MessageService,
@@ -99,7 +103,8 @@ export class RegisterFormComponent {
 
   constructor(
     private messageService: MessageService,
-    private SecurityService: SecurityService
+    private SecurityService: SecurityService,
+    private googleAuthService: GoogleAuthService,
   ) {}
 
   register() {
@@ -238,5 +243,23 @@ export class RegisterFormComponent {
     this.isTaxIdentificationNumberInvalid = false;
     this.isLegalNameInvalid = false;
     this.isLegalAddressInvalid = false;
+  }
+
+  onGoogleAuth(event: any): void {
+    console.log('Google auth event received in register:', event);
+    
+    if (event && event.token) {
+      // Usar el método googleRegister del SecurityService
+      this.SecurityService.googleRegister(event.token).subscribe({
+        next: (response) => {
+          console.log('Google registration successful:', response);
+          // Redirigir o mostrar mensaje de éxito
+        },
+        error: (error) => {
+          console.error('Google registration failed:', error);
+          // Mostrar mensaje de error
+        }
+      });
+    }
   }
 }

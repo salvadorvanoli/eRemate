@@ -28,5 +28,19 @@
             [label]="'Iniciar sesión'"
             (onClick)="login()"
         />
+        
+        <!-- Separador -->
+        <div class="w-full flex items-center my-4">
+            <div class="flex-grow border-t border-gray-300"></div>
+            <span class="flex-shrink mx-4 text-gray-600">o</span>
+            <div class="flex-grow border-t border-gray-300"></div>
+        </div>
+
+        <!-- Google Sign-In -->
+        <app-google-signin
+            class="w-full"
+            buttonText="Iniciar sesión con Google"
+            (onAuth)="onGoogleAuth($event)"
+        />
     </form>
 </div>

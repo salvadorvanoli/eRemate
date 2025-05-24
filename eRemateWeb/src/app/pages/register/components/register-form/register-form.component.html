@@ -163,5 +163,19 @@
             [label]="'Registrarse'"
             (onClick)="register()"
         />
+
+        <!-- Separador -->
+        <div class="w-full flex items-center my-4 max-w-md">
+            <hr class="flex-1 border-gray-300">
+            <span class="px-3 text-gray-500 text-sm">o</span>
+            <hr class="flex-1 border-gray-300">
+        </div>
+        <!-- Google Sign In -->
+        <div class="w-full max-w-md">
+            <app-google-signin 
+                buttonText="Registrarse con Google"
+                (onAuth)="onGoogleAuth($event)">
+            </app-google-signin>
+        </div>
     </form>
 </div>

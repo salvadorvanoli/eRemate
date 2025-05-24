@@ -5,6 +5,7 @@ use App\Http\Controllers\SubastaController;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Route;
 use App\Http\Controllers\AuthController;
+use App\Http\Controllers\GoogleAuthController;
 use App\Http\Controllers\UsuarioController;
 use App\Http\Controllers\NotificationController;
 
@@ -79,6 +80,10 @@ Route::post('/register', [AuthController::class, 'register']);
 Route::post('/login', [AuthController::class, 'login']);
 Route::middleware('auth:sanctum')->post('/logout', [AuthController::class, 'logout']);
 Route::middleware('auth:sanctum')->get('/me', [AuthController::class, 'getAuthenticatedUser']);
+
+// Rutas de Google OAuth
+Route::post('/auth/google', [GoogleAuthController::class, 'googleAuth']);
+Route::post('/register/google', [GoogleAuthController::class, 'googleRegister']);
 
 //testing nitificaciones
 Route::post('/notify/user-register', [NotificationController::class, 'testBienvenida']);

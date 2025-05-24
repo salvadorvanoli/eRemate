@@ -72,4 +72,28 @@ export class SecurityService {
     );
   }
 
+  googleAuth(googleToken: string): Observable<{ access_token: string, user: any }> {
+    return this.http.post<{ access_token: string, user: any }>(`${this.apiUrl}/auth/google`, { 
+      token: googleToken 
+    }).pipe(
+      tap(response => {
+        localStorage.setItem('token', response.access_token);
+        this.getActualUser().subscribe();
+      })
+    );
+  }
+
+  googleRegister(googleToken: string, additionalData?: any): Observable<any> {
+    return this.http.post<any>(`${this.apiUrl}/register/google`, { 
+      token: googleToken,
+      ...additionalData 
+    }).pipe(
+      tap(response => {
+        if (response.access_token) {
+          localStorage.setItem('token', response.access_token);
+          this.getActualUser().subscribe();
+        }
+      })
+    );
+  }
 }
