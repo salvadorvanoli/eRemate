@@ -20,7 +20,8 @@ class Usuario extends Model
         'contrasenia',
         'telefono',
         'tipo',
-        'google_id'
+        'google_id',
+        'perfil_completo'
     ];
 
     public function usuarioRegistrado()

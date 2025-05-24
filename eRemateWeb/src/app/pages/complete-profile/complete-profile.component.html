@@ -1,16 +1,14 @@
 <div class="card md:w-150 sm:w-100 w-70 p-10 my-10 mx-auto rounded-md border-solid border-gray-200 border-2">
     <p-toast />
+    
+    <!-- Encabezado explicativo -->
+    <div class="text-center mb-6">
+        <h2 class="text-2xl font-bold text-gray-800 mb-2">Completa tu perfil</h2>
+        <p class="text-gray-600">Para completar tu registro con Google, necesitamos algunos datos adicionales</p>
+    </div>
+    
     <form novalidate action="" method="post" class="mx-auto flex flex-col items-center gap-4 w-full max-w-md">
-        <app-form-text-input
-            #emailInput
-            class="w-full" 
-            placeholder="Email"
-            [formSubmitted]="formSubmitted"
-            [textPattern]="emailPattern"
-            errorMessage="Correo electrónico inválido"
-            (textValue)="email = $event"
-            (isInputInvalid)="isEmailInvalid = $event"
-        />
+        <!-- Teléfono - siempre requerido -->
         <app-form-text-input
             #phoneInput
             class="w-full" 
@@ -21,24 +19,8 @@
             (textValue)="phone = $event"
             (isInputInvalid)="isPhoneInvalid = $event"
         />
-        <app-interactive-password-input
-            #passwordInput
-            class="w-full" 
-            placeholder="Contraseña"
-            [formSubmitted]="formSubmitted"
-            errorMessage="La contraseña debe tener al menos 6 caracteres"
-            (passwordValue)="password.set($event);"
-            (isPasswordInvalid)="isPasswordInvalid = $event"
-        />
-        <app-form-password-input
-            #confirmPasswordInput
-            class="w-full" 
-            placeholder="Confirmar contraseña"
-            [formSubmitted]="formSubmitted"
-            errorMessage="Las contraseñas deben coincidir"
-            (passwordValue)="confirmPassword.set($event);"
-            [isPasswordWrong]="arePasswordsDifferent()"
-        />
+
+        <!-- Selector de tipo de usuario -->
         <app-form-select-input
             class="w-full"
             [options]="[
@@ -53,6 +35,7 @@
             [formSubmitted]="formSubmitted"
         />
 
+        <!-- Campos específicos para Rematador -->
         @if(selectedOption === 'rematador') {
             <app-form-text-input
                 #nameInput
@@ -110,6 +93,7 @@
             />
         }
 
+        <!-- Campos específicos para Casa de Remates -->
         @if(selectedOption === 'casa') {
 
             <app-form-text-input
@@ -146,26 +130,13 @@
             />
         }
 
+        <!-- Botón para completar perfil -->
         <app-primary-button
             class="w-full"
             styleClass="w-full"
             [classes]="'w-full'"
-            [label]="'Registrarse'"
-            (onClick)="register()"
+            [label]="'Completar perfil'"
+            (onClick)="completeProfile()"
         />
-
-        <!-- Separador -->
-        <div class="w-full flex items-center my-4 max-w-md">
-            <hr class="flex-1 border-gray-300">
-            <span class="px-3 text-gray-500 text-sm">o</span>
-            <hr class="flex-1 border-gray-300">
-        </div>
-        <!-- Google Sign In -->
-        <div class="w-full max-w-md">
-            <app-google-signin 
-                buttonText="Registrarse con Google"
-                (onAuth)="onGoogleAuth($event)">
-            </app-google-signin>
-        </div>
     </form>
 </div>

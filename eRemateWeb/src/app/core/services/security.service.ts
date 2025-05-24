@@ -82,7 +82,6 @@ export class SecurityService {
       })
     );
   }
-
   googleRegister(googleToken: string, additionalData?: any): Observable<any> {
     return this.http.post<any>(`${this.apiUrl}/register/google`, { 
       token: googleToken,
@@ -93,6 +92,21 @@ export class SecurityService {
           localStorage.setItem('token', response.access_token);
           this.getActualUser().subscribe();
         }
+      })
+    );
+  }
+
+  completeProfile(profileData: any): Observable<any> {
+    const token = localStorage.getItem('token');
+    
+    return this.http.post<any>(`${this.apiUrl}/complete-profile`, profileData, {
+      headers: {
+        Authorization: `Bearer ${token}`
+      }
+    }).pipe(
+      tap(() => {
+        // Actualizar el usuario después de completar el perfil
+        this.getActualUser().subscribe();
       })
     );
   }

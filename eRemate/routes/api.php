@@ -81,10 +81,6 @@ Route::post('/login', [AuthController::class, 'login']);
 Route::middleware('auth:sanctum')->post('/logout', [AuthController::class, 'logout']);
 Route::middleware('auth:sanctum')->get('/me', [AuthController::class, 'getAuthenticatedUser']);
 
-// Rutas de Google OAuth
-Route::post('/auth/google', [GoogleAuthController::class, 'googleAuth']);
-Route::post('/register/google', [GoogleAuthController::class, 'googleRegister']);
-
 //testing nitificaciones
 Route::post('/notify/user-register', [NotificationController::class, 'testBienvenida']);
 Route::post('/notify/auction-start', [NotificationController::class, 'notificarInicioSubasta']);
@@ -166,3 +162,12 @@ Route::prefix('item')->group(function () {
 });
 
 Route::post('/contacto', [ContactoController::class, 'enviarFormulario']);
+
+// Google OAuth routes
+Route::post('/auth/google', [GoogleAuthController::class, 'googleAuth']);
+Route::post('/register/google', [GoogleAuthController::class, 'googleRegister']);
+
+// Complete profile route (protected)
+Route::middleware('auth:sanctum')->group(function () {
+    Route::post('/complete-profile', [GoogleAuthController::class, 'completeProfile']);
+});

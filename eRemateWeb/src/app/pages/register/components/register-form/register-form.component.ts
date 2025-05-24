@@ -1,4 +1,5 @@
 import { Component, computed, signal } from '@angular/core';
+import { Router } from '@angular/router';
 import { Toast } from 'primeng/toast';
 import { MessageService } from 'primeng/api';
 import { SecurityService } from '../../../../core/services/security.service';
@@ -48,7 +49,6 @@ export class RegisterFormComponent {
   @ViewChild('imageInput') imageInput: any;
 
   // Campos de casa de remates
-  @ViewChild('fiscalAddressHouseInput') fiscalAddressHouseInput: any;
   @ViewChild('taxIdInput') taxIdInput: any;
   @ViewChild('legalNameInput') legalNameInput: any;
   @ViewChild('legalAddressInput') legalAddressInput: any;
@@ -65,7 +65,6 @@ export class RegisterFormComponent {
   fiscalAddress: string = '';
   image: string = '';
 
-  fiscalAddressHouse: string = '';
   taxIdentificationNumber: string = '';
   legalName: string = '';
   legalAddress: string = '';
@@ -83,7 +82,6 @@ export class RegisterFormComponent {
   isFiscalAddressInvalid: boolean = false;
   isImageInvalid: boolean = false;
 
-  isFiscalAddressHouseInvalid: boolean = false;
   isTaxIdentificationNumberInvalid: boolean = false;
   isLegalNameInvalid: boolean = false;
   isLegalAddressInvalid: boolean = false;
@@ -100,11 +98,11 @@ export class RegisterFormComponent {
   imagePattern = /\.(jpg|jpeg|png|gif)$/i;
   taxIdentificationNumberPattern = /^[a-zA-Z0-9-]{5,20}$/;
   addressPattern = /^[a-zA-Z0-9\s.,#-]{5,100}$/;
-
   constructor(
     private messageService: MessageService,
     private SecurityService: SecurityService,
     private googleAuthService: GoogleAuthService,
+    private router: Router
   ) {}
 
   register() {
@@ -179,7 +177,6 @@ export class RegisterFormComponent {
       this.arePasswordsDifferent() ||
       this.isOptionInvalid ||
       this.isPhoneInvalid ||
-      this.isFiscalAddressHouseInvalid ||
       this.isTaxIdentificationNumberInvalid ||
       this.isLegalNameInvalid ||
       this.isLegalAddressInvalid;
@@ -203,7 +200,6 @@ export class RegisterFormComponent {
     this.imageInput?.reset();
 
     // Resetear inputs de casa de remates
-    this.fiscalAddressHouseInput?.reset();
     this.taxIdInput?.reset();
     this.legalNameInput?.reset();
     this.legalAddressInput?.reset();
@@ -220,7 +216,6 @@ export class RegisterFormComponent {
     this.fiscalAddress = '';
     this.image = '';
 
-    this.fiscalAddressHouse = '';
     this.taxIdentificationNumber = '';
     this.legalName = '';
     this.legalAddress = '';
@@ -239,25 +234,36 @@ export class RegisterFormComponent {
     this.isFiscalAddressInvalid = false;
     this.isImageInvalid = false;
 
-    this.isFiscalAddressHouseInvalid = false;
     this.isTaxIdentificationNumberInvalid = false;
     this.isLegalNameInvalid = false;
     this.isLegalAddressInvalid = false;
   }
-
+  
   onGoogleAuth(event: any): void {
     console.log('Google auth event received in register:', event);
     
     if (event && event.token) {
       this.SecurityService.googleRegister(event.token).subscribe({
         next: (response) => {
+          
+          if (event.user) {
+            localStorage.setItem('google_registration_data', JSON.stringify({
+              name: event.user.name,
+              email: event.user.email,
+              picture: event.user.picture,
+              token: event.token
+            }));
+          }
+          
           this.messageService.add({ 
             severity: 'success', 
             summary: 'Operación exitosa', 
-            detail: '¡Registro exitoso con Google!', 
+            detail: '¡Registro inicial exitoso! Completa tu perfil', 
             life: 4000 
           });
-          this.resetForm();
+          
+          // Redirigir a completar perfil
+          this.router.navigate(['/completar-perfil']);
         },
         error: (err) => {
           let errorMessage = 'Error en autenticación con Google';

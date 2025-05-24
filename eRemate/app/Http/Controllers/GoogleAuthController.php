@@ -4,6 +4,8 @@ namespace App\Http\Controllers;
 
 use App\Models\Usuario;
 use App\Models\UsuarioRegistrado;
+use App\Models\Rematador;
+use App\Models\CasaDeRemates;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Hash;
 use Google_Client;
@@ -26,14 +28,14 @@ class GoogleAuthController extends Controller
 
             $googleId = $payload['sub'];
             $email = $payload['email'];
-            $name = $payload['name'] ?? '';
-            $picture = $payload['picture'] ?? '';
 
-            // Buscar usuario existente por email
-            $usuario = Usuario::where('email', $email)->first();
+            // Buscar usuario existente por email o google_id
+            $usuario = Usuario::where('email', $email)
+                             ->orWhere('google_id', $googleId)
+                             ->first();
 
             if (!$usuario) {
-                return response()->json(['error' => 'Usuario no encontrado'], 404);
+                return response()->json(['error' => 'Usuario no encontrado. Por favor regístrate primero.'], 404);
             }
 
             // Actualizar google_id si no lo tiene
@@ -59,8 +61,7 @@ class GoogleAuthController extends Controller
     {
         try {
             $request->validate([
-                'token' => 'required|string',
-                'tipo' => 'string|in:registrado,rematador,casa'
+                'token' => 'required|string'
             ]);
 
             $client = new Google_Client(['client_id' => env('GOOGLE_CLIENT_ID')]);
@@ -79,60 +80,103 @@ class GoogleAuthController extends Controller
             $existingUser = Usuario::where('email', $email)->orWhere('google_id', $googleId)->first();
 
             if ($existingUser) {
-                // Si existe, hacer login
-                $token = $existingUser->createToken('google_auth_token')->plainTextToken;
-                
-                return response()->json([
-                    'access_token' => $token,
-                    'user' => $existingUser,
-                    'message' => 'Usuario ya existía, sesión iniciada'
-                ]);
+                return response()->json(['error' => 'El usuario ya existe'], 409);
             }
 
-            // Crear nuevo usuario
-            $tipoUsuario = $request->tipo ?? 'registrado';
-            $telefono = $request->telefono ?? ''; // Puede estar vacío inicialmente
+            // Crear usuario con datos mínimos de Google y perfil incompleto
+            $usuario = Usuario::create([
+                'email' => $email,
+                'google_id' => $googleId,
+                'telefono' => '', // Se completará después
+                'tipo' => '', // Se completará después
+                'contrasenia' => '', // No necesaria para Google
+                'perfil_completo' => false
+            ]);
 
-            // Separar nombre y apellido
-            $nameParts = explode(' ', trim($name));
-            $nombre = $nameParts[0] ?? '';
-            $apellido = count($nameParts) > 1 ? implode(' ', array_slice($nameParts, 1)) : '';            if ($tipoUsuario === 'registrado') {
-                // Crear usuario en tabla usuarios primero
-                $usuario = Usuario::create([
-                    'email' => $email,
-                    'telefono' => $telefono,
-                    'contrasenia' => Hash::make('google_user_' . time()), // Contraseña temporal
-                    'tipo' => 'registrado',
-                    'google_id' => $googleId
-                ]);
-
-                // Crear entrada en usuarios_registrados
-                UsuarioRegistrado::create([
-                    'id' => $usuario->id
-                ]);
-            } else {
-                // Para rematador y casa, crear en la tabla Usuario base
-                $usuario = Usuario::create([
-                    'email' => $email,
-                    'telefono' => $telefono,
-                    'contrasenia' => Hash::make('google_user_' . time()),
-                    'tipo' => $tipoUsuario,
-                    'google_id' => $googleId
-                ]);
-            }
-
-            $token = $usuario->createToken('google_register_token')->plainTextToken;
+            $token = $usuario->createToken('google_auth_token')->plainTextToken;
 
             return response()->json([
                 'access_token' => $token,
                 'user' => $usuario,
-                'message' => 'Usuario registrado con Google exitosamente',
-                'requires_completion' => empty($telefono) // Indica si necesita completar datos
-            ], 201);
+                'requires_completion' => true,
+                'google_data' => [
+                    'name' => $name,
+                    'email' => $email,
+                    'picture' => $picture
+                ]
+            ]);
 
         } catch (\Exception $e) {
             \Log::error('Google Register Error: ' . $e->getMessage());
-            return response()->json(['error' => 'Error en registro con Google'], 500);
+            return response()->json(['error' => 'Error en el registro con Google'], 500);
+        }
+    }
+
+    public function completeProfile(Request $request)
+    {
+        try {
+            $user = $request->user();
+            
+            if (!$user || $user->perfil_completo) {
+                return response()->json(['error' => 'Usuario no válido o perfil ya completado'], 400);
+            }
+
+            $request->validate([
+                'telefono' => 'required|string|max:15',
+                'tipo' => 'required|string|in:registrado,rematador,casa',
+                // Campos para rematador
+                'nombre' => 'required_if:tipo,rematador|string|max:255',
+                'apellido' => 'required_if:tipo,rematador|string|max:255',
+                'numeroMatricula' => 'required_if:tipo,rematador|string|max:50',
+                'direccionFiscal' => 'required_if:tipo,rematador|string|max:255',
+                'imagen' => 'nullable|string',
+                // Campos para casa de remates
+                'identificacionFiscal' => 'required_if:tipo,casa|string|max:50',
+                'nombreLegal' => 'required_if:tipo,casa|string|max:255',
+                'domicilio' => 'required_if:tipo,casa|string|max:255'
+            ]);
+
+            // Actualizar usuario base
+            $user->update([
+                'telefono' => $request->telefono,
+                'tipo' => $request->tipo,
+                'perfil_completo' => true
+            ]);
+
+            // Crear registros específicos según el tipo
+            if ($request->tipo === 'registrado') {
+                UsuarioRegistrado::create([
+                    'id' => $user->id
+                ]);
+            } elseif ($request->tipo === 'rematador') {
+                Rematador::create([
+                    'id' => $user->id,
+                    'nombre' => $request->nombre,
+                    'apellido' => $request->apellido,
+                    'numeroMatricula' => $request->numeroMatricula,
+                    'direccionFiscal' => $request->direccionFiscal,
+                    'imagen' => $request->imagen ?? ''
+                ]);
+            } elseif ($request->tipo === 'casa') {
+                CasaDeRemates::create([
+                    'id' => $user->id,
+                    'identificacionFiscal' => $request->identificacionFiscal,
+                    'nombreLegal' => $request->nombreLegal,
+                    'domicilio' => $request->domicilio
+                ]);
+            }
+
+            // Recargar usuario con relaciones
+            $user->refresh();
+
+            return response()->json([
+                'message' => 'Perfil completado exitosamente',
+                'user' => $user
+            ]);
+
+        } catch (\Exception $e) {
+            \Log::error('Complete Profile Error: ' . $e->getMessage());
+            return response()->json(['error' => 'Error al completar el perfil'], 500);
         }
     }
 }
