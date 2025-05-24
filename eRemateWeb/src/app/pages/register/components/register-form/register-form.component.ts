@@ -249,15 +249,27 @@ export class RegisterFormComponent {
     console.log('Google auth event received in register:', event);
     
     if (event && event.token) {
-      // Usar el método googleRegister del SecurityService
       this.SecurityService.googleRegister(event.token).subscribe({
         next: (response) => {
-          console.log('Google registration successful:', response);
-          // Redirigir o mostrar mensaje de éxito
+          this.messageService.add({ 
+            severity: 'success', 
+            summary: 'Operación exitosa', 
+            detail: '¡Registro exitoso con Google!', 
+            life: 4000 
+          });
+          this.resetForm();
         },
-        error: (error) => {
-          console.error('Google registration failed:', error);
-          // Mostrar mensaje de error
+        error: (err) => {
+          let errorMessage = 'Error en autenticación con Google';
+          if (err.error?.error) {
+            errorMessage = err.error.error;
+          }
+          this.messageService.add({ 
+            severity: 'error', 
+            summary: 'Error', 
+            detail: errorMessage, 
+            life: 4000 
+          });
         }
       });
     }

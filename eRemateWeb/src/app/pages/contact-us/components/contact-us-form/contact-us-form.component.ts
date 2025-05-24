@@ -68,7 +68,7 @@ export class ContactUsFormComponent {
         this.emailService.sendEmail(emailData).subscribe({
             next: () => {
                 this.messageService.add({ severity: 'success', summary: 'Éxito', detail: 'El correo fue enviado correctamente.' });
-                this.clearForm();
+                this.resetForm();
             },
             error: () => {
                 this.messageService.add({ severity: 'error', summary: 'Error', detail: 'Hubo un problema al enviar el correo.' });
@@ -80,7 +80,7 @@ export class ContactUsFormComponent {
         return this.isEmailInvalid && this.isHeaderInvalid && this.isMessageInvalid && this.isOptionInvalid;
     }
 
-    clearForm() {
+    resetForm() {
         
         this.emailInput?.reset();
         this.asuntoInput?.reset();

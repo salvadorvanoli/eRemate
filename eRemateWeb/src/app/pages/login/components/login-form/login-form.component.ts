@@ -56,7 +56,7 @@ export class LoginFormComponent {
       this.securityService.auth(usuario).subscribe({
         next: () => {
           this.messageService.add({ severity: 'success', summary: 'Operación exitosa', detail: "¡Has iniciado sesión exitosamente!", life: 4000 });
-          this.clearForm();
+          this.resetForm();
         },
         error: (err) => {
           if (err.error.error !== undefined) {
@@ -78,7 +78,7 @@ export class LoginFormComponent {
   validateForm() {
     return this.isEmailInvalid;
   }
-  clearForm() {
+  resetForm() {
     this.emailInput?.reset();
     this.passwordInput?.reset();
     
@@ -96,7 +96,7 @@ export class LoginFormComponent {
           detail: '¡Has iniciado sesión con Google exitosamente!', 
           life: 4000 
         });
-        this.clearForm();
+        this.resetForm();
       },
       error: (err) => {
         let errorMessage = 'Error en autenticación con Google';
