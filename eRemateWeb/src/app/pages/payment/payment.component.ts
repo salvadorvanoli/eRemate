@@ -18,6 +18,7 @@ export class PaymentComponent implements OnInit {
   monto: number = 0;
   metodoEntrega: string = '';
   loading: boolean = false;
+  loadingUser: boolean = true;
   error: string = '';
   currentUser: any = null;
 
@@ -40,13 +41,31 @@ export class PaymentComponent implements OnInit {
   }
 
   getCurrentUser() {
+    this.loadingUser = true;
     this.securityService.getActualUser().subscribe({
       next: (user) => {
         this.currentUser = user;
+        this.loadingUser = false;
+
+        // Verificar si el usuario es de tipo 'registrado'
+        if (!user || user.tipo !== 'registrado') {
+          this.error = 'Debe iniciar sesión como usuario registrado para realizar pagos';
+          setTimeout(() => {
+            this.router.navigate(['/inicio-sesion'], { 
+              queryParams: { returnUrl: this.router.url }
+            });
+          }, 2000);
+        }
       },
       error: (error) => {
         console.error('Error al obtener usuario:', error);
-        this.router.navigate(['/inicio-sesion']);
+        this.loadingUser = false;
+        this.error = 'Error al obtener información del usuario';
+        setTimeout(() => {
+          this.router.navigate(['/inicio-sesion'], { 
+            queryParams: { returnUrl: this.router.url }
+          });
+        }, 2000);
       }
     });
   }
@@ -62,27 +81,40 @@ export class PaymentComponent implements OnInit {
 
   async procesarPago() {
     if (!this.validarFormulario()) {
-        return;
+      return;
     }
 
-    // Obtener usuario actual del SecurityService
-    if (!this.currentUser?.usuarioRegistrado?.id) {
-        this.error = 'Debe iniciar sesión para realizar pagos';
-        return;
+    if (this.loadingUser) {
+      this.error = 'Espere mientras cargamos su información...';
+      return;
+    }
+
+    // Verificar usuario registrado con verificación segura de tipo
+    if (!this.currentUser || this.currentUser.tipo !== 'registrado' || !('id' in this.currentUser)) {
+      this.error = 'Debe iniciar sesión como usuario registrado para realizar pagos';
+      setTimeout(() => {
+        this.router.navigate(['/inicio-sesion'], { 
+          queryParams: { returnUrl: this.router.url }
+        });
+      }, 2000);
+      return;
     }
 
     this.loading = true;
     this.error = '';
 
     try {
-        await this.paypalService.procesarPagoPayPal(
-            this.monto,
-            this.metodoEntrega,
-            this.currentUser.usuarioRegistrado.id
-        );
+      console.log('Procesando pago con usuario ID:', this.currentUser.id);
+      await this.paypalService.procesarPagoPayPal(
+        this.monto,
+        this.metodoEntrega,
+        this.currentUser.id
+      );
+      // No necesitamos manejar el redireccionamiento aquí, ya que PayPal lo hará
     } catch (error: any) {
-        this.error = error.message || 'Error al procesar el pago';
-        this.loading = false;
+      this.loading = false;
+      this.error = error.message || 'Error al procesar el pago. Intente nuevamente.';
+      console.error('Error de pago:', error);
     }
   }
 
@@ -102,5 +134,17 @@ export class PaymentComponent implements OnInit {
 
   cancelar() {
     this.router.navigate(['/']);
+  }
+
+  // Método para determinar si el botón debe estar deshabilitado
+  isButtonDisabled(): boolean {
+    return this.loading || 
+           this.loadingUser || 
+           !this.monto || 
+           this.monto <= 0 || 
+           !this.metodoEntrega || 
+           !this.currentUser || 
+           this.currentUser.tipo !== 'registrado' || 
+           !('id' in this.currentUser);
   }
 }

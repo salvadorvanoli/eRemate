@@ -32,6 +32,15 @@ class PayPalController extends Controller
                 ], 422);
             }
 
+            // Verificar que el usuario exista
+            $usuarioRegistrado = \App\Models\UsuarioRegistrado::find($request->input('usuario_registrado_id'));
+            if (!$usuarioRegistrado) {
+                return response()->json([
+                    'success' => false,
+                    'error' => 'El usuario registrado no existe'
+                ], 404);
+            }
+
             $monto = $request->input('monto');
             $metodoEntrega = $request->input('metodo_entrega');
             $usuarioRegistradoId = $request->input('usuario_registrado_id');
@@ -39,6 +48,7 @@ class PayPalController extends Controller
             return $this->paypalService->crearPago($monto, $metodoEntrega, $usuarioRegistradoId);
 
         } catch (\Exception $e) {
+            \Log::error('Error en crearPago: ' . $e->getMessage());
             return response()->json([
                 'success' => false,
                 'error' => 'Error al crear pago',
