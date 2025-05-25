@@ -249,4 +249,16 @@ class SubastaController extends Controller
             ], 500);
         }
     }
+
+    public function eliminarSubasta($id)
+    {
+        try {
+            return $this->subastaService->eliminarSubasta($id);
+        } catch (\Exception $e) {
+            return response()->json([
+                'success' => false,
+                'message' => 'Error al eliminar subasta: ' . $e->getMessage()
+            ], 500);
+        }
+    }
 }

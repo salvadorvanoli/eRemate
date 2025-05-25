@@ -16,4 +16,5 @@ interface SubastaServiceInterface
     public function obtenerPujas(int $id);
     public function realizarPujaAutomatica(int $id);
     public function obtenerTransmisionEnVivo(int $id);
+    public function eliminarSubasta(int $id);
 }

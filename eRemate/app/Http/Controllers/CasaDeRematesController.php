@@ -20,10 +20,10 @@ class CasaDeRematesController extends Controller
     {
         try {
             $data = $request->validate([
-                'identificacionFiscal' => 'sometimes|required|string|max:255|unique:casas_de_remates,identificacionFiscal,' . $id,
-                'nombreLegal' => 'sometimes|required|string|max:255|unique:casas_de_remates,identificacionFiscal,' . $id,
-                'domicilio' => 'sometimes|nullable|string|max:255'
-            ]);
+            'identificacionFiscal' => 'sometimes|required|string|max:255',
+            'nombreLegal' => 'sometimes|required|string|max:255',
+            'domicilio' => 'sometimes|nullable|string|max:255'
+        ]);
 
             $casaDeRemates = $this->casaDeRematesService->actualizarCasaDeRemates($id, $data);
 
@@ -112,26 +112,21 @@ class CasaDeRematesController extends Controller
         
     }
 
-    public function asignarRematador($id, $rematadorId)
+    public function asignarRematador($id, Request $request)
     {
         try {
+            $data = $request->validate([
+                'email' => 'required|email|exists:usuarios,email'
+            ]);
 
-            return $this->casaDeRematesService->asignarRematador($id, $rematadorId);
+            return $this->casaDeRematesService->asignarRematador($id, $data['email']);
 
-        } catch (\Illuminate\Database\Eloquent\ModelNotFoundException $e) {
+        } catch (\Illuminate\Validation\ValidationException $e) {
             return response()->json([
                 'success' => false,
-                'message' => 'Casa de remates o rematador no encontrado'
-            ], 404);
-
-        } catch (\Illuminate\Database\QueryException $e) {
-            if (strpos($e->getMessage(), 'foreign key constraint fails') !== false) {
-                return response()->json([
-                    'success' => false,
-                    'message' => 'El rematador especificado no existe'
-                ], 404);
-            }
-            
+                'errors' => $e->errors(),
+                'message' => 'Error de validación'
+            ], 422);
         } catch (\Exception $e) {
             return response()->json([
                 'success' => false,

@@ -10,5 +10,5 @@ interface UsuarioRegistradoServiceInterface
     public function agregarLoteFavorito($usuarioId, $loteId);
     public function quitarLoteFavorito($usuarioId, $loteId);
     public function obtenerLotesFavoritos($usuarioId);
-    
+    public function obtenerLotesConPujas($usuarioId); // Nuevo método
 }

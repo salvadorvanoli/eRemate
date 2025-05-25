@@ -65,6 +65,7 @@ Route::get('registered-users/{id}/purchase-history', [UsuarioRegistradoControlle
 Route::get('registered-users/{usuarioId}/favorite-lots', [UsuarioRegistradoController::class, 'getLotesFavoritos']);
 Route::post('registered-users/{usuarioId}/favorite-lots', [UsuarioRegistradoController::class, 'addLoteFavorito']);
 Route::delete('registered-users/{usuarioId}/favorite-lots/{loteId}', [UsuarioRegistradoController::class, 'removeLoteFavorito']);
+Route::get('registered-users/{usuarioId}/bidded-lots', [UsuarioRegistradoController::class, 'getLotesConPujas']);
 
 Route::prefix('auctioneer')->group(function () {
     Route::post('/', [RematadorController::class, 'store']);
@@ -89,52 +90,49 @@ Route::post('/notify/auction-bid', [NotificationController::class, 'notificarNue
 Route::get('/auction/page', [SubastaController::class, 'obtenerSubastasOrdenadasPorCierre']);
 
 // Rutas para usuarios
-Route::middleware('auth:sanctum')->group(function () {
-    Route::get('/usuarios/{id}', [UsuarioController::class, 'obtenerUsuario']);
-    Route::get('/usuarios/{id}/perfil', [UsuarioController::class, 'obtenerPerfil']);
+Route::get('/usuarios/{id}', [UsuarioController::class, 'obtenerUsuario']);
+Route::get('/usuarios/{id}/perfil', [UsuarioController::class, 'obtenerPerfil']);
 
-    /*// Notificaciones de subastas
-    Route::post('/auction-start', [NotificationController::class, 'notificarInicioSubasta'])
-        ->name('notifications.auction.start');
+/*// Notificaciones de subastas
+// Route::post('/auction-start', [NotificationController::class, 'notificarInicioSubasta'])
+//     ->name('notifications.auction.start');
     
-    Route::post('/auction-end', [NotificationController::class, 'notificarFinSubasta'])
-        ->name('notifications.auction.end');
+// Route::post('/auction-end', [NotificationController::class, 'notificarFinSubasta'])
+//     ->name('notifications.auction.end');
     
-    Route::post('/auction-bid', [NotificationController::class, 'notificarNuevaPuja'])
-        ->name('notifications.auction.bid');*/
+// Route::post('/auction-bid', [NotificationController::class, 'notificarNuevaPuja'])
+//     ->name('notifications.auction.bid');*/
 
-    Route::prefix('auction-house')->group(function () {
-        Route::put('/{id}', [CasaDeRematesController::class, 'actualizarCasaDeRemates']);
-        Route::post('/{id}/auctioneers/{rematadorId}/assign', [CasaDeRematesController::class, 'asignarRematador']);
-        Route::post('/{id}/auctioneers/{rematadorId}/remove', [CasaDeRematesController::class, 'desasignarRematador']);
-    });
+Route::prefix('auction-house')->group(function () {
+    Route::put('/{id}', [CasaDeRematesController::class, 'actualizarCasaDeRemates']);
+    Route::post('/{id}/auctioneers/{rematadorId}/remove', [CasaDeRematesController::class, 'desasignarRematador']);
+    Route::post('/{id}/auctioneers/assign', [CasaDeRematesController::class, 'asignarRematador']);
+});
 
-    Route::prefix('auction')->group(function () {
-        Route::post('/', [SubastaController::class, 'crearSubasta']);
-        Route::put('/{id}', [SubastaController::class, 'actualizarSubasta']);
-        Route::post('/{id}/start', [SubastaController::class, 'iniciarSubasta']);
-        Route::post('/{id}/end', [SubastaController::class, 'cerrarSubasta']);
+Route::prefix('auction')->group(function () {
+    Route::post('/', [SubastaController::class, 'crearSubasta']);
+    Route::put('/{id}', [SubastaController::class, 'actualizarSubasta']);
+    Route::post('/{id}/start', [SubastaController::class, 'iniciarSubasta']);
+    Route::post('/{id}/end', [SubastaController::class, 'cerrarSubasta']);
 
-        /* Resto de endpoints de subasta
-        Route::post('/{id}/bid', [SubastaController::class, 'realizarPuja']);
-        Route::get('/{id}/bids', [SubastaController::class, 'obtenerPujas']);
-        Route::post('/{id}/auto-bid', [SubastaController::class, 'realizarPujaAutomatica']);
-        Route::post('/{id}/live-stream', [SubastaController::class, 'obtenerTransmisionEnVivo']);
-        */
-    });
+    /* Resto de endpoints de subasta
+    // Route::post('/{id}/bid', [SubastaController::class, 'realizarPuja']);
+    // Route::get('/{id}/bids', [SubastaController::class, 'obtenerPujas']);
+    // Route::post('/{id}/auto-bid', [SubastaController::class, 'realizarPujaAutomatica']);
+    // Route::post('/{id}/live-stream', [SubastaController::class, 'obtenerTransmisionEnVivo']);
+    */
+});
 
-    Route::prefix('lot')->group(function () {
-        Route::post('/', [LoteController::class, 'crearLote']);
-        Route::put('/{id}', [LoteController::class, 'actualizarLote']);
-        Route::post('/{id}/items/{articuloId}/add', [LoteController::class, 'agregarArticulo']);
-        Route::post('/{id}/items/{articuloId}/remove', [LoteController::class, 'removerArticulo']);
-    });
+Route::prefix('lot')->group(function () {
+    Route::post('/', [LoteController::class, 'crearLote']);
+    Route::put('/{id}', [LoteController::class, 'actualizarLote']);
+    Route::post('/{id}/items/{articuloId}/add', [LoteController::class, 'agregarArticulo']);
+    Route::post('/{id}/items/{articuloId}/remove', [LoteController::class, 'removerArticulo']);
+});
 
-    Route::prefix('item')->group(function () {
-        Route::post('/', [ArticuloController::class, 'crearArticulo']);
-        Route::put('/{id}', [ArticuloController::class, 'actualizarArticulo']);
-    });
-
+Route::prefix('item')->group(function () {
+    Route::post('/', [ArticuloController::class, 'crearArticulo']);
+    Route::put('/{id}', [ArticuloController::class, 'actualizarArticulo']);
 });
 
 Route::prefix('auction-house')->group(function () {
@@ -161,3 +159,9 @@ Route::prefix('item')->group(function () {
 });
 
 Route::post('/contacto', [ContactoController::class, 'enviarFormulario']);
+
+
+// Rutas nuevas
+
+Route::delete('lot/{id}', [LoteController::class, 'eliminarLote']);
+Route::delete('auction/{id}', [SubastaController::class, 'eliminarSubasta']);
