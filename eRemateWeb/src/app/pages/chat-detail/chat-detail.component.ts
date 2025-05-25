@@ -4,8 +4,8 @@ import { FormsModule } from '@angular/forms';
 import { ActivatedRoute, Router } from '@angular/router';
 import { ChatService } from '../../core/services/chat.service';
 import { SecurityService } from '../../core/services/security.service';
-import { PaymentRequestDialogComponent } from './payment-request-dialog.component';
-import { PaymentRequestListComponent } from './payment-request-list.component';
+import { PaymentRequestDialogComponent } from '../../shared/components/payment/payment-request-dialog.component';
+import { PaymentRequestListComponent } from '../../shared/components/payment/payment-request-list.component';
 import { PaypalService } from '../../core/services/paypal.service';
 
 @Component({

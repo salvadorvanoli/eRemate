@@ -1,7 +1,7 @@
 import { Component, EventEmitter, Input, Output } from '@angular/core';
 import { CommonModule } from '@angular/common';
-import { PrimaryButtonComponent } from '../../shared/components/buttons/primary-button/primary-button.component';
-import { PaypalService } from '../../core/services/paypal.service';
+import { PrimaryButtonComponent } from '../buttons/primary-button/primary-button.component';
+import { PaypalService } from '../../../core/services/paypal.service';
 
 @Component({
   selector: 'app-payment-request-list',

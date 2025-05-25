@@ -107,7 +107,7 @@ export class PaymentSuccessComponent implements OnInit, OnDestroy {
             }
           }
         },
-        error: () => {} // Ignorar errores en el polling
+        error: () => {} 
       });
     });
   }
@@ -167,7 +167,6 @@ export class PaymentSuccessComponent implements OnInit, OnDestroy {
   }
 
   volverAlInicio() {
-    // Si tenemos un chat ID, volvemos a él
     if (this.chatId) {
       this.router.navigate(['/chat', this.chatId]);
     } else {

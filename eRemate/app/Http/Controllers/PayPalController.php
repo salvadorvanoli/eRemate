@@ -88,7 +88,7 @@ class PayPalController extends Controller
             $payerId = $request->input('payer_id');
             $usuarioRegistradoId = $request->input('usuario_registrado_id');
             
-            // Get authenticated user at the beginning
+            // Autenticar user
             $usuarioAutenticado = auth()->user();
             if (!$usuarioAutenticado) {
                 return response()->json([
@@ -127,10 +127,10 @@ class PayPalController extends Controller
                 $tienePermiso = false;
                 
                 if ($usuarioAutenticado->tipo === 'registrado') {
-                    // Si es usuario registrado, debe coincidir con el usuario del chat
+                    // Si es usuario registrad, debe coincidir con el usuario del chat
                     $tienePermiso = ($usuarioAutenticado->id == $chat->usuarioRegistrado_id);
                 } elseif ($usuarioAutenticado->tipo === 'casa_de_remate') {
-                    // Si es casa de remate, debe coincidir con la casa del chat
+                    // si es casa de remate, debe coincidir con la casa del chat
                     $tienePermiso = ($usuarioAutenticado->id == $chat->casa_de_remate_id);
                 }
                 
@@ -143,7 +143,7 @@ class PayPalController extends Controller
                     ], 403);
                 }
                 
-                // Asignar el ID del usuario registrado del chat (quien recibe el pago)
+                // Asignar el id del usuario registrado del chat (quien recibe el pago)
                 $usuarioRegistradoId = $chat->usuarioRegistrado_id;
             }
 
@@ -154,7 +154,7 @@ class PayPalController extends Controller
                 return response()->json($result, 400);
             }
 
-            // Si hay un ID de solicitud de pago, validar y actualizar su estado
+            // Si hay un id de solicitud de pago, validar y actualizar estado
             if ($request->has('payment_request_id')) {
                 $paymentRequestId = $request->input('payment_request_id');
                 
@@ -166,7 +166,7 @@ class PayPalController extends Controller
                 if ($paymentRequest) {
                     \Log::info('PaymentRequest encontrado, estado actual: ' . $paymentRequest->estado);
                     
-                    // VALIDACIÓN CRÍTICA: Verificar que el usuario autenticado sea el usuario registrado de la solicitud
+                    // Verificar que el usuario autenticado sea el usuario registrado de la solicitud
                     if ($paymentRequest->usuario_registrado_id !== $usuarioAutenticado->id) {
                         \Log::warning('Intento de pago no autorizado - usuario no coincide', [
                             'payment_request_id' => $paymentRequestId,

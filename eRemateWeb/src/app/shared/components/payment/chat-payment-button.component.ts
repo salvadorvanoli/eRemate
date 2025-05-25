@@ -1,7 +1,7 @@
 import { Component, Input } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { Router } from '@angular/router';
-import { PrimaryButtonComponent } from '../../shared/components/buttons/primary-button/primary-button.component';
+import { PrimaryButtonComponent } from '../buttons/primary-button/primary-button.component';
 
 @Component({
   selector: 'app-chat-payment-button',

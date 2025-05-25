@@ -26,7 +26,7 @@ class PayPalService implements PayPalServiceInterface
     private function obtenerAccessToken()
     {
         try {
-            // Check if credentials exist
+            // Verificar que las credenciales existan
             if (empty($this->clientId) || empty($this->clientSecret)) {
                 Log::error('PayPal credentials missing', [
                     'clientIdExists' => !empty($this->clientId),
@@ -35,10 +35,10 @@ class PayPalService implements PayPalServiceInterface
                 throw new \Exception('Las credenciales de PayPal no están configuradas correctamente');
             }
 
-            // Disable SSL verification for local development
+            // Deshabilitar SSL
             $response = Http::withBasicAuth($this->clientId, $this->clientSecret)
                 ->withOptions([
-                    'verify' => false, // Disable SSL verification for local development
+                    'verify' => false, 
                 ])
                 ->asForm()
                 ->post($this->baseUrl . '/v1/oauth2/token', [
@@ -103,7 +103,7 @@ class PayPalService implements PayPalServiceInterface
 
             $response = Http::withToken($accessToken)
                 ->withOptions([
-                    'verify' => false, // Disable SSL verification for local development
+                    'verify' => false, 
                 ])
                 ->post($this->baseUrl . '/v1/payments/payment', $paymentData);
 
@@ -168,7 +168,7 @@ class PayPalService implements PayPalServiceInterface
             
             $response = Http::withToken($accessToken)
                 ->withOptions([
-                    'verify' => false, // Disable SSL verification for local development
+                    'verify' => false, 
                 ])
                 ->post($this->baseUrl . '/v1/payments/payment', $paymentData);
             
@@ -184,7 +184,7 @@ class PayPalService implements PayPalServiceInterface
                 // Log the payment response for debugging
                 Log::debug('PayPal payment response', ['payment' => $payment]);
                 
-                // Check if the approval_url link exists
+                // Verificar que approval_url existe
                 $approvalLink = collect($payment['links'] ?? [])->firstWhere('rel', 'approval_url');
                 
                 if (!$approvalLink || !isset($approvalLink['href'])) {
@@ -239,7 +239,7 @@ class PayPalService implements PayPalServiceInterface
             // Ejecutar el pago en PayPal
             $response = Http::withToken($accessToken)
                 ->withOptions([
-                    'verify' => false, // Disable SSL verification for local development
+                    'verify' => false, 
                 ])
                 ->post($this->baseUrl . "/v1/payments/payment/{$paymentId}/execute", [
                     'payer_id' => $payerId
@@ -340,7 +340,7 @@ class PayPalService implements PayPalServiceInterface
 
             $response = Http::withToken($accessToken)
                 ->withOptions([
-                    'verify' => false, // Disable SSL verification for local development
+                    'verify' => false, 
                 ])
                 ->get($this->baseUrl . "/v1/payments/payment/{$paymentId}");
 

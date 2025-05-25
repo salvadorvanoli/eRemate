@@ -13,7 +13,6 @@ import { PaymentSuccessComponent } from './pages/payment-success/payment-success
 import { NotFoundComponent } from './pages/not-found/not-found.component';
 import { CompleteProfileComponent } from './pages/complete-profile/complete-profile.component';
 import { ChatDetailComponent } from './pages/chat-detail/chat-detail.component';
-import { ChatDetailComponent as ChatDetailComponentOld } from './pages/chat/chat-detail.component';
 
 // Guards
 import { AuthGuard } from './core/guards/auth.guard';
