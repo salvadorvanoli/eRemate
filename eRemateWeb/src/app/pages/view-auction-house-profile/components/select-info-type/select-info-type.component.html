@@ -1,0 +1,11 @@
+<div class="select-info-container">
+  <p-dropdown 
+    [options]="options" 
+    [(ngModel)]="selectedOption" 
+    optionLabel="label"
+    (onChange)="onOptionChange()"
+    placeholder="Seleccione tipo de información"
+    [style]="{'width': '100%'}"
+    styleClass="purple-highlight-dropdown">
+  </p-dropdown>
+</div>

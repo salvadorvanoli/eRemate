@@ -7,18 +7,13 @@
   <div *ngIf="!loading" class="profile-content">
     <div class="form-section">
       <div class="form-group">
-        <label class="form-label">Nombre legal</label>
-        <input type="text" pInputText [(ngModel)]="profile.nombreLegal" class="form-input" />
+        <label class="form-label">Nombre</label>
+        <input type="text" pInputText [(ngModel)]="profile.nombre" class="form-input" />
       </div>
       
       <div class="form-group">
-        <label class="form-label">Identificación fiscal</label>
-        <input type="text" pInputText [(ngModel)]="profile.identificacionFiscal" class="form-input" />
-      </div>
-      
-      <div class="form-group">
-        <label class="form-label">Domicilio</label>
-        <input type="text" pInputText [(ngModel)]="profile.domicilio" class="form-input" />
+        <label class="form-label">Dirección</label>
+        <input type="text" pInputText [(ngModel)]="profile.direccion" class="form-input" />
       </div>
       
       <div class="form-group">

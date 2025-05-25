@@ -34,7 +34,15 @@
             (onClick)="openNew()" 
             [style]="{'background-color': '#22C55E', 'border-color': '#22C55E'}" 
         />
-
+        
+     
+        <p-button 
+            label="Artículos del Lote" 
+            icon="pi pi-list" 
+            [disabled]="!selectedLots || selectedLots.length !== 1"
+            (onClick)="openArticlesDialog()" 
+            [style]="{'background-color': '#3B82F6', 'border-color': '#3B82F6'}" 
+        />
       </div>
     </ng-template>
     
@@ -67,6 +75,7 @@
         
         <td style="width: 11%">
           <div class="flex gap-2 justify-center">
+            <p-button icon="pi pi-list" severity="info" [rounded]="true" [outlined]="true" (click)="editArticlesForLot(lot)" pTooltip="Editar artículos" />
             <p-button icon="pi pi-trash" severity="danger" [rounded]="true" [outlined]="true" (click)="deleteLot(lot)" pTooltip="Eliminar lote" />
           </div>
         </td>
@@ -82,33 +91,48 @@
     </ng-template>
   </p-table>
 
-  <p-dialog [(visible)]="lotDialog" [style]="{ width: '500px' }" header="Detalles del Lote" [modal]="true">
+  <!-- Modal de Lote (sin la sección de artículos) -->
+  <p-dialog [(visible)]="lotDialog" [style]="{ width: '700px' }" header="Detalles del Lote" [modal]="true">
     <ng-template pTemplate="content">
       <div class="flex flex-col gap-4">
+        <!-- Datos básicos del lote -->
         <div>
-          <label for="subasta" class="block font-bold mb-2">Subasta</label>
-          <input type="text" pInputText id="subasta" [(ngModel)]="lot.subasta" />
-        </div>
-        
-        <div>
-          <label for="lote" class="block font-bold mb-2">Nombre del Lote</label>
-          <input type="text" pInputText id="lote" [(ngModel)]="lot.lote" required autofocus />
-          <small class="text-red-500" *ngIf="submitted && !lot.lote?.trim()">El nombre del lote es requerido.</small>
-        </div>
-        
-        <div>
-          <label for="vendedorExterno" class="block font-bold mb-2">Vendedor Externo</label>
-          <input type="text" pInputText id="vendedorExterno" [(ngModel)]="lot.vendedorExterno" />
-        </div>
-        
-        <div>
-          <label for="valorBase" class="block font-bold mb-2">Valor Base ($)</label>
-          <p-inputNumber id="valorBase" [(ngModel)]="lot.valorBase" mode="currency" currency="UYU" locale="es-UY" [minFractionDigits]="0" />
-        </div>
-        
-        <div>
-          <label for="incrementoMinimo" class="block font-bold mb-2">Incremento Mínimo ($)</label>
-          <p-inputNumber id="incrementoMinimo" [(ngModel)]="lot.incrementoMinimo" mode="currency" currency="UYU" locale="es-UY" [minFractionDigits]="0" />
+          <h3 class="text-xl font-semibold mb-3">Información del lote</h3>
+          
+          <!-- Campos existentes -->
+          <div>
+            <label for="subasta" class="block font-bold mb-2">Subasta</label>
+            <input type="text" pInputText id="subasta" [value]="auctionId" disabled class="w-full" />
+          </div>
+          
+          <div class="mt-3">
+            <label for="lote" class="block font-bold mb-2">Nombre del Lote</label>
+            <input type="text" pInputText id="lote" [(ngModel)]="lot.lote" required autofocus class="w-full" />
+            <small class="text-red-500" *ngIf="submitted && !lot.lote?.trim()">El nombre del lote es requerido.</small>
+          </div>
+          
+          <div class="mt-3">
+            <label for="vendedorExterno" class="block font-bold mb-2">Vendedor Externo</label>
+            <input type="text" pInputText id="vendedorExterno" [(ngModel)]="lot.vendedorExterno" class="w-full" />
+          </div>
+          
+          <div class="mt-3">
+            <label for="valorBase" class="block font-bold mb-2">Valor Base ($)</label>
+            <p-inputNumber id="valorBase" [(ngModel)]="lot.valorBase" mode="currency" currency="UYU" 
+              locale="es-UY" [minFractionDigits]="0" class="w-full" />
+          </div>
+          
+          <div class="mt-3">
+            <label for="incrementoMinimo" class="block font-bold mb-2">Incremento Mínimo ($)</label>
+            <p-inputNumber id="incrementoMinimo" [(ngModel)]="lot.incrementoMinimo" mode="currency" 
+              currency="UYU" locale="es-UY" [minFractionDigits]="0" class="w-full" />
+          </div>
+          
+          <!-- Nuevo campo Condiciones de Entrega -->
+          <div class="mt-3">
+            <label for="condicionesEntrega" class="block font-bold mb-2">Condiciones de Entrega</label>
+            <textarea pInputTextarea id="condicionesEntrega" [(ngModel)]="lot.condicionesEntrega" rows="3" class="w-full"></textarea>
+          </div>
         </div>
       </div>
     </ng-template>
@@ -132,4 +156,72 @@
   </p-dialog>
 
   <p-confirmDialog [style]="{ width: '450px' }" />
+
+  <!-- Modal para gestionar artículos del lote -->
+  <p-dialog [(visible)]="articlesManagementDialog" [style]="{ width: '800px' }" [header]="'Artículos del Lote: ' + (selectedLotForArticles?.lote || '')" [modal]="true">
+    <ng-template pTemplate="content">
+      <div class="flex flex-col gap-4">
+        <div class="flex justify-between items-center mb-3">
+          <h3 class="text-xl font-semibold">Artículos</h3>
+          <p-button 
+              icon="pi pi-plus" 
+              label="Agregar Artículo" 
+              (click)="addNewArticle()" 
+              [style]="{'background-color': '#22C55E', 'border-color': '#22C55E'}" 
+          />
+        </div>
+        
+        <div *ngIf="selectedLotForArticles?.articulos " class="mb-4">
+          <table class="article-table">
+            <thead>
+              <tr class="bg-gray-100">
+                <th class="border border-gray-300 p-2 text-left">Nombre</th>
+                <th class="border border-gray-300 p-2 text-left">Estado</th>
+                <th class="border border-gray-300 p-2 text-left">Especificaciones Técnicas</th>
+                <th class="border border-gray-300 p-2 text-center" style="width: 100px">Acciones</th>
+              </tr>
+            </thead>
+            <tbody>
+              <tr *ngFor="let articulo of selectedLotForArticles?.articulos || []; let i = index" class="border-b border-gray-300">
+                <td class="border border-gray-300 p-2">{{articulo.nombre}}</td>
+                <td class="border border-gray-300 p-2">{{articulo.estado}}</td>
+                <td class="border border-gray-300 p-2">{{articulo.especificacionesTecnicas}}</td>
+                <td class="border border-gray-300 p-2 text-center">
+                  <div class="flex justify-center gap-2">
+                    <button pButton pRipple icon="pi pi-pencil" class="p-button-rounded p-button-text" (click)="editArticle(i)"></button>
+                    <button pButton pRipple icon="pi pi-trash" class="p-button-rounded p-button-text p-button-danger" (click)="removeArticle(i)"></button>
+                  </div>
+                </td>
+              </tr>
+            </tbody>
+          </table>
+        </div>
+        
+        <div *ngIf="!selectedLotForArticles?.articulos" class="text-center p-4 bg-gray-100 rounded mb-3">
+          No hay artículos agregados. Use el botón "Agregar Artículo" para incluir artículos en este lote.
+        </div>
+      </div>
+    </ng-template>
+
+    <ng-template pTemplate="footer">
+      <div class="flex justify-content-end gap-2">
+        <p-button 
+            label="Aceptar" 
+            icon="pi pi-check" 
+            (onClick)="hideArticlesDialog()" 
+            [style]="{'background-color': '#6334E3', 'border-color': '#6334E3'}" 
+        />
+      </div>
+    </ng-template>
+  </p-dialog>
+
+  <!-- Diálogo para detalles del artículo (individual) -->
+  <p-dialog [(visible)]="articleDialog" [style]="{ width: '500px' }" header="Detalles del Artículo" [modal]="true">
+    <app-add-item 
+      [articulo]="currentArticle" 
+      [submitted]="submittedArticle"
+      (save)="saveArticle($event)"
+      (cancel)="articleDialog = false">
+    </app-add-item>
+  </p-dialog>
 </div>

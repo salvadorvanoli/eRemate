@@ -17,7 +17,7 @@ import { RadioButtonModule } from 'primeng/radiobutton';
 import { TextareaModule } from 'primeng/textarea';
 import { IconFieldModule } from 'primeng/iconfield';
 import { InputIconModule } from 'primeng/inputicon';
-import { UsuarioRematador } from '../../../../core/models/usuario';
+import { UsuarioRematador, RematadorResponse } from '../../../../core/models/usuario';
 import { SecurityService } from '../../../../core/services/security.service';
 import { AuctionHouseService } from '../../../../core/services/auction-house.service';
 import { finalize } from 'rxjs/operators';
@@ -89,16 +89,16 @@ export class TableComponent implements OnInit {
     ngOnInit() {
         this.configureTable();
         
-        this.securityService.user.subscribe(user => {
-          console.log('Usuario actual:', user);
-          if (user) {
-            console.log('Email:', user.email);
-            console.log('Tipo:', user.tipo);
-          }
-        });
-
-        this.casaId = '1';
+        // HARDCODEAR el ID de la casa a "1" para desarrollo
+        this.casaId = "1";
+        console.log('ID de casa HARDCODEADO:', this.casaId);
+        
+        // Cargar datos con el ID hardcodeado
         this.loadRematadoresData(this.casaId);
+        
+        // Mantener esto solo para diagnóstico
+        const usuario = this.securityService.actualUser;
+        console.log('Usuario actual (solo diagnóstico):', usuario);
     }
     
     configureTable() {
@@ -129,8 +129,25 @@ export class TableComponent implements OnInit {
                     console.log('Respuesta completa:', response);
                     
                     if (response && response.success && Array.isArray(response.data)) {
-                        this.products = response.data;
-                    } 
+                        // Aplanar la estructura anidada
+                        this.products = response.data.map((item: RematadorResponse) => {
+                            return {
+                                // Del objeto rematador
+                                id: item.rematador?.id,
+                                nombre: item.rematador?.nombre,
+                                apellido: item.rematador?.apellido,
+                                numeroMatricula: item.rematador?.numeroMatricula,
+                                direccionFiscal: item.rematador?.direccionFiscal,
+                                imagen: item.rematador?.imagen,
+                                
+                                // Del objeto usuario
+                                email: item.usuario?.email,
+                                telefono: item.usuario?.telefono,
+                                tipo: item.usuario?.tipo
+                            };
+                        });
+                        console.log('Datos procesados:', this.products);
+                    }
                     else if (response && response.success && response.data && typeof response.data === 'object') {
                         if (response.data.id) {
                             this.products = [response.data];

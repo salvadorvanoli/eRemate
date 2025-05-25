@@ -6,12 +6,60 @@
     display: block;
 }
 
+.view-container {
+  width: 1040px;
+  margin: 0 auto;
+  padding: 20px 0;
+}
+
+.info-selector-wrapper {
+  display: flex;
+  justify-content: center; 
+  margin-bottom: 20px;
+}
+
 .titulos {
-  width: 185px;
-  height: 36px;
-  color: #232323;
-  font-family: "Montserrat";
-  font-weight: 800;
-  font-size: 26px;
-  text-align: left;
+  margin: 40px auto 10px;
+  padding: 0px 25px;
+  display: flex;
+  align-items: center;
+  justify-content: flex-start;
+  font-size: 18px;
+  font-weight: 600;
+}
+
+.subasta-seleccionada {
+  margin-left: 10px;
+  font-size: 14px;
+  color: #6334E3;
+  font-weight: normal;
+}
+
+
+app-table-lots {
+  position: relative;
+}
+
+app-table-lots::before {
+  content: '';
+  position: absolute;
+  top: -20px;
+  left: 20px;
+  width: 2px;
+  height: 20px;
+  background-color: #6334E3;
+  opacity: 0.5;
+  display: none;
+}
+
+app-table-lots.has-selected::before {
+  display: block;
+}
+
+.statistics-placeholder {
+  background-color: #f8f9fa;
+  border-radius: 8px;
+  padding: 40px;
+  text-align: center;
+  color: #6c757d;
 }

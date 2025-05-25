@@ -10,6 +10,7 @@ export interface UsuarioSimple {
 }
 
 export interface UsuarioRegistrado {
+    id: number;
     email: string;
     telefono: string;
     contrasenia: string;
@@ -17,6 +18,7 @@ export interface UsuarioRegistrado {
 }
 
 export interface UsuarioRematador {
+    id: number;
     email: string;
     contrasenia: string;
     telefono: string;
@@ -29,7 +31,7 @@ export interface UsuarioRematador {
 }
 
 export interface UsuarioCasaDeRemates {
-     id: number;
+    id: number;
     email: string;
     contrasenia: string;
     telefono: string;
@@ -43,4 +45,25 @@ export interface UsuarioCasaDeRemates {
 export interface AccesoUsuario {
     email: string;
     contrasenia: string;
+}
+
+export interface RematadorResponse {
+  rematador: {
+    id?: number;
+    nombre?: string;
+    apellido?: string;
+    numeroMatricula?: string;
+    direccionFiscal?: string;
+    imagen?: string;
+    pivot?: any;
+  };
+  usuario: {
+    id?: number;
+    email?: string;
+    telefono?: string;
+    tipo?: string;
+    contrasenia?: string;
+    created_at?: string;
+    updated_at?: string;
+  };
 }

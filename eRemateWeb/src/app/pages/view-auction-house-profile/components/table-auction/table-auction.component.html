@@ -11,12 +11,14 @@
     [paginator]="auctions.length > 0"
     [globalFilterFields]="globalFilterFields"
     [tableStyle]="{ width: '100%', marginBottom: '1rem' }"
-    [(selection)]="selectedAuctions"
+    [(selection)]="selectedAuction"
+    selectionMode="single"
     [rowHover]="true"
     dataKey="id"
     currentPageReportTemplate="Mostrando {first} a {last} de {totalRecords} elementos"
     [showCurrentPageReport]="auctions.length > 0"
     [loading]="loading"
+    (selectionChange)="onSelectionChange()"
   >
     <ng-template pTemplate="caption">
       <div class="flex items-center" style="gap: 10px;">
@@ -39,9 +41,6 @@
     
     <ng-template pTemplate="header">
       <tr style="background-color: rgba(0, 0, 0, 0.04);">
-        <th style="width: 5%; background-color: rgba(0, 0, 0, 0.04);">
-          <p-tableHeaderCheckbox />
-        </th>
         <th *ngFor="let col of cols" [style.width]="'calc(84% / ' + cols.length + ')'" style="background-color: rgba(0, 0, 0, 0.04);">
           {{ col.header }}
         </th>
@@ -50,11 +49,7 @@
     </ng-template>
     
     <ng-template pTemplate="body" let-auction>
-      <tr>
-        <td style="width: 5%">
-          <p-tableCheckbox [value]="auction" />
-        </td>
-        
+      <tr [pSelectableRow]="auction">
         <td [style.width]="'calc(84% / ' + cols.length + ')'" *ngFor="let col of cols">
           {{ auction[col.field] }}
         </td>
@@ -80,34 +75,30 @@
     <ng-template pTemplate="content">
       <div class="flex flex-col gap-4">
         <div>
-          <label for="subasta" class="block font-bold mb-2">Nombre de la Subasta</label>
-          <input type="text" pInputText id="subasta" [(ngModel)]="auction.subasta" required autofocus />
-          <small class="text-red-500" *ngIf="submitted && !auction.subasta?.trim()">El nombre de la subasta es requerido.</small>
+          <label for="tipoSubasta" class="block font-bold mb-2">Tipo de Subasta</label>
+          <input type="text" pInputText id="tipoSubasta" [(ngModel)]="auction.tipoSubasta" required autofocus />
+          <small class="text-red-500" *ngIf="submitted && !auction.tipoSubasta?.trim()">El tipo de subasta es requerido.</small>
         </div>
-        
         <div>
-          <label for="fecha" class="block font-bold mb-2">Fecha</label>
-          <input type="text" pInputText id="fecha" [(ngModel)]="auction.fecha" placeholder="DD/MM/YYYY" />
+          <label for="fechaInicio" class="block font-bold mb-2">Fecha de Inicio</label>
+          <input type="datetime-local" pInputText id="fechaInicio" [(ngModel)]="auction.fechaInicio" required />
+          <small class="text-red-500" *ngIf="submitted && !auction.fechaInicio">La fecha de inicio es requerida.</small>
         </div>
-        
         <div>
-          <label for="casa" class="block font-bold mb-2">Casa de Subastas</label>
-          <input type="text" pInputText id="casa" [(ngModel)]="auction.casa" />
+          <label for="fechaCierre" class="block font-bold mb-2">Fecha de Cierre</label>
+          <input type="datetime-local" pInputText id="fechaCierre" [(ngModel)]="auction.fechaCierre" required />
+          <small class="text-red-500" *ngIf="submitted && !auction.fechaCierre">La fecha de cierre es requerida.</small>
         </div>
-        
         <div>
           <label for="ubicacion" class="block font-bold mb-2">Ubicación</label>
-          <input type="text" pInputText id="ubicacion" [(ngModel)]="auction.ubicacion" />
+          <input type="text" pInputText id="ubicacion" [(ngModel)]="auction.ubicacion" required />
+          <small class="text-red-500" *ngIf="submitted && !auction.ubicacion?.trim()">La ubicación es requerida.</small>
         </div>
-        
         <div>
-          <label for="estado" class="block font-bold mb-2">Estado</label>
-          <input type="text" pInputText id="estado" [(ngModel)]="auction.estado" />
-        </div>
-        
-        <div>
-          <label for="rematador" class="block font-bold mb-2">Rematador</label>
-          <input type="text" pInputText id="rematador" [(ngModel)]="auction.rematador" />
+          <label for="rematadorEmail" class="block font-bold mb-2">Email del Rematador</label>
+          <input type="email" pInputText id="rematadorEmail" [(ngModel)]="rematadorEmail" required />
+          <small class="text-red-500" *ngIf="submitted && !rematadorEmail?.trim()">El email del rematador es requerido.</small>
+          <small class="text-red-500" *ngIf="submitted && emailError">{{emailError}}</small>
         </div>
       </div>
     </ng-template>

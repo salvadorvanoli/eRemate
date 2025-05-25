@@ -1,4 +1,4 @@
-import { Component, OnInit, ViewChild } from '@angular/core';
+import { Component, OnInit, ViewChild, Output, EventEmitter } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { FormsModule } from '@angular/forms';
 import { TableModule, Table } from 'primeng/table';
@@ -12,16 +12,9 @@ import { InputTextModule } from 'primeng/inputtext';
 import { IconFieldModule } from 'primeng/iconfield';
 import { InputIconModule } from 'primeng/inputicon';
 import { finalize } from 'rxjs/operators';
-
-interface Auction {
-    id: string;
-    subasta: string;
-    fecha: string;
-    casa: string;
-    ubicacion: string;
-    estado: string;
-    rematador: string;
-}
+import { AuctionHouseService } from '../../../../core/services/auction-house.service';
+import { Subasta } from '../../../../core/models/subasta';
+import { UsuarioRematador, RematadorResponse } from '../../../../core/models/usuario';
 
 @Component({
   selector: 'app-table-auction',
@@ -44,106 +37,164 @@ interface Auction {
   styleUrl: './table-auction.component.scss'
 })
 export class TableAuctionComponent implements OnInit {
-    auctions: Auction[] = [];
+    auctions: Subasta[] = [];
     cols: any[] = [];
     loading = false;
     auctionDialog: boolean = false;
-    auction!: Auction;
-    selectedAuctions: Auction[] | null = null;
+    auction!: Subasta;
+    selectedAuction: Subasta | null = null;
     submitted: boolean = false;
     globalFilterFields: string[] = [];
+    rematadorEmail: string = '';
+    emailError: string = '';
+    rematadores: RematadorResponse[] = [];
+    casaId: number = 1; // ID hardcodeado de la casa de remates
     
     @ViewChild('dt') dt!: Table;
 
+ 
+    @Output() auctionSelected = new EventEmitter<number>();
+
     constructor(
         private messageService: MessageService,
-        private confirmationService: ConfirmationService
+        private confirmationService: ConfirmationService,
+        private auctionHouseService: AuctionHouseService
     ) {}
 
     ngOnInit() {
         this.configureTable();
         this.loadAuctionsData();
+        this.loadRematadores();
     }
     
     configureTable() {
         this.cols = [
-            { field: 'subasta', header: 'Subasta' },
-            { field: 'fecha', header: 'Fecha' },
-            { field: 'casa', header: 'Casa de subastas' },
+            { field: 'tipoSubasta', header: 'Tipo' },
+            { field: 'fechaInicio', header: 'Fecha Inicio' },
+            { field: 'fechaCierre', header: 'Fecha Cierre' },
             { field: 'ubicacion', header: 'Ubicación' },
             { field: 'estado', header: 'Estado' },
-            { field: 'rematador', header: 'Rematador' }
+            { field: 'rematador_id', header: 'Rematador' }
         ];
         this.globalFilterFields = this.cols.map(col => col.field);
     }
 
     loadAuctionsData() {
         this.loading = true;
-        setTimeout(() => {
-            this.auctions = [
-                {
-                    id: '1',
-                    subasta: 'Subasta de Arte Moderno',
-                    fecha: '10/06/2025',
-                    casa: 'Casa Central',
-                    ubicacion: 'Montevideo',
-                    estado: 'Activa',
-                    rematador: 'Juan Pérez'
+        this.auctionHouseService.getAuctionsByHouseId('1')
+            .pipe(finalize(() => this.loading = false))
+            .subscribe({
+                next: (data: any) => {
+                    console.log('Respuesta de getAuctionsByHouseId:', data);
+
+                 
+                    if (data && Array.isArray(data.data)) {
+                        this.auctions = data.data;
+                    }
+                  
+                    else if (Array.isArray(data)) {
+                        this.auctions = data;
+                    }
+                
+                    else if (typeof data === 'object' && data !== null) {
+                        this.auctions = [data];
+                    }
+                  
+                    else {
+                        this.auctions = [];
+                    }
+
+                    console.log('Valor final de this.auctions:', this.auctions);
                 },
-                {
-                    id: '2',
-                    subasta: 'Subasta de Antigüedades',
-                    fecha: '15/06/2025',
-                    casa: 'Galería Sur',
-                    ubicacion: 'Punta del Este',
-                    estado: 'Programada',
-                    rematador: 'María González'
+                error: () => {
+                    this.auctions = [];
+                    this.messageService.add({ severity: 'error', summary: 'Error', detail: 'No se pudieron cargar las subastas', life: 3000 });
                 }
-            ];
-            this.loading = false;
-        }, 500);
+            });
+    }
+    
+    loadRematadores() {
+        this.auctionHouseService.getAllAuctioneersByHouse(this.casaId.toString())
+            .subscribe({
+                next: (response: any) => {
+                    if (response && response.data) {
+                        this.rematadores = response.data;
+                    } else if (Array.isArray(response)) {
+                        this.rematadores = response;
+                    } else {
+                        this.rematadores = [];
+                    }
+                    console.log('Rematadores cargados:', this.rematadores);
+                },
+                error: (error) => {
+                    console.error('Error al cargar rematadores:', error);
+                    this.rematadores = [];
+                }
+            });
     }
     
     openNew() {
         this.auction = {
-            id: '',
-            subasta: '',
-            fecha: '',
-            casa: '',
-            ubicacion: '',
-            estado: '',
-            rematador: ''
+            casaDeRemates_id: this.casaId,
+            rematador_id: 0,
+            mensajes: '',
+            urlTransmision: 'https://ejemplo.com/stream',
+            tipoSubasta: '',
+            estado: 'pendiente',
+            pujaHabilitada: false,
+            fechaInicio: new Date(),
+            fechaCierre: new Date(),
+            ubicacion: ''
         };
+        this.rematadorEmail = '';
+        this.emailError = '';
         this.submitted = false;
         this.auctionDialog = true;
     }
     
     deleteSelectedAuctions() {
         this.confirmationService.confirm({
-            message: '¿Está seguro de que desea eliminar las subastas seleccionadas?',
+            message: '¿Está seguro de que desea eliminar la subasta seleccionada?',
             header: 'Confirmar',
             icon: 'pi pi-exclamation-triangle',
             accept: () => {
-                this.auctions = this.auctions.filter(val => !this.selectedAuctions?.includes(val));
-                this.selectedAuctions = null;
-                this.messageService.add({ severity: 'success', summary: 'Éxito', detail: 'Subastas eliminadas', life: 3000 });
+               
+                if (this.selectedAuction) {
+                    this.auctions = this.auctions.filter(val => val.id !== this.selectedAuction?.id);
+                    this.selectedAuction = null;
+                    this.messageService.add({ severity: 'success', summary: 'Éxito', detail: 'Subasta eliminada', life: 3000 });
+                }
             }
         });
     }
 
-    deleteAuction(auction: Auction) {
+    deleteAuction(auction: Subasta) {
         this.confirmationService.confirm({
-            message: `¿Está seguro de que desea eliminar la subasta "${auction.subasta}"?`,
+            message: `¿Está seguro de que desea eliminar la subasta con ID "${auction.id}"?`,
             header: 'Confirmar eliminación',
             icon: 'pi pi-exclamation-triangle',
             accept: () => {
-                this.auctions = this.auctions.filter(val => val.id !== auction.id);
-                this.messageService.add({
-                    severity: 'success',
-                    summary: 'Éxito',
-                    detail: 'Subasta eliminada correctamente',
-                    life: 3000
-                });
+                if (auction.id) {
+                    this.auctionHouseService.deleteAuction(auction.id.toString()).subscribe({
+                        next: () => {
+                            this.auctions = this.auctions.filter(val => val.id !== auction.id);
+                            this.messageService.add({
+                                severity: 'success',
+                                summary: 'Éxito',
+                                detail: 'Subasta eliminada correctamente',
+                                life: 3000
+                            });
+                        },
+                        error: () => {
+                            this.messageService.add({
+                                severity: 'error',
+                                summary: 'Error',
+                                detail: 'No se pudo eliminar la subasta',
+                                life: 3000
+                            });
+                        }
+                    });
+                }
             }
         });
     }
@@ -153,58 +204,120 @@ export class TableAuctionComponent implements OnInit {
         this.submitted = false;
     }
     
+    findRematadorByEmail(email: string): number | null {
+        console.log('Buscando email:', email);
+        console.log('Rematadores disponibles:', this.rematadores);
+        
+        // Busca el rematador con ese email en el objeto usuario
+        const rematador = this.rematadores.find(r => r.usuario?.email === email);
+        
+        if (rematador) {
+            console.log('Rematador encontrado:', rematador);
+            return rematador.rematador?.id || null;
+        }
+        
+        return null;
+    }
+    
     saveAuction() {
         this.submitted = true;
+        this.emailError = '';
         
-        if (this.auction.subasta?.trim()) {
-            if (this.auction.id) {
-                const index = this.findIndexById(this.auction.id);
-                this.auctions[index] = this.auction;
-                this.messageService.add({ severity: 'success', summary: 'Éxito', detail: 'Subasta actualizada', life: 3000 });
-            } else {
-                this.auction.id = this.createId();
-                this.auctions.push(this.auction);
-                this.messageService.add({ severity: 'success', summary: 'Éxito', detail: 'Subasta creada', life: 3000 });
-            }
-            
-            this.auctions = [...this.auctions];
-            this.auctionDialog = false;
-            this.auction = {
-                id: '',
-                subasta: '',
-                fecha: '',
-                casa: '',
-                ubicacion: '',
-                estado: '',
-                rematador: ''
-            };
+        // Validar campos requeridos
+        if (!this.auction.tipoSubasta?.trim() || !this.auction.ubicacion?.trim() || 
+            !this.auction.fechaInicio || !this.auction.fechaCierre || !this.rematadorEmail?.trim()) {
+            return;
         }
+        
+        // Buscar el ID del rematador por email
+        const rematadorId = this.findRematadorByEmail(this.rematadorEmail);
+        
+        if (!rematadorId) {
+            this.emailError = 'No se encontró un rematador con ese email';
+            return;
+        }
+        
+        // Asignar el ID del rematador encontrado
+        this.auction.rematador_id = rematadorId;
+        
+        // Preparar datos para enviar
+        const subastaData = {
+            casaDeRemates_id: this.casaId,
+            rematador_id: this.auction.rematador_id,
+            urlTransmision: this.auction.urlTransmision,
+            tipoSubasta: this.auction.tipoSubasta,
+            estado: 'pendiente',
+            fechaInicio: this.auction.fechaInicio,
+            fechaCierre: this.auction.fechaCierre,
+            ubicacion: this.auction.ubicacion,
+            mensajes: []
+        };
+        
+        console.log('Datos de subasta a crear:', subastaData);
+        
+        // Llamar al servicio para crear la subasta
+        this.loading = true;
+        this.auctionHouseService.createAuction(subastaData)
+            .pipe(finalize(() => this.loading = false))
+            .subscribe({
+                next: (response) => {
+                    console.log('Respuesta del servidor:', response);
+                    
+                    // Actualizar la interfaz
+                    if (response && response.data) {
+                        this.auction.id = response.data.id;
+                        this.auctions.push(response.data);
+                    } else if (response && response.id) {
+                        this.auction.id = response.id;
+                        this.auctions.push(response);
+                    }
+                    
+                    this.auctions = [...this.auctions];
+                    this.messageService.add({ 
+                        severity: 'success', 
+                        summary: 'Éxito', 
+                        detail: 'Subasta creada correctamente', 
+                        life: 3000 
+                    });
+                    
+                    this.auctionDialog = false;
+                    this.rematadorEmail = '';
+                },
+                error: (error) => {
+                    console.error('Error al crear subasta:', error);
+                    this.messageService.add({ 
+                        severity: 'error', 
+                        summary: 'Error', 
+                        detail: 'No se pudo crear la subasta', 
+                        life: 3000 
+                    });
+                }
+            });
     }
     
-    findIndexById(id: string): number {
-        let index = -1;
-        for (let i = 0; i < this.auctions.length; i++) {
-            if (this.auctions[i].id === id) {
-                index = i;
-                break;
-            }
-        }
-        return index;
+    findIndexById(id: number): number {
+        return this.auctions.findIndex(a => a.id === id);
     }
     
-    createId(): string {
-        let id = '';
-        const chars = 'ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz0123456789';
-        for (let i = 0; i < 5; i++) {
-            id += chars.charAt(Math.floor(Math.random() * chars.length));
-        }
-        return id;
+    createId(): number {
+        return Math.floor(Math.random() * 100000);
     }
     
     onFilterGlobal(event: Event) {
         const inputElement = event.target as HTMLInputElement;
         if (this.dt) {
             this.dt.filterGlobal(inputElement.value, 'contains');
+        }
+    }
+
+    // Agregar este método para detectar cambios en la selección
+    onSelectionChange() {
+        console.log('Selección cambiada:', this.selectedAuction);
+        
+        // Si hay una subasta seleccionada, emitir su ID
+        if (this.selectedAuction && this.selectedAuction.id) {
+            console.log('Emitiendo ID de subasta seleccionada:', this.selectedAuction.id);
+            this.auctionSelected.emit(this.selectedAuction.id);
         }
     }
 }

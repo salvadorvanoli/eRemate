@@ -24,4 +24,10 @@ export class UserService extends BaseHttpService<AccesoUsuario, UsuarioSimple> {
   override post(user: AccesoUsuario): Observable<UsuarioSimple> {
     return this.http.post<UsuarioSimple>(`${this.baseUrl}${this.end}`, user);
   }
+
+  getUserProfile(id: number): Observable<any> {
+
+    return this.http.get<any>(`${this.baseUrl}/usuarios/${id}/perfil`);
+  }
+  
 }

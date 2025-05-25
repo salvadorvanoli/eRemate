@@ -7,6 +7,7 @@ import { CatalogComponent } from './pages/catalog/catalog.component';
 import { ViewProductComponent } from './pages/view-product/view-product.component';
 import { ContactUsComponent } from './pages/contact-us/contact-us.component';
 import { ViewAuctionHouseProfileComponent } from './pages/view-auction-house-profile/view-auction-house-profile.component';
+import { ViewRegisteredUserProfileComponent } from './pages/view-registered-user-profile/view-registered-user-profile.component';
 
 export const routes: Routes = [
     { path: 'inicio', component: HomeComponent },
@@ -17,6 +18,7 @@ export const routes: Routes = [
     { path: 'producto/:id', component: ViewProductComponent },
     { path: 'contacto', component: ContactUsComponent },
     { path: 'perfil-casa', component: ViewAuctionHouseProfileComponent },
+    { path: 'perfil-usuario', component: ViewRegisteredUserProfileComponent },
     { path: '', redirectTo: '/inicio', pathMatch: 'full' },
     { path: '**', redirectTo: '/inicio' }
 ];
