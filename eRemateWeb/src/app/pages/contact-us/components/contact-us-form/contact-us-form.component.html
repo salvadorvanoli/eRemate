@@ -1,7 +1,8 @@
 <div class="card md:w-150 sm:w-100 w-70 p-10 my-10 mx-auto rounded-md border-solid border-gray-200 border-2">
     <p-toast />
     <form novalidate action="" method="post" class="mx-auto flex flex-col items-center gap-4 w-full max-w-md">
-        <app-form-text-input 
+        <app-form-text-input
+            #emailInput
             class="w-full"
             placeholder="Email"
             [formSubmitted]="formSubmitted"
@@ -32,6 +33,7 @@
         />
 
         <app-form-text-input
+            #asuntoInput
             class="w-full"
             placeholder="Asunto"
             [formSubmitted]="formSubmitted"
@@ -42,6 +44,7 @@
         />
 
         <app-form-text-input
+            #messageInput
             class="w-full"
             placeholder="Consulta"
             [formSubmitted]="formSubmitted"

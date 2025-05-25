@@ -7,6 +7,7 @@ import { MessageService } from 'primeng/api';
 import { FormSelectInputComponent } from '../../../../shared/components/inputs/form-select-input/form-select-input.component';
 import { EmailService } from '../../../../core/services/email.service';
 import { EmailRequest } from '../../../../core/models/email';
+import { ViewChild } from '@angular/core';
 
 @Component({
   selector: 'app-contact-us-form',
@@ -24,6 +25,10 @@ import { EmailRequest } from '../../../../core/models/email';
 })
 export class ContactUsFormComponent {
     
+    @ViewChild('emailInput') emailInput: any;
+    @ViewChild('asuntoInput') asuntoInput: any;
+    @ViewChild('messageInput') messageInput: any;
+
     email: string = '';
     asunto: string = '';
     question: string = '';
@@ -76,10 +81,18 @@ export class ContactUsFormComponent {
     }
 
     resetForm() {
+        
+        this.emailInput?.reset();
+        this.asuntoInput?.reset();
+        this.messageInput?.reset();
+        
         this.email = '';
         this.asunto = '';
         this.message = '';
-        this.selectedOption = '';
         this.formSubmitted.set(false);
+        
+        this.isEmailInvalid = false;
+        this.isHeaderInvalid = false;
+        this.isMessageInvalid = false;
     }
 }

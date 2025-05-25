@@ -7,17 +7,20 @@ import { CatalogComponent } from './pages/catalog/catalog.component';
 import { ViewProductComponent } from './pages/view-product/view-product.component';
 import { ContactUsComponent } from './pages/contact-us/contact-us.component';
 import { AuctionComponent } from './pages/auction/auction.component';
+import { NotFoundComponent } from './pages/not-found/not-found.component';
+import { CompleteProfileComponent } from './pages/complete-profile/complete-profile.component';
 
 export const routes: Routes = [
-    { path: 'inicio', component: HomeComponent },
-    { path: 'registro', component: RegisterComponent },
+    { path: 'inicio', component: HomeComponent },    { path: 'registro', component: RegisterComponent },
+    { path: 'completar-perfil', component: CompleteProfileComponent },
     { path: 'inicio-sesion', component: LoginComponent },
     { path: 'panel', component: ControlPanelComponent},
     { path: 'catalogo', component: CatalogComponent },
     { path: 'producto/:id', component: ViewProductComponent },
     { path: 'contacto', component: ContactUsComponent },
     { path: 'subasta/:id', component: AuctionComponent },
+    { path: '404', component: NotFoundComponent },
     { path: '', redirectTo: '/inicio', pathMatch: 'full' },
-    { path: '**', redirectTo: '/inicio' }
+    { path: '**', redirectTo: '/404' }
 
 ];

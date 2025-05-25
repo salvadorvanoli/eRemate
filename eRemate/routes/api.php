@@ -5,6 +5,7 @@ use App\Http\Controllers\SubastaController;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Route;
 use App\Http\Controllers\AuthController;
+use App\Http\Controllers\GoogleAuthController;
 use App\Http\Controllers\UsuarioController;
 use App\Http\Controllers\NotificationController;
 
@@ -165,3 +166,13 @@ Route::post('/contacto', [ContactoController::class, 'enviarFormulario']);
 
 Route::delete('lot/{id}', [LoteController::class, 'eliminarLote']);
 Route::delete('auction/{id}', [SubastaController::class, 'eliminarSubasta']);
+
+// Google OAuth routes
+Route::post('/auth/google', [GoogleAuthController::class, 'googleAuth']);
+Route::post('/register/google', [GoogleAuthController::class, 'googleRegister']);
+
+// Complete profile route (protected)
+Route::middleware('auth:sanctum')->group(function () {
+    Route::post('/complete-profile', [GoogleAuthController::class, 'completeProfile']);
+});
+

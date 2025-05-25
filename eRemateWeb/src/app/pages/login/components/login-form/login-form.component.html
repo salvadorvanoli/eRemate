@@ -2,6 +2,7 @@
     <p-toast />
     <form novalidate action="" method="post" class="mx-auto flex flex-col items-center gap-4 w-full max-w-md">
         <app-form-text-input 
+            #emailInput
             class="w-full"
             placeholder="Email"
             [formSubmitted]="formSubmitted"
@@ -11,6 +12,7 @@
             (isInputInvalid)="isEmailInvalid = $event"
         />
         <app-form-password-input
+            #passwordInput
             class="w-full" 
             placeholder="Contraseña"
             [formSubmitted]="formSubmitted"
@@ -25,6 +27,20 @@
             [classes]="'w-full'"
             [label]="'Iniciar sesión'"
             (onClick)="login()"
+        />
+        
+        <!-- Separador -->
+        <div class="w-full flex items-center my-4">
+            <div class="flex-grow border-t border-gray-300"></div>
+            <span class="flex-shrink mx-4 text-gray-600">o</span>
+            <div class="flex-grow border-t border-gray-300"></div>
+        </div>
+
+        <!-- Google Sign-In -->
+        <app-google-signin
+            class="w-full"
+            buttonText="Iniciar sesión con Google"
+            (onAuth)="onGoogleAuth($event)"
         />
     </form>
 </div>

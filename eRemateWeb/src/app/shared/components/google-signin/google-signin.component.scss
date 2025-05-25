@@ -1,0 +1,49 @@
+.google-signin-container {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  width: 100%;
+}
+
+.google-button-container {
+  min-height: 40px;
+  width: 100%;
+}
+
+// Mostrar botón de respaldo solo si el contenedor está vacío
+.google-button-container:empty + button {
+  display: block;
+}
+
+.google-button-container:not(:empty) + button {
+  display: none;
+}
+
+// Estilos para el botón oficial de Google
+:host ::ng-deep .g_id_signin {
+  width: 100% !important;
+  
+  > div {
+    width: 100% !important;
+  }
+}
+
+// Estilos para el botón de respaldo
+button {
+  transition: all 0.2s ease-in-out;
+  
+  &:hover {
+    transform: translateY(-1px);
+    box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
+  }
+  
+  &:disabled {
+    opacity: 0.6;
+    cursor: not-allowed;
+    
+    &:hover {
+      transform: none;
+      box-shadow: none;
+    }
+  }
+}
