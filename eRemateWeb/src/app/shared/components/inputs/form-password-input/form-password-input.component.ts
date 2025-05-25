@@ -28,4 +28,10 @@ export class FormPasswordInputComponent {
   @Input() isPasswordWrong: boolean = false;
 
   @Output() passwordValue = new EventEmitter<string>();
+
+  reset() {
+    this.password.set('');
+    this.isPasswordWrong = false;
+    this.passwordValue.emit('');
+  }
 }
