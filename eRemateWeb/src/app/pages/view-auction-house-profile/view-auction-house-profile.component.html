@@ -1,0 +1,50 @@
+<p-toast></p-toast>
+
+<div class="view-container">
+  <div class="info-selector-wrapper">
+    <app-select-info-type 
+      [defaultOption]="selectedInfoType" 
+      (optionChanged)="onInfoTypeChanged($event)">
+    </app-select-info-type>
+  </div>
+
+  <!-- Información del perfil -->
+  <div *ngIf="selectedInfoType === 'profile'">
+    <app-profile-info></app-profile-info>
+  </div>
+
+  <!-- Rematadores -->
+  <div *ngIf="selectedInfoType === 'auctioneers'">
+    <div class="titulos">
+      Gestión de Rematadores
+    </div>
+    <app-table></app-table>
+  </div>
+
+  <!-- Subastas y Lotes -->
+  <div *ngIf="selectedInfoType === 'auctions'">
+    <div class="titulos">
+      Gestión de Subastas
+    </div>
+    <app-table-auction (auctionSelected)="onAuctionSelected($event)"></app-table-auction>
+
+    <div class="titulos">
+      <span>Gestión de Lotes</span>
+      <span *ngIf="selectedAuctionId" class="subasta-seleccionada">
+        (Subasta seleccionada: #{{selectedAuctionId}})
+      </span>
+    </div>
+    <app-table-lots [auctionId]="selectedAuctionId"></app-table-lots>
+  </div>
+
+  <!-- Panel de Estadísticas -->
+  <div *ngIf="selectedInfoType === 'statistics'">
+    <div class="titulos">
+      Panel de Estadísticas
+    </div>
+    <div class="statistics-placeholder">
+      <p>Aquí se mostrarán las estadísticas de la casa de remates.</p>
+    </div>
+  </div>
+</div>
+

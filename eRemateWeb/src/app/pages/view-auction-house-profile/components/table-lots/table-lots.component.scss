@@ -1,0 +1,27 @@
+.articles-button {
+  margin-left: 8px;
+}
+
+.article-table {
+  width: 100%;
+  border-collapse: collapse;
+  
+  th, td {
+    padding: 0.75rem;
+    border: 1px solid #e2e8f0;
+  }
+  
+  thead {
+    background-color: #f8fafc;
+  }
+  
+  tbody tr:hover {
+    background-color: #f1f5f9;
+  }
+}
+
+.action-buttons {
+  display: flex;
+  gap: 0.5rem;
+  justify-content: center;
+}

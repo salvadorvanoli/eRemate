@@ -1,0 +1,47 @@
+.select-info-container {
+  width: 300px;
+  margin: 0 auto 20px;
+}
+
+
+:host ::ng-deep {
+ 
+  .p-dropdown {
+    width: 100%;
+    border-radius: 8px;
+    
+    &:hover {
+      border-color: #6334E3;
+    }
+    
+    &.p-focus {
+      box-shadow: 0 0 0 0.2rem rgba(99, 52, 227, 0.25);
+      border-color: #6334E3;
+    }
+  }
+
+
+  .p-dropdown-panel .p-dropdown-items .p-dropdown-item.p-highlight,
+  .p-dropdown-panel .p-dropdown-items .p-dropdown-item.p-highlight:hover,
+  .p-component .p-dropdown-panel .p-dropdown-items .p-dropdown-item.p-highlight {
+    background: rgba(99, 52, 227, 0.1) !important;
+    color: #6334E3 !important;
+  }
+  
+ 
+  .p-dropdown-panel .p-dropdown-items .p-dropdown-item:hover {
+    background: rgba(99, 52, 227, 0.05) !important;
+    color: #6334E3 !important;
+  }
+  
+
+  .p-dropdown .p-dropdown-label.p-highlight {
+    color: #6334E3 !important;
+  }
+  
+
+  .p-component:not(.p-highlight):not(.p-disabled).p-focus {
+    box-shadow: 0 0 0 0.2rem rgba(99, 52, 227, 0.25) !important;
+    border-color: #6334E3 !important;
+  }
+}

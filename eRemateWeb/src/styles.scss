@@ -21,3 +21,15 @@ body {
     margin-bottom: 331px;
   }
 }
+
+
+body {
+  .p-dropdown-panel .p-dropdown-items .p-dropdown-item.p-highlight {
+    background: rgba(99, 52, 227, 0.1) !important;
+    color: #6334E3 !important;
+  }
+  
+  .p-dropdown-panel .p-dropdown-items .p-dropdown-item:hover {
+    background: rgba(99, 52, 227, 0.05) !important;
+  }
+}
