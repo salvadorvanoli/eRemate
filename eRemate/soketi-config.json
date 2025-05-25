@@ -1,0 +1,40 @@
+{
+  "port": 6001,
+  "debug": true,
+  "presence": {
+    "maxMembersPerChannel": 100
+  },
+  "cors.enabled": true,
+  "cors.origin": [
+    "http://localhost:4200",
+    "http://127.0.0.1:4200",
+    "http://localhost:8000",
+    "http://127.0.0.1:8000"
+  ],
+  "cors.methods": ["GET", "POST", "PUT", "DELETE", "OPTIONS"],
+  "cors.allowedHeaders": [
+    "Origin",
+    "Content-Type",
+    "X-Auth-Token",
+    "X-Requested-With",
+    "Accept",
+    "Authorization",
+    "X-CSRF-TOKEN",
+    "XSRF-TOKEN"
+  ],
+  "cors.credentials": true,
+  "cors.maxAge": 86400,
+  "appManager.array.apps": [
+    {
+      "id": "app-id",
+      "key": "app-key",
+      "secret": "app-secret",
+      "maxConnections": -1,
+      "enableClientMessages": true,
+      "enabled": true,
+      "maxBackendEventsPerSecond": -1,
+      "maxClientEventsPerSecond": -1,
+      "maxEventsPerSecond": -1
+    }
+  ]
+}

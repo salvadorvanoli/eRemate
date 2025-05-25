@@ -12,7 +12,7 @@ interface SubastaServiceInterface
     public function obtenerLotes(int $id);
     public function iniciarSubasta(int $id);
     public function cerrarSubasta(int $id);
-    public function realizarPuja(int $id);
+    public function realizarPuja(array $puja, int $id);
     public function obtenerPujas(int $id);
     public function realizarPujaAutomatica(int $id);
     public function obtenerTransmisionEnVivo(int $id);

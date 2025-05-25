@@ -13,6 +13,7 @@ class Subasta extends Model
     protected $fillable = [
         'casaDeRemates_id',
         'rematador_id',
+        'loteActual_id',
         'mensajes',
         'urlTransmision',
         'tipoSubasta',
@@ -38,7 +39,7 @@ class Subasta extends Model
 
     public function loteActual()
     {
-        return $this->hasOne(Lote::class, 'loteActual_id');
+        return $this->belongsTo(Lote::class, 'loteActual_id');
     }
 
     public function rematador()

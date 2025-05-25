@@ -114,10 +114,9 @@ Route::middleware('auth:sanctum')->group(function () {
         Route::put('/{id}', [SubastaController::class, 'actualizarSubasta']);
         Route::post('/{id}/start', [SubastaController::class, 'iniciarSubasta']);
         Route::post('/{id}/end', [SubastaController::class, 'cerrarSubasta']);
-
-        /* Resto de endpoints de subasta
         Route::post('/{id}/bid', [SubastaController::class, 'realizarPuja']);
         Route::get('/{id}/bids', [SubastaController::class, 'obtenerPujas']);
+        /* Resto de endpoints de subasta
         Route::post('/{id}/auto-bid', [SubastaController::class, 'realizarPujaAutomatica']);
         Route::post('/{id}/live-stream', [SubastaController::class, 'obtenerTransmisionEnVivo']);
         */

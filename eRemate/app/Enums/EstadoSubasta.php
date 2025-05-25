@@ -7,13 +7,15 @@ enum EstadoSubasta: string
     case PENDIENTE = 'pendiente';
     case INICIADA = 'iniciada';
     case CERRADA = 'cerrada';
+    case CANCELADA = 'cancelada';
 
     public function label(): string
     {
         return match($this) {
             self::PENDIENTE => 'Pendiente',
             self::INICIADA => 'Iniciada',
-            self::CERRADA => 'Cerrada'
+            self::CERRADA => 'Cerrada',
+            self::CANCELADA => 'Cancelada'
         };
     }
     

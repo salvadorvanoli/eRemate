@@ -41,6 +41,20 @@ class CasaDeRematesService implements CasaDeRematesServiceInterface
 
         return $casaDeRemates;
     }
+
+    private function buscarCasaDeRematesPorId(int $id): mixed
+    {
+        $casaDeRemates = CasaDeRemates::find($id);
+
+        if (!$casaDeRemates) {
+            return response()->json([
+                'success' => false,
+                'error' => 'Casa de remates no encontrada'
+            ], 404);
+        }
+
+        return $casaDeRemates;
+    }
     
     public function actualizarCasaDeRemates(int $id, array $data): mixed
     {
@@ -61,11 +75,15 @@ class CasaDeRematesService implements CasaDeRematesServiceInterface
 
     public function obtenerRematadores(int $id): mixed
     {
-        $casaDeRemates = CasaDeRemates::where('id', $id)->first();
-        if (!$casaDeRemates) {
+        $casaDeRemates = $this->buscarCasaDeRematesPorId($id);
+        if (!$casaDeRemates instanceof CasaDeRemates) {
+            return $casaDeRemates;
+        }
+
+        if ($casaDeRemates->rematadores()->count() === 0) {
             return response()->json([
                 'success' => false,
-                'message' => 'Casa de remates no encontrada'
+                'message' => 'No hay rematadores asignados a esta casa de remates'
             ], 404);
         }
 
@@ -74,11 +92,12 @@ class CasaDeRematesService implements CasaDeRematesServiceInterface
 
     public function obtenerSubastas(int $id): mixed
     {
-        $casaDeRemates = CasaDeRemates::where('id', $id)->first();
-        if (!$casaDeRemates) {
+        $casaDeRemates = $this->buscarCasaDeRematesPorId($id);
+
+        if ($casaDeRemates->subastas()->count() === 0) {
             return response()->json([
                 'success' => false,
-                'message' => 'Casa de remates no encontrada'
+                'message' => 'No hay subastas para esta casa de remates'
             ], 404);
         }
 

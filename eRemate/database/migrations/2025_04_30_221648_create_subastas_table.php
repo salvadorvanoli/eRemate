@@ -10,7 +10,6 @@ return new class extends Migration
         Schema::create('subastas', function (Blueprint $table) {
             $table->id();
             $table->json('mensajes');
-            $table->unsignedBigInteger('loteActual_id')->nullable()->default(null);
             $table->string('urlTransmision');
             $table->string('tipoSubasta');
             $table->string('estado')->default('Pendiente');
@@ -19,6 +18,7 @@ return new class extends Migration
             $table->string('ubicacion');
             $table->foreignId('rematador_id')->nullable()->constrained('rematadores')->nullOnDelete();
             $table->foreignId('casaDeRemates_id')->nullable()->constrained('casas_de_remates')->nullOnDelete();
+            $table->unsignedBigInteger('loteActual_id')->nullable();
             $table->timestamps();
         });
     }
