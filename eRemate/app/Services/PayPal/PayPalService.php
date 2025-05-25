@@ -5,6 +5,7 @@ namespace App\Services\PayPal;
 use App\Models\Factura;
 use App\Models\Compra;
 use App\Models\UsuarioRegistrado;
+use App\Models\Chat;
 use App\Enums\MetodoPago;
 use Illuminate\Support\Facades\Http;
 use Illuminate\Support\Facades\Log;
@@ -25,7 +26,20 @@ class PayPalService implements PayPalServiceInterface
     private function obtenerAccessToken()
     {
         try {
+            // Check if credentials exist
+            if (empty($this->clientId) || empty($this->clientSecret)) {
+                Log::error('PayPal credentials missing', [
+                    'clientIdExists' => !empty($this->clientId),
+                    'clientSecretExists' => !empty($this->clientSecret)
+                ]);
+                throw new \Exception('Las credenciales de PayPal no están configuradas correctamente');
+            }
+
+            // Disable SSL verification for local development
             $response = Http::withBasicAuth($this->clientId, $this->clientSecret)
+                ->withOptions([
+                    'verify' => false, // Disable SSL verification for local development
+                ])
                 ->asForm()
                 ->post($this->baseUrl . '/v1/oauth2/token', [
                     'grant_type' => 'client_credentials'
@@ -35,6 +49,10 @@ class PayPalService implements PayPalServiceInterface
                 return $response->json()['access_token'];
             }
 
+            Log::error('Error al obtener token de PayPal', [
+                'statusCode' => $response->status(),
+                'response' => $response->body()
+            ]);
             throw new \Exception('Error al obtener token de PayPal: ' . $response->body());
         } catch (\Exception $e) {
             Log::error('Error obteniendo token PayPal: ' . $e->getMessage());
@@ -42,66 +60,174 @@ class PayPalService implements PayPalServiceInterface
         }
     }
 
+    private function buildPaymentData($monto, $metodoEntrega, $usuarioRegistradoId, $chatId = null): array {
+        return [
+            'intent' => 'sale',
+            'payer' => [
+                'payment_method' => 'paypal'
+            ],
+            'transactions' => [
+                [
+                    'amount' => [
+                        'total' => number_format($monto, 2, '.', ''),
+                        'currency' => config('paypal.currency', 'USD')
+                    ],
+                    'description' => 'Pago de subasta - eRemate',
+                    'custom' => json_encode([
+                        'usuario_registrado_id' => $usuarioRegistradoId,
+                        'metodo_entrega' => $metodoEntrega,
+                        'chat_id' => $chatId
+                    ])
+                ]
+            ],
+            'redirect_urls' => [
+                'return_url' => config('app.paypal_success_url', 'http://localhost:4200/pago/exitoso'),
+                'cancel_url' => config('app.paypal_cancel_url', 'http://localhost:4200/pago/cancelado')
+            ]
+        ];
+    }
+
     public function crearPago(float $monto, string $metodoEntrega, int $usuarioRegistradoId): mixed
     {
         try {
             $usuario = UsuarioRegistrado::find($usuarioRegistradoId);
             if (!$usuario) {
-                return response()->json([
+                return [
                     'success' => false,
                     'error' => 'Usuario registrado no encontrado'
-                ], 404);
+                ];
             }
 
             $accessToken = $this->obtenerAccessToken();
-
-            $paymentData = [
-                'intent' => 'sale',
-                'payer' => [
-                    'payment_method' => 'paypal'
-                ],
-                'transactions' => [
-                    [
-                        'amount' => [
-                            'total' => number_format($monto, 2, '.', ''),
-                            'currency' => 'USD'
-                        ],
-                        'description' => 'Pago de subasta - eRemate',
-                        'custom' => json_encode([
-                            'usuario_registrado_id' => $usuarioRegistradoId,
-                            'metodo_entrega' => $metodoEntrega
-                        ])
-                    ]
-                ],
-                'redirect_urls' => [
-                    'return_url' => config('app.url') . '/api/paypal/success',
-                    'cancel_url' => config('app.url') . '/api/paypal/cancel'
-                ]
-            ];
+            $paymentData = $this->buildPaymentData($monto, $metodoEntrega, $usuarioRegistradoId);
 
             $response = Http::withToken($accessToken)
+                ->withOptions([
+                    'verify' => false, // Disable SSL verification for local development
+                ])
                 ->post($this->baseUrl . '/v1/payments/payment', $paymentData);
 
             if ($response->successful()) {
                 $payment = $response->json();
                 
-                return response()->json([
+                return [
                     'success' => true,
                     'data' => [
                         'payment_id' => $payment['id'],
                         'approval_url' => collect($payment['links'])->firstWhere('rel', 'approval_url')['href']
                     ]
-                ], 200);
+                ];
             }
 
             throw new \Exception('Error al crear pago en PayPal: ' . $response->body());
 
         } catch (\Exception $e) {
             Log::error('Error creando pago PayPal: ' . $e->getMessage());
-            return response()->json([
+            return [
                 'success' => false,
                 'error' => 'Error al procesar el pago: ' . $e->getMessage()
-            ], 500);
+            ];
+        }
+    }
+
+    public function crearPagoDesdeChatId(float $monto, string $metodoEntrega, int $chatId): mixed
+    {
+        try {
+            // Obtener el chat y el usuario registrado
+            $chat = Chat::find($chatId);
+            if (!$chat) {
+                return [
+                    'success' => false,
+                    'error' => 'Chat no encontrado'
+                ];
+            }
+
+            $usuarioRegistradoId = $chat->usuarioRegistrado_id;
+            if (!$usuarioRegistradoId) {
+                Log::error("Chat ID {$chatId} no tiene usuarioRegistrado_id");
+                return [
+                    'success' => false,
+                    'error' => 'El chat no tiene un usuario registrado asociado'
+                ];
+            }
+            
+            // Verificar que el usuario exista
+            $usuarioRegistrado = UsuarioRegistrado::find($usuarioRegistradoId);
+            if (!$usuarioRegistrado) {
+                return [
+                    'success' => false,
+                    'error' => 'Usuario registrado no encontrado'
+                ];
+            }
+
+            $accessToken = $this->obtenerAccessToken();
+            $paymentData = $this->buildPaymentData($monto, $metodoEntrega, $usuarioRegistradoId, $chatId);
+
+            // Log the payment data being sent for debugging
+            Log::debug('PayPal payment request data', ['paymentData' => $paymentData]);
+            
+            $response = Http::withToken($accessToken)
+                ->withOptions([
+                    'verify' => false, // Disable SSL verification for local development
+                ])
+                ->post($this->baseUrl . '/v1/payments/payment', $paymentData);
+            
+            // Log the raw response for debugging
+            Log::debug('PayPal API response', [
+                'status' => $response->status(),
+                'body' => $response->body()
+            ]);
+
+            if ($response->successful()) {
+                $payment = $response->json();
+                
+                // Log the payment response for debugging
+                Log::debug('PayPal payment response', ['payment' => $payment]);
+                
+                // Check if the approval_url link exists
+                $approvalLink = collect($payment['links'] ?? [])->firstWhere('rel', 'approval_url');
+                
+                if (!$approvalLink || !isset($approvalLink['href'])) {
+                    Log::error('Missing approval_url in PayPal response', ['payment' => $payment]);
+                    throw new \Exception('No se pudo obtener la URL de aprobación de PayPal');
+                }
+            } else {
+                Log::error('PayPal API error response', [
+                    'status' => $response->status(),
+                    'body' => $response->body()
+                ]);
+                throw new \Exception('Error al crear pago en PayPal: ' . $response->body());
+            }
+
+            // Verificar si hay una solicitud de pago pendiente para este chat con el mismo monto
+            $paymentRequest = \App\Models\PaymentRequest::where('chat_id', $chatId)
+                ->where('monto', $monto)
+                ->where('metodo_entrega', $metodoEntrega)
+                ->where('estado', 'pendiente')
+                ->first();
+            
+            return [
+                'success' => true,
+                'data' => [
+                    'payment_id' => $payment['id'],
+                    'approval_url' => $approvalLink['href'],
+                    'chat_id' => $chatId,
+                    'payment_request_id' => $paymentRequest ? $paymentRequest->id : null
+                ]
+            ];
+
+        } catch (\Exception $e) {
+            Log::error('Error creando pago PayPal desde chat: ' . $e->getMessage(), [
+                'exception' => $e->getTraceAsString(),
+                'chat_id' => $chatId,
+                'monto' => $monto,
+                'metodo_entrega' => $metodoEntrega
+            ]);
+            
+            return [
+                'success' => false,
+                'error' => 'Error al procesar el pago: ' . $e->getMessage()
+            ];
         }
     }
 
@@ -112,6 +238,9 @@ class PayPalService implements PayPalServiceInterface
 
             // Ejecutar el pago en PayPal
             $response = Http::withToken($accessToken)
+                ->withOptions([
+                    'verify' => false, // Disable SSL verification for local development
+                ])
                 ->post($this->baseUrl . "/v1/payments/payment/{$paymentId}/execute", [
                     'payer_id' => $payerId
                 ]);
@@ -127,36 +256,61 @@ class PayPalService implements PayPalServiceInterface
             $monto = floatval($transaction['amount']['total']);
             $customData = json_decode($transaction['custom'], true);
             $metodoEntrega = $customData['metodo_entrega'];
+            $chatId = $customData['chat_id'] ?? null;
 
-            // Crear factura
+            // Si el ID de usuario no coincide con el del chat, priorizar el del chat
+            if ($chatId) {
+                $chat = Chat::find($chatId);
+                if ($chat && $chat->usuarioRegistrado_id) {
+                    $usuarioRegistradoId = $chat->usuarioRegistrado_id;
+                }
+            }
+
+            // Crear factura con metodoPago PAYPAL
             $factura = Factura::create([
                 'monto' => $monto,
                 'metodoEntrega' => $metodoEntrega,
                 'metodoPago' => MetodoPago::PAYPAL
             ]);
 
-            // Crear compra
+            // Crear compra asociada al usuario registrado
             $compra = Compra::create([
                 'usuarioRegistrado_id' => $usuarioRegistradoId,
                 'factura_id' => $factura->id
             ]);
 
-            return response()->json([
+            // Si el pago viene de un chat, enviar un mensaje de confirmación
+            if ($chatId) {
+                try {
+                    \App\Models\Mensaje::create([
+                        'contenido' => "💵 Se ha generado la factura #" . $factura->id . " por un monto de $" . $monto . ". Método de pago: PayPal. Método de entrega: " . $metodoEntrega,
+                        'chat_id' => $chatId,
+                        'usuario_id' => $usuarioRegistradoId,
+                        'tipo' => 'factura'
+                    ]);
+                } catch (\Exception $e) {
+                    \Log::error("Error al enviar mensaje de confirmación: " . $e->getMessage());
+                    // No detener el proceso por un error en el mensaje
+                }
+            }
+
+            return [
                 'success' => true,
                 'data' => [
                     'payment_id' => $paymentId,
                     'factura' => $factura,
-                    'compra' => $compra
+                    'compra' => $compra,
+                    'chat_id' => $chatId
                 ],
-                'message' => 'Pago procesado exitosamente'
-            ], 200);
+                'message' => 'Pago procesado exitosamente y factura generada'
+            ];
 
         } catch (\Exception $e) {
             Log::error('Error ejecutando pago PayPal: ' . $e->getMessage());
-            return response()->json([
+            return [
                 'success' => false,
                 'error' => 'Error al ejecutar el pago: ' . $e->getMessage()
-            ], 500);
+            ];
         }
     }
 
@@ -165,17 +319,17 @@ class PayPalService implements PayPalServiceInterface
         try {
             Log::info("Pago cancelado: {$paymentId}");
             
-            return response()->json([
+            return [
                 'success' => true,
                 'message' => 'Pago cancelado correctamente'
-            ], 200);
+            ];
 
         } catch (\Exception $e) {
             Log::error('Error cancelando pago PayPal: ' . $e->getMessage());
-            return response()->json([
+            return [
                 'success' => false,
                 'error' => 'Error al cancelar el pago: ' . $e->getMessage()
-            ], 500);
+            ];
         }
     }
 
@@ -185,23 +339,54 @@ class PayPalService implements PayPalServiceInterface
             $accessToken = $this->obtenerAccessToken();
 
             $response = Http::withToken($accessToken)
+                ->withOptions([
+                    'verify' => false, // Disable SSL verification for local development
+                ])
                 ->get($this->baseUrl . "/v1/payments/payment/{$paymentId}");
 
             if ($response->successful()) {
-                return response()->json([
+                return [
                     'success' => true,
                     'data' => $response->json()
-                ], 200);
+                ];
             }
 
             throw new \Exception('Error al obtener estado del pago: ' . $response->body());
 
         } catch (\Exception $e) {
             Log::error('Error obteniendo estado de pago PayPal: ' . $e->getMessage());
-            return response()->json([
+            return [
                 'success' => false,
                 'error' => 'Error al obtener estado del pago: ' . $e->getMessage()
-            ], 500);
+            ];
+        }
+    }
+
+    /**
+     * Verifica la configuración de PayPal y la validez de las credenciales
+     * 
+     * @return bool
+     */
+    public function verificarCredenciales(): bool
+    {
+        try {
+            // Verificar que las credenciales estén configuradas
+            if (empty($this->clientId) || empty($this->clientSecret)) {
+                Log::error('Credenciales de PayPal no configuradas correctamente', [
+                    'clientIdConfigured' => !empty($this->clientId),
+                    'clientSecretConfigured' => !empty($this->clientSecret)
+                ]);
+                return false;
+            }
+            
+            // Intentar obtener un token para verificar las credenciales
+            $accessToken = $this->obtenerAccessToken();
+            return !empty($accessToken);
+        } catch (\Exception $e) {
+            Log::error('Error verificando credenciales de PayPal: ' . $e->getMessage(), [
+                'trace' => $e->getTraceAsString()
+            ]);
+            return false;
         }
     }
 }

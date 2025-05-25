@@ -23,6 +23,7 @@ export class PaymentSuccessComponent implements OnInit, OnDestroy {
   currentUser: any = null;
   paymentId: string = '';
   payerId: string = '';
+  chatId: number | null = null;
   
   private authCheckSubscription?: Subscription;
   private maxRetries = 10;
@@ -50,6 +51,7 @@ export class PaymentSuccessComponent implements OnInit, OnDestroy {
     this.route.queryParams.subscribe(params => {
       this.paymentId = params['paymentId'] || '';
       this.payerId = params['PayerID'] || '';
+      this.chatId = params['chat_id'] ? parseInt(params['chat_id'], 10) : null;
 
       if (!this.paymentId || !this.payerId) {
         this.loading = false;
@@ -65,7 +67,7 @@ export class PaymentSuccessComponent implements OnInit, OnDestroy {
         this.currentUser = user;
         this.loadingUser = false;
         
-        if (user && user.usuarioRegistrado && user.usuarioRegistrado.id) {
+        if (user) {
           // Si tenemos usuario y parámetros válidos, procesar el pago
           if (this.paymentId && this.payerId) {
             this.executePayment(this.paymentId, this.payerId);
@@ -96,8 +98,7 @@ export class PaymentSuccessComponent implements OnInit, OnDestroy {
       this.retryCount++;
       this.securityService.getActualUser().subscribe({
         next: (user) => {
-          // Verificar que existe el usuario, es de tipo registrado y tiene ID
-          if (user && user.tipo === 'registrado' && 'id' in user) {
+          if (user && user.tipo === 'registrado') {
             this.currentUser = user;
             this.authCheckSubscription?.unsubscribe();
             
@@ -110,27 +111,49 @@ export class PaymentSuccessComponent implements OnInit, OnDestroy {
       });
     });
   }
-
   executePayment(paymentId: string, payerId: string) {
     // Verificar que el usuario es válido
-    if (!this.currentUser || !('id' in this.currentUser) || this.currentUser.tipo !== 'registrado') {
+    if (!this.currentUser || this.currentUser.tipo !== 'registrado') {
       this.error = 'Usuario no válido para completar el pago';
       this.loading = false;
       return;
     }
     
-    const executionData = {
+    const executionData: any = {
       payment_id: paymentId,
       payer_id: payerId,
       usuario_registrado_id: this.currentUser.id
     };
 
+    // Si tenemos un chat ID, lo incluimos
+    if (this.chatId) {
+      executionData.chat_id = this.chatId;
+    }    // Incluir el payment_request_id si está disponible en sessionStorage
+    const storedRequestId = sessionStorage.getItem('payment_request_id');
+    console.log('Verificando payment_request_id en sessionStorage:', storedRequestId);
+    
+    if (storedRequestId) {
+      executionData.payment_request_id = parseInt(storedRequestId, 10);
+      console.log('Payment request ID agregado a executionData:', executionData.payment_request_id);
+    } else {
+      console.log('No se encontró payment_request_id en sessionStorage');
+    }
+
+    console.log('Datos completos para ejecutar pago:', executionData);
+
     this.paypalService.ejecutarPago(executionData).subscribe({
       next: (response) => {
-        this.loading = false;
-        if (response && response.success) {
+        this.loading = false;        if (response && response.success) {
           this.success = true;
           this.paymentData = response.data;
+          
+          // Limpiar el payment_request_id del sessionStorage después del éxito
+          sessionStorage.removeItem('payment_request_id');
+          
+          // Guardar el chat_id si viene en la respuesta
+          if (response.data?.chat_id) {
+            this.chatId = response.data.chat_id;
+          }
         } else {
           this.error = response.error || 'Error al procesar el pago';
         }
@@ -144,7 +167,12 @@ export class PaymentSuccessComponent implements OnInit, OnDestroy {
   }
 
   volverAlInicio() {
-    this.router.navigate(['/']);
+    // Si tenemos un chat ID, volvemos a él
+    if (this.chatId) {
+      this.router.navigate(['/chat', this.chatId]);
+    } else {
+      this.router.navigate(['/']);
+    }
   }
 
   verFactura() {

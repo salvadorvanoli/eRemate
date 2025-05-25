@@ -20,6 +20,7 @@ use App\Http\Controllers\CalificacionController;
 use App\Http\Controllers\UsuarioRegistradoController;
 use App\Http\Controllers\ContactoController;
 use App\Http\Controllers\PayPalController;
+use App\Http\Controllers\PaymentRequestController;
 
 // Rutas de Chat
 Route::get('chats', [ChatController::class, 'index']);
@@ -141,11 +142,18 @@ Route::middleware('auth:sanctum')->group(function () {
 
 // Rutas de PayPal
 Route::prefix('paypal')->group(function () {
-    Route::post('/create-payment', [PayPalController::class, 'crearPago']);
-    Route::post('/execute-payment', [PayPalController::class, 'ejecutarPago']);
-    Route::get('/success', [PayPalController::class, 'pagoExitoso']);
-    Route::get('/cancel', [PayPalController::class, 'pagoCancelado']);
-    Route::get('/payment-status/{paymentId}', [PayPalController::class, 'obtenerEstadoPago']);
+    // Rutas públicas
+    Route::get('/verify-credentials', [PayPalController::class, 'verificarCredenciales']);
+    Route::get('/success', [PayPalController::class, 'pagoExitoso'])->name('paypal.success');
+    Route::get('/cancel', [PayPalController::class, 'pagoCancelado'])->name('paypal.cancel');
+    
+    // Rutas que requieren autenticación
+    Route::middleware('auth:sanctum')->group(function () {
+        Route::post('/create-payment', [PayPalController::class, 'crearPago']);
+        Route::post('/create-payment-from-chat', [PayPalController::class, 'crearPagoDesdeChatId']);
+        Route::post('/execute-payment', [PayPalController::class, 'ejecutarPago']);
+        Route::get('/payment-status/{paymentId}', [PayPalController::class, 'obtenerEstadoPago']);
+    });
 });
 
 Route::prefix('auction-house')->group(function () {
@@ -173,11 +181,58 @@ Route::prefix('item')->group(function () {
 
 Route::post('/contacto', [ContactoController::class, 'enviarFormulario']);
 
-// Google OAuth routes
-Route::post('/auth/google', [GoogleAuthController::class, 'googleAuth']);
-Route::post('/register/google', [GoogleAuthController::class, 'googleRegister']);
-
-// Complete profile route (protected)
-Route::middleware('auth:sanctum')->group(function () {
-    Route::post('/complete-profile', [GoogleAuthController::class, 'completeProfile']);
+// Rutas de Solicitudes de Pago
+Route::prefix('payment-requests')->middleware('auth:sanctum')->group(function () {
+    Route::get('/', [PaymentRequestController::class, 'index']);
+    Route::post('/', [PaymentRequestController::class, 'store']);
+    Route::get('/{id}', [PaymentRequestController::class, 'show']);
+    Route::put('/{id}/status', [PaymentRequestController::class, 'updateStatus']);
+    Route::get('/user/{userId}', [PaymentRequestController::class, 'getByUser']);
 });
+
+// Simple test endpoint
+Route::get('/test', function () {
+    return response()->json([
+        'success' => true,
+        'message' => 'API is working',
+        'timestamp' => now()
+    ]);
+});
+
+// Debug endpoint for chat permissions
+Route::get('/debug/chat/{chatId}/permissions', function ($chatId) {
+    try {
+        $chat = App\Models\Chat::find($chatId);
+        if (!$chat) {
+            return response()->json([
+                'success' => false,
+                'error' => 'Chat no encontrado',
+                'chat_id' => $chatId
+            ], 404);
+        }
+
+        $user = auth('sanctum')->user();
+        $permissions = [
+            'chat_exists' => true,
+            'chat_id' => $chat->id,
+            'usuario_registrado_id' => $chat->usuarioRegistrado_id,
+            'casa_de_remate_id' => $chat->casa_de_remate_id,
+            'authenticated_user_id' => $user ? $user->id : null,
+            'user_type' => $user ? get_class($user) : null,
+            'can_access_as_usuario' => $user && $user->id == $chat->usuarioRegistrado_id,
+            'can_access_as_casa' => $user && $user->id == $chat->casa_de_remate_id,
+            'has_chat_access' => $user && ($user->id == $chat->usuarioRegistrado_id || $user->id == $chat->casa_de_remate_id)
+        ];
+
+        return response()->json([
+            'success' => true,
+            'data' => $permissions
+        ]);
+    } catch (\Exception $e) {
+        return response()->json([
+            'success' => false,
+            'error' => $e->getMessage(),
+            'trace' => $e->getTraceAsString()
+        ], 500);
+    }
+})->middleware('auth:sanctum');

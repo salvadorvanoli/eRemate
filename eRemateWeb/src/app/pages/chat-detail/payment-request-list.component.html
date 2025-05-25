@@ -1,0 +1,59 @@
+<div class="bg-white rounded-lg p-6 shadow-lg max-w-lg w-full">
+  <div class="flex justify-between items-center mb-4">
+    <h2 class="text-xl font-bold">Solicitudes de Pago Pendientes</h2>
+    <button (click)="onClose.emit()" class="text-gray-500 hover:text-gray-700">
+      <svg xmlns="http://www.w3.org/2000/svg" class="h-5 w-5" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12" />
+      </svg>
+    </button>
+  </div>
+  
+  <div *ngIf="requests.length === 0" class="p-4 bg-gray-50 rounded text-center text-gray-500">
+    No tienes solicitudes de pago pendientes.
+  </div>
+  
+  <div *ngIf="requests.length > 0" class="overflow-y-auto max-h-96">
+    <div *ngFor="let request of requests" class="border rounded-lg p-4 mb-3 hover:bg-gray-50">
+      <div class="flex justify-between mb-2">
+        <span class="font-medium">Solicitud #{{request.id}}</span>
+        <span class="px-2 py-1 rounded-full text-xs"
+          [ngClass]="{
+            'bg-yellow-100 text-yellow-800': request.estado === 'pendiente',
+            'bg-green-100 text-green-800': request.estado === 'pagado',
+            'bg-red-100 text-red-800': request.estado === 'cancelado'
+          }">
+          {{request.estado | titlecase}}
+        </span>
+      </div>
+      
+      <div class="text-sm text-gray-600 mb-3">
+        <p><span class="font-medium">Monto:</span> ${{request.monto}}</p>
+        <p><span class="font-medium">Método de entrega:</span> {{getMetodoEntregaLabel(request.metodo_entrega)}}</p>
+        <p><span class="font-medium">Fecha:</span> {{request.created_at | date:'medium'}}</p>
+      </div>
+      
+      <div class="flex justify-end">
+        <app-primary-button
+          *ngIf="request.estado === 'pendiente'"
+          [label]="processingPayment && processingRequestId === request.id ? 'Procesando...' : 'Pagar con PayPal'"
+          [disabled]="processingPayment"
+          (onClick)="processPayment(request)">
+        </app-primary-button>
+        
+        <span *ngIf="request.estado === 'pagado'" class="text-green-600 flex items-center">
+          <svg xmlns="http://www.w3.org/2000/svg" class="h-5 w-5 mr-1" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M5 13l4 4L19 7" />
+          </svg>
+          Pagado
+        </span>
+
+        <span *ngIf="request.estado === 'cancelado'" class="text-red-600 flex items-center">
+          <svg xmlns="http://www.w3.org/2000/svg" class="h-5 w-5 mr-1" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12" />
+          </svg>
+          Cancelado
+        </span>
+      </div>
+    </div>
+  </div>
+</div>

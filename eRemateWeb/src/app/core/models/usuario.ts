@@ -10,6 +10,7 @@ export interface UsuarioSimple {
 }
 
 export interface UsuarioRegistrado {
+    id: number;
     email: string;
     telefono: string;
     contrasenia: string;
@@ -17,6 +18,7 @@ export interface UsuarioRegistrado {
 }
 
 export interface UsuarioRematador {
+    id: number;
     email: string;
     contrasenia: string;
     telefono: string;
@@ -29,6 +31,7 @@ export interface UsuarioRematador {
 }
 
 export interface UsuarioCasaDeRemates {
+    id: number;
     email: string;
     contrasenia: string;
     telefono: string;
