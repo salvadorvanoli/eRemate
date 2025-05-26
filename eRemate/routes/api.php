@@ -190,49 +190,12 @@ Route::prefix('payment-requests')->middleware('auth:sanctum')->group(function ()
     Route::get('/user/{userId}', [PaymentRequestController::class, 'getByUser']);
 });
 
-// Simple test endpoint
-Route::get('/test', function () {
-    return response()->json([
-        'success' => true,
-        'message' => 'API is working',
-        'timestamp' => now()
-    ]);
+// Google OAuth routes
+Route::post('/auth/google', [GoogleAuthController::class, 'googleAuth']);
+Route::post('/register/google', [GoogleAuthController::class, 'googleRegister']);
+
+// Complete profile route (protected)
+Route::middleware('auth:sanctum')->group(function () {
+    Route::post('/complete-profile', [GoogleAuthController::class, 'completeProfile']);
 });
 
-// Debug endpoint for chat permissions
-Route::get('/debug/chat/{chatId}/permissions', function ($chatId) {
-    try {
-        $chat = App\Models\Chat::find($chatId);
-        if (!$chat) {
-            return response()->json([
-                'success' => false,
-                'error' => 'Chat no encontrado',
-                'chat_id' => $chatId
-            ], 404);
-        }
-
-        $user = auth('sanctum')->user();
-        $permissions = [
-            'chat_exists' => true,
-            'chat_id' => $chat->id,
-            'usuario_registrado_id' => $chat->usuarioRegistrado_id,
-            'casa_de_remate_id' => $chat->casa_de_remate_id,
-            'authenticated_user_id' => $user ? $user->id : null,
-            'user_type' => $user ? get_class($user) : null,
-            'can_access_as_usuario' => $user && $user->id == $chat->usuarioRegistrado_id,
-            'can_access_as_casa' => $user && $user->id == $chat->casa_de_remate_id,
-            'has_chat_access' => $user && ($user->id == $chat->usuarioRegistrado_id || $user->id == $chat->casa_de_remate_id)
-        ];
-
-        return response()->json([
-            'success' => true,
-            'data' => $permissions
-        ]);
-    } catch (\Exception $e) {
-        return response()->json([
-            'success' => false,
-            'error' => $e->getMessage(),
-            'trace' => $e->getTraceAsString()
-        ], 500);
-    }
-})->middleware('auth:sanctum');
