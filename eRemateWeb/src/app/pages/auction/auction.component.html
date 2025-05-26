@@ -31,9 +31,7 @@
 
 <!-- Modal de Detalles -->
 <app-modal [visible]="showDetallesModal" [size]="'large'" (closed)="onModalClose()">
-    <div modal-title>
-        Detalles del Lote #{{ loteSeleccionadoModal?.id }}
-    </div>
+
     <div>
         @if (loteSeleccionadoModal) {
             <app-lot-product-details [lote]="loteSeleccionadoModal"></app-lot-product-details>
