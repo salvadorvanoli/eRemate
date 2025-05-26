@@ -1,0 +1,118 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Test de WebSockets para eRemate</title>
+  <script src="https://js.pusher.com/7.2/pusher.min.js"></script>
+  <script src="websocket-test.js"></script>
+  <style>
+    body {
+      font-family: Arial, sans-serif;
+      line-height: 1.6;
+      max-width: 800px;
+      margin: 0 auto;
+      padding: 20px;
+    }
+    h1 {
+      color: #333;
+      border-bottom: 2px solid #eee;
+      padding-bottom: 10px;
+    }
+    .card {
+      border: 1px solid #ddd;
+      border-radius: 8px;
+      padding: 20px;
+      margin-bottom: 20px;
+      box-shadow: 0 2px 4px rgba(0,0,0,0.1);
+    }
+    .form-group {
+      margin-bottom: 15px;
+    }
+    label {
+      display: block;
+      margin-bottom: 5px;
+      font-weight: bold;
+    }
+    input {
+      width: 100%;
+      padding: 8px;
+      border: 1px solid #ddd;
+      border-radius: 4px;
+    }
+    button {
+      background-color: #4CAF50;
+      color: white;
+      border: none;
+      padding: 10px 15px;
+      border-radius: 4px;
+      cursor: pointer;
+    }
+    button:hover {
+      background-color: #45a049;
+    }
+    .status {
+      display: inline-block;
+      padding: 5px 10px;
+      border-radius: 4px;
+      font-weight: bold;
+    }
+    .connected {
+      background-color: #d4edda;
+      color: #155724;
+    }
+    .disconnected {
+      background-color: #f8d7da;
+      color: #721c24;
+    }
+    .messages {
+      height: 300px;
+      overflow-y: auto;
+      border: 1px solid #eee;
+      padding: 10px;
+      background-color: #f9f9f9;
+      border-radius: 4px;
+    }
+    .messages li {
+      margin-bottom: 5px;
+      padding: 5px;
+      border-bottom: 1px solid #eee;
+    }
+  </style>
+</head>
+<body>
+  <h1>Test de WebSockets para eRemate</h1>
+  
+  <div class="card">
+    <h2>Estado de conexión: <span id="connection-status" class="status disconnected">Desconectado</span></h2>
+    
+    <div class="form-group">
+      <label for="subasta-id">ID de Subasta:</label>
+      <input type="number" id="subasta-id" placeholder="Ingrese ID de subasta">
+    </div>
+    
+    <button id="conectar-button">Conectar a WebSocket</button>
+  </div>
+  
+  <div class="card">
+    <h2>Enviar puja de prueba</h2>
+    
+    <div class="form-group">
+      <label for="lote-id">ID del Lote:</label>
+      <input type="number" id="lote-id" placeholder="Ingrese ID del lote">
+    </div>
+    
+    <div class="form-group">
+      <label for="monto">Monto de la puja:</label>
+      <input type="number" id="monto" placeholder="Ingrese monto">
+    </div>
+    
+    <button id="enviar-puja-button">Enviar Puja</button>
+  </div>
+  
+  <div class="card">
+    <h2>Mensajes</h2>
+    <ul id="messages" class="messages"></ul>
+  </div>
+</body>
+</html>

@@ -6,4 +6,5 @@ export interface Lote {
     pujaMinima: number;
     disponibilidad: string;
     condicionesDeEntrga: string;
+    oferta: number;
 }

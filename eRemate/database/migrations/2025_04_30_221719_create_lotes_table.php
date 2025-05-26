@@ -13,8 +13,11 @@ return new class extends Migration
             $table->foreignId('compra_id')->nullable()->constrained('compras')->nullOnDelete();
             $table->foreignId('ganador_id')->nullable()->constrained('usuarios_registrados')->nullOnDelete();
             $table->timestamps();
+            $table->string('nombre');
+            $table->string('descripcion');
             $table->float('valorBase');
             $table->float('pujaMinima');
+            $table->float('oferta')->default(0);
             $table->string('disponibilidad');
             $table->string('condicionesDeEntrega');
         });

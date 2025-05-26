@@ -17,6 +17,7 @@ class Lote extends Model
         'descripcion',
         'valorBase',
         'pujaMinima',
+        'oferta',
         'disponibilidad',
         'condicionesDeEntrega'
     ];
