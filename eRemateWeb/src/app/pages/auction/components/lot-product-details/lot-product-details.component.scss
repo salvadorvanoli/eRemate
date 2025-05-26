@@ -1,0 +1,377 @@
+.lot-product-details {
+  // Enhanced lot header
+  .lot-header {
+    padding-bottom: 1.5rem;
+    margin-bottom: 2rem;
+    border-bottom: 2px solid #f3f4f6;
+    
+    h2 {
+      background: linear-gradient(135deg, #1e40af, #3b82f6);
+      background-clip: text;
+      -webkit-background-clip: text;
+      -webkit-text-fill-color: transparent;
+    }
+  }
+
+  // Enhanced articles navigation
+  .articles-navigation {
+    h3 {
+      svg {
+        animation: bounce 2s infinite;
+      }
+    }
+    
+    button {
+      font-size: 0.875rem;
+      position: relative;
+      overflow: hidden;
+      
+      &::before {
+        content: '';
+        position: absolute;
+        top: 0;
+        left: -100%;
+        width: 100%;
+        height: 100%;
+        background: linear-gradient(90deg, transparent, rgba(255, 255, 255, 0.2), transparent);
+        transition: left 0.5s;
+      }
+      
+      &:hover:not(.bg-blue-600) {
+        transform: translateY(-2px);
+        box-shadow: 0 8px 25px rgba(0, 0, 0, 0.15);
+        
+        &::before {
+          left: 100%;
+        }
+      }
+      
+      &.bg-blue-600 {
+        box-shadow: 0 4px 15px rgba(59, 130, 246, 0.4);
+        
+        &::before {
+          background: linear-gradient(90deg, transparent, rgba(255, 255, 255, 0.1), transparent);
+        }
+      }
+    }
+  }
+
+  // Enhanced selected article
+  .selected-article {    .article-images {
+      img {
+        border-radius: 0.75rem;
+        box-shadow: 0 10px 30px rgba(0, 0, 0, 0.1);
+        transition: all 0.3s ease;
+        
+        &:hover {
+          box-shadow: 0 15px 40px rgba(0, 0, 0, 0.2);
+        }
+      }
+
+      // Estilos específicos para carrusel de imágenes individuales
+      ::ng-deep {
+        .p-carousel {
+          .p-carousel-content {
+            .p-carousel-container {
+              .p-carousel-items-content {
+                .p-carousel-items-container {
+                  .p-carousel-item {
+                    display: flex;
+                    justify-content: center;
+                    align-items: center;
+                    
+                    .border-none {
+                      border: none !important;
+                      margin: 0;
+                      padding: 0;
+                      width: 100%;
+                      
+                      .mb-3 {
+                        margin-bottom: 0 !important;
+                        
+                        img {
+                          width: 100%;
+                          height: 300px;
+                          object-fit: contain;
+                          border-radius: 0.75rem;
+                          box-shadow: 0 10px 30px rgba(0, 0, 0, 0.1);
+                          transition: all 0.3s ease;
+                          
+                          &:hover {
+                            box-shadow: 0 15px 40px rgba(0, 0, 0, 0.2);
+                            transform: scale(1.02);
+                          }
+                          
+                          @media (min-width: 640px) {
+                            height: 350px;
+                          }
+                          
+                          @media (min-width: 768px) {
+                            height: 400px;
+                          }
+                          
+                          @media (min-width: 1024px) {
+                            height: 450px;
+                          }
+                        }
+                      }
+                      
+                      // Ocultar título para carrusel de imágenes
+                      .font-medium {
+                        display: none;
+                      }
+                    }
+                  }
+                }
+              }
+            }
+          }
+          
+          // Estilos para botones de navegación
+          .p-carousel-prev,
+          .p-carousel-next {
+            background: rgba(255, 255, 255, 0.95);
+            border: 1px solid rgba(0, 0, 0, 0.1);
+            border-radius: 50%;
+            color: #374151;
+            width: 3rem;
+            height: 3rem;
+            margin: 0.5rem;
+            box-shadow: 0 4px 12px rgba(0, 0, 0, 0.15);
+            transition: all 0.2s ease;
+            
+            &:hover:not(:disabled) {
+              background: rgba(59, 130, 246, 0.95);
+              color: white;
+              transform: scale(1.1);
+              box-shadow: 0 6px 20px rgba(59, 130, 246, 0.4);
+            }
+            
+            &:disabled {
+              background: rgba(0, 0, 0, 0.1);
+              color: rgba(0, 0, 0, 0.3);
+            }
+          }
+          
+          // Estilos para indicadores
+          .p-carousel-indicators {
+            .p-carousel-indicator {
+              button {
+                background: rgba(0, 0, 0, 0.3);
+                width: 12px;
+                height: 12px;
+                border-radius: 50%;
+                border: 2px solid white;
+                margin: 0 4px;
+                transition: all 0.2s ease;
+                
+                &:hover {
+                  background: rgba(59, 130, 246, 0.7);
+                  transform: scale(1.2);
+                }
+              }
+              
+              &.p-highlight button {
+                background: #3b82f6;
+                transform: scale(1.3);
+              }
+            }
+          }
+        }
+      }
+    }
+
+    .article-info {
+      .header-section {
+        h4 {
+          background: linear-gradient(135deg, #1f2937, #374151);
+          background-clip: text;
+          -webkit-background-clip: text;
+          -webkit-text-fill-color: transparent;
+        }
+        
+        span {
+          backdrop-filter: blur(10px);
+          border: 1px solid rgba(255, 255, 255, 0.2);
+        }
+      }
+      
+      .specifications-section {
+        .spec-item {
+          position: relative;
+          transition: all 0.2s ease;
+          
+          &::before {
+            content: '';
+            position: absolute;
+            top: 0;
+            left: 0;
+            right: 0;
+            height: 2px;
+            background: linear-gradient(90deg, #3b82f6, #8b5cf6);
+            transform: scaleX(0);
+            transition: transform 0.3s ease;
+          }
+          
+          &:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 8px 25px rgba(0, 0, 0, 0.1);
+            
+            &::before {
+              transform: scaleX(1);
+            }
+          }
+        }
+      }
+      
+      .info-section {
+        h5 {
+          color: #374151;
+          font-weight: 600;
+          
+          svg {
+            color: #6b7280;
+            transition: color 0.2s ease;
+          }
+          
+          &:hover svg {
+            color: #3b82f6;
+          }
+        }
+      }
+    }
+  }
+
+  // Loading animation
+  .animate-spin {
+    animation: spin 1s linear infinite;
+  }
+
+  @keyframes spin {
+    from { transform: rotate(0deg); }
+    to { transform: rotate(360deg); }
+  }
+  
+  @keyframes bounce {
+    0%, 20%, 53%, 80%, 100% {
+      transform: translate3d(0,0,0);
+    }
+    40%, 43% {
+      transform: translate3d(0, -5px, 0);
+    }
+    70% {
+      transform: translate3d(0, -3px, 0);
+    }
+    90% {
+      transform: translate3d(0, -1px, 0);
+    }
+  }
+}
+
+// Enhanced responsive design
+@media (max-width: 1280px) {
+  .lot-product-details {
+    .selected-article {
+      .grid {
+        gap: 1.5rem;
+      }
+    }
+  }
+}
+
+@media (max-width: 1024px) {
+  .lot-product-details {
+    .lot-header {
+      h2 {
+        font-size: 2rem;
+      }
+      
+      .grid {
+        grid-template-columns: repeat(2, 1fr);
+        gap: 1rem;
+      }
+    }
+    
+    .articles-navigation {
+      .grid {
+        grid-template-columns: repeat(2, 1fr);
+      }
+    }
+  }
+}
+
+@media (max-width: 768px) {
+  .lot-product-details {
+    .lot-header {
+      h2 {
+        font-size: 1.75rem;
+      }
+      
+      .grid {
+        grid-template-columns: 1fr;
+        gap: 0.75rem;
+      }
+    }
+    
+    .articles-navigation {
+      .grid {
+        grid-template-columns: 1fr;
+        gap: 0.5rem;
+      }
+      
+      button {
+        width: 100%;
+        text-align: center;
+      }
+    }
+
+    .selected-article {
+      .grid {
+        grid-template-columns: 1fr;
+        gap: 1rem;
+      }
+      
+      .article-info {
+        .specifications-section {
+          .grid {
+            grid-template-columns: 1fr;
+          }
+        }
+      }
+    }
+  }
+}
+
+@media (max-width: 640px) {
+  .lot-product-details {
+    .lot-header {
+      h2 {
+        font-size: 1.5rem;
+      }
+    }
+    
+    .selected-article {
+      .article-info {
+        .header-section {
+          h4 {
+            font-size: 1.25rem;
+          }
+        }
+        
+        .specifications-section,
+        .info-section {
+          h5 {
+            font-size: 1rem;
+          }
+        }
+      }
+    }
+  }
+}
+
+// Dark mode
+@media (prefers-color-scheme: dark) {
+  .lot-product-details {
+    
+  }
+}

@@ -2,6 +2,7 @@ import { Component, OnInit } from '@angular/core';
 import { AuctionInfoComponent } from './components/auction-info/auction-info.component';
 import { TitleAndDescriptionComponent } from '../../shared/components/title-and-description/title-and-description.component';
 import { DynamicCarouselComponent } from '../../shared/components/dynamic-carousel/dynamic-carousel.component';
+import { LotProductDetailsComponent } from './components/lot-product-details/lot-product-details.component';
 import { Lote } from '../../core/models/lote';
 import { LoteService } from '../../core/services/lote.service';
 import { SubastaService } from '../../core/services/subasta.service';
@@ -17,6 +18,7 @@ import { PrimaryButtonComponent } from '../../shared/components/buttons/primary-
     AuctionInfoComponent,
     TitleAndDescriptionComponent,
     DynamicCarouselComponent,
+    LotProductDetailsComponent,
     ModalComponent,
     PrimaryButtonComponent
   ],
@@ -31,6 +33,9 @@ export class AuctionComponent {
   showDetallesModal = false;
   showPujaModal = false;
   loteSeleccionadoModal?: Lote;
+
+  // Nueva propiedad para el enlace de YouTube Live
+  youtubeUrl?: string;
 
   constructor(
     private loteService: LoteService,
@@ -71,6 +76,9 @@ export class AuctionComponent {
             fechaInicio: new Date(data.fechaInicio),
             fechaCierre: new Date(data.fechaCierre)
           };
+          
+          // Asignar el enlace de YouTube si existe en la subasta
+          this.youtubeUrl = data.urlTransmision || undefined;
         },
         (error) => {
           console.error('Error al obtener la subasta:', error);

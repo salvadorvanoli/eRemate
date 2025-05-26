@@ -161,7 +161,7 @@ class LoteService implements LoteServiceInterface
             ], 404);
         }
 
-        return $lote->articulos()->get();
+        return $lote->articulos()->with('categoria')->get();
     }
 
     public function agregarArticulo(int $id, int $articuloId): mixed
