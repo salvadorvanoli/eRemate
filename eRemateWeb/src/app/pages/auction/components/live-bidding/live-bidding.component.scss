@@ -1,0 +1,222 @@
+/* Live Bidding Component Styles */
+
+.live-bidding-container {
+  padding-bottom: 120px; /* Space for fixed bottom bar */
+  
+  @media (max-width: 768px) {
+    padding-bottom: 140px; /* More space on mobile */
+  }
+}
+
+.lot-header {
+  .live-indicator {
+    animation: pulse-glow 2s ease-in-out infinite alternate;
+  }
+  
+  @keyframes pulse-glow {
+    from {
+      box-shadow: 0 0 10px rgba(239, 68, 68, 0.3);
+    }
+    to {
+      box-shadow: 0 0 20px rgba(239, 68, 68, 0.6);
+    }
+  }
+}
+
+.articles-navigation {
+  .grid {
+    max-height: 200px;
+    overflow-y: auto;
+    
+    /* Custom scrollbar */
+    &::-webkit-scrollbar {
+      width: 6px;
+    }
+    
+    &::-webkit-scrollbar-track {
+      background: #f1f5f9;
+      border-radius: 10px;
+    }
+    
+    &::-webkit-scrollbar-thumb {
+      background: #cbd5e1;
+      border-radius: 10px;
+      
+      &:hover {
+        background: #94a3b8;
+      }
+    }
+  }
+  
+  button {
+    transition: all 0.2s cubic-bezier(0.4, 0, 0.2, 1);
+    
+    &:hover {
+      transform: translateY(-1px);
+    }
+    
+    &:active {
+      transform: translateY(0);
+    }
+  }
+}
+
+.selected-article {
+  .article-images {
+    .hover\:scale-105:hover {
+      transform: scale(1.05);
+    }
+  }
+  
+  .specifications-section {
+    .spec-item {
+      transition: all 0.2s ease-in-out;
+      
+      &:hover {
+        transform: translateY(-1px);
+        box-shadow: 0 4px 12px rgba(0, 0, 0, 0.1);
+      }
+    }
+  }
+}
+
+/* Fixed bottom bar enhancements */
+.fixed.bottom-0 {
+  backdrop-filter: blur(10px);
+  background-color: rgba(255, 255, 255, 0.95);
+  
+  @supports not (backdrop-filter: blur(10px)) {
+    background-color: rgba(255, 255, 255, 0.98);
+  }
+  
+  /* Ensure it stays above modals */
+  z-index: 1040 !important;
+  
+  /* Enhanced shadow */
+  box-shadow: 
+    0 -4px 6px -1px rgba(0, 0, 0, 0.1),
+    0 -2px 4px -1px rgba(0, 0, 0, 0.06),
+    0 -10px 15px -3px rgba(0, 0, 0, 0.1);
+  
+  /* Smooth slide-up animation */
+  animation: slideUp 0.3s ease-out;
+  
+  @keyframes slideUp {
+    from {
+      transform: translateY(100%);
+      opacity: 0;
+    }
+    to {
+      transform: translateY(0);
+      opacity: 1;
+    }
+  }
+  
+  /* Responsive adjustments */
+  @media (max-width: 640px) {
+    .flex.flex-col.lg\:flex-row {
+      gap: 0.75rem;
+      
+      .flex.items-center {
+        flex-wrap: wrap;
+        justify-content: center;
+      }
+    }
+  }
+  
+  /* Input field styling */
+  input[type="number"] {
+    transition: all 0.2s ease-in-out;
+    
+    &:focus {
+      box-shadow: 0 0 0 3px rgba(59, 130, 246, 0.1);
+    }
+    
+    /* Remove number input spinners */
+    -moz-appearance: textfield;
+    
+    &::-webkit-outer-spin-button,
+    &::-webkit-inner-spin-button {
+      -webkit-appearance: none;
+      margin: 0;
+    }
+  }
+  
+  /* Quick increment buttons */
+  button {
+    transition: all 0.15s ease-in-out;
+    
+    &:hover {
+      transform: scale(1.05);
+    }
+    
+    &:active {
+      transform: scale(0.95);
+    }
+  }
+}
+
+/* Loading and error states */
+.animate-spin {
+  animation: spin 1s linear infinite;
+  
+  @keyframes spin {
+    from { transform: rotate(0deg); }
+    to { transform: rotate(360deg); }
+  }
+}
+
+/* Responsive grid improvements */
+@media (max-width: 640px) {
+  .grid.grid-cols-1.sm\:grid-cols-2.lg\:grid-cols-4 {
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+    gap: 0.75rem;
+  }
+  
+  .grid.grid-cols-1.sm\:grid-cols-2 {
+    gap: 0.75rem;
+  }
+}
+
+@media (max-width: 480px) {
+  .grid.grid-cols-1.sm\:grid-cols-2.lg\:grid-cols-4 {
+    grid-template-columns: 1fr;
+  }
+  
+  .live-bidding-container {
+    padding-bottom: 160px; /* Extra space for smaller screens */
+  }
+}
+
+/* Accessibility improvements */
+@media (prefers-reduced-motion: reduce) {
+  * {
+    animation-duration: 0.01ms !important;
+    animation-iteration-count: 1 !important;
+    transition-duration: 0.01ms !important;
+  }
+  
+  .live-indicator {
+    animation: none;
+  }
+}
+
+/* Focus improvements for keyboard navigation */
+button:focus-visible,
+input:focus-visible {
+  outline: 2px solid #3b82f6;
+  outline-offset: 2px;
+}
+
+/* Print styles */
+@media print {
+  .fixed.bottom-0 {
+    position: static !important;
+    box-shadow: none !important;
+    border-top: 1px solid #e5e7eb;
+  }
+  
+  .live-indicator {
+    display: none;
+  }
+}

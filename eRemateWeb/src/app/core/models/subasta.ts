@@ -5,5 +5,6 @@ export interface Subasta {
     fechaInicio: Date;
     fechaCierre: Date;
     ubicacion: string;
+    loteActual_id?: number;
     //imagenUrl?: string;
 }

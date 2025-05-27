@@ -3,6 +3,7 @@ import { AuctionInfoComponent } from './components/auction-info/auction-info.com
 import { TitleAndDescriptionComponent } from '../../shared/components/title-and-description/title-and-description.component';
 import { DynamicCarouselComponent } from '../../shared/components/dynamic-carousel/dynamic-carousel.component';
 import { LotProductDetailsComponent } from './components/lot-product-details/lot-product-details.component';
+import { LiveBiddingComponent } from './components/live-bidding/live-bidding.component';
 import { Lote } from '../../core/models/lote';
 import { LoteService } from '../../core/services/lote.service';
 import { SubastaService } from '../../core/services/subasta.service';
@@ -13,12 +14,12 @@ import { PrimaryButtonComponent } from '../../shared/components/buttons/primary-
 
 @Component({
   selector: 'app-auction',
-  standalone: true,
-  imports: [
+  standalone: true,  imports: [
     AuctionInfoComponent,
     TitleAndDescriptionComponent,
     DynamicCarouselComponent,
     LotProductDetailsComponent,
+    LiveBiddingComponent,
     ModalComponent,
     PrimaryButtonComponent
   ],

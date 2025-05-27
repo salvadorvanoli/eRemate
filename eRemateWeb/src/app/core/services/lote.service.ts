@@ -1,5 +1,5 @@
 import { Injectable } from '@angular/core';
-import { HttpClient } from '@angular/common/http';
+import { HttpClient, HttpHeaders } from '@angular/common/http';
 import { map, Observable } from 'rxjs';
 import { BaseHttpService } from './base-http.service';
 import { Lote } from '../models/lote';
@@ -11,9 +11,16 @@ import { Articulo } from '../models/producto';
 export class LoteService extends BaseHttpService<any, Lote> {
 
   private apiUrl = '/lot';
-
   constructor(http: HttpClient) {
     super(http, '/lot');
+  }
+
+  private getAuthHeaders(): HttpHeaders {
+    const token = localStorage.getItem('token');
+    return new HttpHeaders({
+      'Authorization': `Bearer ${token}`,
+      'Content-Type': 'application/json'
+    });
   }
 
   getLotesBySubasta(id: number): Observable<Lote[]> {
@@ -23,6 +30,18 @@ export class LoteService extends BaseHttpService<any, Lote> {
           return response.data;
         }
         throw new Error(response.message || 'Error al obtener los lotes');
+      })
+    );
+  }
+  getLoteById(loteId: number): Observable<Lote> {
+    return this.http.get<any>(`${this.baseUrl}/lot/${loteId}`, {
+      headers: this.getAuthHeaders()
+    }).pipe(
+      map(response => {
+        if (response.success) {
+          return response.data;
+        }
+        throw new Error(response.message || 'Error al obtener el lote');
       })
     );
   }

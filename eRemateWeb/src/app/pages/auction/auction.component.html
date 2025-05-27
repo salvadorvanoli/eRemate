@@ -46,12 +46,11 @@
 </app-modal>
 
 <!-- Modal de Puja -->
-<app-modal [visible]="showPujaModal" (closed)="onModalClose()">
-    <div modal-title>
-        Realizar Puja
-    </div>
+<app-modal [visible]="showPujaModal" [size]="'extra-large'" (closed)="onModalClose()">
     <div>
-        <p>Contenido del modal de puja</p>
+        @if (subasta) {
+            <app-live-bidding [subasta]="subasta"></app-live-bidding>
+        }
     </div>
     <div modal-action>
         <app-primary-button 
