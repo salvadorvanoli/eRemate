@@ -61,18 +61,31 @@ Route::get('ratings/by-purchase/{compraId}', [CalificacionController::class, 'ge
 Route::get('registered-users/{id}/payment-methods', [UsuarioRegistradoController::class, 'getMetodosPago']);
 Route::post('registered-users/{id}/payment-methods', [UsuarioRegistradoController::class, 'addMetodoPago']);
 Route::get('registered-users/{id}/purchase-history', [UsuarioRegistradoController::class, 'getHistorialCompras']);
+Route::get('registered-users/{usuarioId}/bidded-lots', [UsuarioRegistradoController::class, 'getLotesConPujas']);
 
 // Rutas de Lotes Favoritos
 Route::get('registered-users/{usuarioId}/favorite-lots', [UsuarioRegistradoController::class, 'getLotesFavoritos']);
 Route::post('registered-users/{usuarioId}/favorite-lots', [UsuarioRegistradoController::class, 'addLoteFavorito']);
 Route::delete('registered-users/{usuarioId}/favorite-lots/{loteId}', [UsuarioRegistradoController::class, 'removeLoteFavorito']);
-Route::get('registered-users/{usuarioId}/bidded-lots', [UsuarioRegistradoController::class, 'getLotesConPujas']);
 
 Route::prefix('auctioneer')->group(function () {
     Route::post('/', [RematadorController::class, 'store']);
     Route::get('/{id}', [RematadorController::class, 'show']);
     Route::put('/{id}', [RematadorController::class, 'update']);
     Route::get('/{id}/auctions', [RematadorController::class, 'subastas']);
+
+    // Nuevas rutas
+    // 1. Obtener agenda del rematador (subastas programadas)
+    Route::get('/{id}/schedule', [RematadorController::class, 'obtenerAgenda']);
+    
+    // 2. Obtener subastas solicitadas (pendientes de aceptar)
+    Route::get('/{id}/requested-auctions', [RematadorController::class, 'obtenerSubastasSolicitadas']);
+    
+    // 3. Aceptar una subasta
+    Route::post('/{id}/auctions/{subastaId}/accept', [RematadorController::class, 'aceptarSubasta']);
+    
+    // 4. Rechazar/cancelar una subasta
+    Route::post('/{id}/auctions/{subastaId}/reject', [RematadorController::class, 'rechazarSubasta']);
 });
 
 // Rutas de autenticación

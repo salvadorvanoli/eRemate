@@ -22,7 +22,7 @@ class Rematador extends Model
 
     public function usuario()
     {
-        return $this->belongsTo(Usuario::class);
+        return $this->belongsTo(Usuario::class, 'id', 'id');
     }
 
     public function casasDeRemates()

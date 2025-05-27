@@ -86,10 +86,18 @@ class RematadorController extends Controller
             'id' => 'sometimes|integer|exists:usuarios,id',
             'nombre' => 'sometimes|string|max:255',
             'apellido' => 'sometimes|string|max:255',
-            'numeroMatricula' => 'sometimes|string|max:255|unique:rematadores,numeroMatricula,' . $id,
+            'numeroMatricula' => 'sometimes|string|max:255', // Eliminado unique
             'direccionFiscal' => 'sometimes|string|max:255',
-            'imagen' => 'nullable|image|max:2048'
+            'imagen' => 'nullable|image|max:2048',
+            // Validación sin restricción unique
+            'email' => 'sometimes|email|max:255', // Eliminado unique
+            'telefono' => 'sometimes|string|max:20'
         ]);
+
+        // Si hay imagen, procesarla
+        if ($request->hasFile('imagen')) {
+            $data['imagen'] = $request->file('imagen')->store('rematadores', 'public');
+        }
 
         $rematador = $this->rematadorService->actualizarRematador($id, $data);
 
@@ -143,6 +151,100 @@ class RematadorController extends Controller
     }
 }
 
+
+    /**
+     * Obtener agenda de subastas aceptadas del rematador
+     */
+    public function obtenerAgenda($id)
+{
+    try {
+        $subastas = $this->rematadorService->obtenerAgendaRematador($id);
+        
+        return response()->json([
+            'success' => true,
+            'data' => $subastas,
+            'count' => $subastas->count(),
+            'message' => $subastas->isEmpty() 
+                ? 'El rematador no tiene subastas programadas' 
+                : 'Agenda de subastas obtenida correctamente'
+        ]);
+        
+    } catch (\Exception $e) {
+        return response()->json([
+            'success' => false,
+            'message' => 'Error al obtener agenda: ' . $e->getMessage()
+        ], 500);
+    }
+}
+
+/**
+ * Obtener subastas solicitadas al rematador
+ */
+public function obtenerSubastasSolicitadas($id)
+{
+    try {
+        $subastas = $this->rematadorService->obtenerSubastasSolicitadas($id);
+        
+        return response()->json([
+            'success' => true,
+            'data' => $subastas,
+            'count' => $subastas->count(),
+            'message' => $subastas->isEmpty() 
+                ? 'No hay subastas pendientes de aprobación' 
+                : 'Subastas solicitadas obtenidas correctamente'
+        ]);
+        
+    } catch (\Exception $e) {
+        return response()->json([
+            'success' => false,
+            'message' => 'Error al obtener subastas solicitadas: ' . $e->getMessage()
+        ], 500);
+    }
+}
+
+/**
+ * Aceptar una subasta solicitada
+ */
+public function aceptarSubasta($id, $subastaId)
+{
+    try {
+        $subasta = $this->rematadorService->aceptarSubasta($id, $subastaId);
+        
+        return response()->json([
+            'success' => true,
+            'data' => $subasta,
+            'message' => 'Subasta aceptada correctamente'
+        ]);
+        
+    } catch (\Exception $e) {
+        return response()->json([
+            'success' => false,
+            'message' => 'Error al aceptar subasta: ' . $e->getMessage()
+        ], 500);
+    }
+}
+
+/**
+ * Rechazar/cancelar una subasta
+ */
+public function rechazarSubasta($id, $subastaId)
+{
+    try {
+        $subasta = $this->rematadorService->rechazarSubasta($id, $subastaId);
+        
+        return response()->json([
+            'success' => true,
+            'data' => $subasta,
+            'message' => 'Subasta cancelada correctamente'
+        ]);
+        
+    } catch (\Exception $e) {
+        return response()->json([
+            'success' => false,
+            'message' => 'Error al cancelar subasta: ' . $e->getMessage()
+        ], 500);
+    }
+}
 
     /**
      * Remove the specified resource from storage.

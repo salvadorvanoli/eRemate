@@ -3,6 +3,8 @@
 namespace App\Services\Rematador;
 
 use App\Models\Rematador;
+use App\Models\Subasta;
+use App\Enums\EstadoSubasta; // ¡Importante importar el enum!
 use Illuminate\Database\Eloquent\Collection;
 
 class RematadorService implements RematadorServiceInterface
@@ -34,11 +36,53 @@ class RematadorService implements RematadorServiceInterface
         return Rematador::findOrFail($id);
     }
 
+    /**
+     * Actualiza los datos de un rematador y, opcionalmente, el email y teléfono en la tabla usuario
+     * 
+     * @param int $id ID del rematador
+     * @param array $data Datos para actualizar
+     * @return bool
+     */
     public function actualizarRematador(int $id, array $data): bool
     {
         $rematador = $this->obtenerRematadorPorId($id);
-        return $rematador->update($data);
         
+        // Iniciar una transacción para asegurar que ambas actualizaciones se completen o ninguna
+        \DB::beginTransaction();
+        
+        try {
+            // Extraer los datos del usuario (email y teléfono)
+            $datosUsuario = [];
+            if (isset($data['email'])) {
+                $datosUsuario['email'] = $data['email'];
+                unset($data['email']); // Quitar del array de datos del rematador
+            }
+            
+            if (isset($data['telefono'])) {
+                $datosUsuario['telefono'] = $data['telefono'];
+                unset($data['telefono']); // Quitar del array de datos del rematador
+            }
+            
+            // Actualizar el rematador
+            $rematador->update($data);
+            
+            // Si hay datos de usuario para actualizar
+            if (!empty($datosUsuario)) {
+                $usuario = \App\Models\Usuario::find($id);
+                if (!$usuario) {
+                    throw new \Exception('No se encontró el usuario asociado al rematador');
+                }
+                $usuario->update($datosUsuario);
+            }
+            
+            \DB::commit();
+            return true;
+            
+        } catch (\Exception $e) {
+            \DB::rollBack();
+            \Log::error('Error al actualizar rematador: ' . $e->getMessage());
+            return false;
+        }
     }
 
     public function obtenerSubastasPorRematador(int $id): Collection
@@ -47,4 +91,77 @@ class RematadorService implements RematadorServiceInterface
         return $rematador->subastas;
     }
 
+    public function obtenerAgendaRematador(int $id): Collection
+    {
+        $rematador = $this->obtenerRematadorPorId($id);
+        
+        // Usar el valor del enum correctamente
+        return Subasta::where('rematador_id', $id)
+            ->where('estado', EstadoSubasta::ACEPTADA->value) // Cambiado
+            ->orderBy('fechaInicio')
+            ->get();
+    }
+
+    public function obtenerSubastasSolicitadas(int $id): Collection
+    {
+        $rematador = $this->obtenerRematadorPorId($id);
+        
+        // Usar el valor del enum correctamente
+        return Subasta::where('rematador_id', $id)
+            ->where('estado', EstadoSubasta::PENDIENTE_APROBACION->value) // Cambiado
+            ->orderBy('fechaInicio')
+            ->get();
+    }
+
+    public function aceptarSubasta(int $rematadorId, int $subastaId): Subasta
+    {
+        $rematador = $this->obtenerRematadorPorId($rematadorId);
+        $subasta = Subasta::findOrFail($subastaId);
+        
+        if ($subasta->rematador_id != $rematadorId) {
+            throw new \Exception('Esta subasta no está asignada a este rematador');
+        }
+        
+        // Logs corregidos - acceder al valor del enum con ->value
+        \Log::info('Estado actual de la subasta: ' . $subasta->estado->value);
+        \Log::info('Valor esperado: ' . EstadoSubasta::PENDIENTE_APROBACION->value);
+        
+        // Comparar objetos enum directamente
+        if ($subasta->estado !== EstadoSubasta::PENDIENTE_APROBACION) {
+            throw new \Exception('La subasta no está en estado pendiente de aprobación (estado actual: ' . $subasta->estado->value . ')');
+        }
+        
+        // Asignar el objeto enum, no el string
+        $subasta->estado = EstadoSubasta::ACEPTADA;
+        $subasta->save();
+        
+        return $subasta;
+    }
+
+    public function rechazarSubasta(int $rematadorId, int $subastaId): Subasta
+    {
+        $rematador = $this->obtenerRematadorPorId($rematadorId);
+        $subasta = Subasta::findOrFail($subastaId);
+        
+        if ($subasta->rematador_id != $rematadorId) {
+            throw new \Exception('Esta subasta no está asignada a este rematador');
+        }
+        
+        // Log para depuración
+        \Log::info('Estado actual de la subasta a cancelar: ' . $subasta->estado->value);
+        
+        // Comparar objetos enum directamente, no valores
+        if (!in_array($subasta->estado, [
+            EstadoSubasta::PENDIENTE_APROBACION, 
+            EstadoSubasta::ACEPTADA
+        ])) {
+            throw new \Exception('La subasta no puede ser cancelada en su estado actual (estado actual: ' . $subasta->estado->value . ')');
+        }
+        
+        // Asignar el objeto enum, no el string
+        $subasta->estado = EstadoSubasta::CANCELADA;
+        $subasta->save();
+        
+        return $subasta;
+    }
 }

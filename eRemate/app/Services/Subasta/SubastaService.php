@@ -15,106 +15,119 @@ class SubastaService implements SubastaServiceInterface
 
     private function validarCasa()
     {
-        // Seguridad deshabilitada para pruebas
-        // $usuarioAutenticado = Auth::user();
+        // Obtiene el usuario autenticado actualmente a través del token JWT.
+        // Este es el primer paso de seguridad para asegurar que cualquier operación
+        // que requiera una casa de remates sea realizada por un usuario logueado.
+        $usuarioAutenticado = Auth::user();
 
-        // if (!$usuarioAutenticado) {
-        //     return response()->json(['error' => 'Token no proporcionado o inválido'], 401);
-        // }
+        // Si no hay un usuario autenticado (token no proporcionado o inválido),
+        // se retorna un error 401 (No autorizado).
+        if (!$usuarioAutenticado) {
+            return response()->json(['error' => 'Token no proporcionado o inválido'], 401);
+        }
 
-        // $usuario = Usuario::find($usuarioAutenticado)->first();
-        // if (!$usuario) {
-        //     return response()->json(['error' => 'Usuario no encontrado'], 404);
-        // }
+        // Busca el usuario en la base de datos utilizando el ID del usuario autenticado.
+        // Esto asegura que el usuario asociado al token existe en el sistema.
+        $usuario = Usuario::find($usuarioAutenticado->id);
+        if (!$usuario) {
+            return response()->json(['error' => 'Usuario no encontrado'], 404);
+        }
 
-        // $casaDeRemates = CasaDeRemates::where('id', $usuarioAutenticado->id)->first();
+        // Verifica si existe una casa de remates cuyo ID coincida con el ID del usuario autenticado.
+        // Esta es una capa crucial de autorización: no solo el usuario debe estar autenticado,
+        // sino que también debe estar registrado como una casa de remates con el mismo ID.
+        $casaDeRemates = CasaDeRemates::where('id', $usuario->id)->first();
 
-        // if (!$casaDeRemates) {
-        //     return response()->json(['error' => 'No tienes permiso para acceder a esta información'], 403);
-        // }
+        // Si no se encuentra una casa de remates con el ID del usuario,
+        // significa que el usuario autenticado no tiene los permisos para actuar como casa de remates.
+        // Se retorna un error 403 (Prohibido).
+        if (!$casaDeRemates) {
+            return response()->json(['error' => 'No tienes permiso para acceder a esta información'], 403);
+        }
 
-        // return $usuario;
-
-        // Siempre retorna el primer usuario para pruebas
-        return Usuario::first();
+        // Si todas las validaciones son exitosas, se retorna el objeto Usuario.
+        // Este usuario ya ha sido validado como una casa de remates.
+        return $usuario;
     }
 
     private function validarRematador()
     {
-        // Seguridad deshabilitada para pruebas
-        // $usuarioAutenticado = Auth::user();
+        $usuarioAutenticado = Auth::user();
 
-        // if (!$usuarioAutenticado) {
-        //     return response()->json(['error' => 'Token no proporcionado o inválido'], 401);
-        // }
+        if (!$usuarioAutenticado) {
+            return response()->json(['error' => 'Token no proporcionado o inválido'], 401);
+        }
 
-        // $usuario = Usuario::find($usuarioAutenticado)->first();
-        // if (!$usuario) {
-        //     return response()->json(['error' => 'Usuario no encontrado'], 404);
-        // }
+        $usuario = Usuario::find($usuarioAutenticado->id);
+        if (!$usuario) {
+            return response()->json(['error' => 'Usuario no encontrado'], 404);
+        }
 
-        // $rematador = Rematador::where('id', $usuarioAutenticado->id)->first();
+        $rematador = Rematador::where('id', $usuario->id)->first();
 
-        // if (!$rematador) {
-        //     return response()->json(['error' => 'No tienes permiso para acceder a esta información'], 403);
-        // }
+        if (!$rematador) {
+            return response()->json(['error' => 'No tienes permiso para acceder a esta información'], 403);
+        }
 
-        // return $usuario;
-
-        // Siempre retorna el primer usuario para pruebas
-        return Usuario::first();
+        return $usuario;
     }
     
     private function verificarUsuario($usuario, $subasta)
     {
-        // Seguridad deshabilitada para pruebas
-        // $casaDeRemates = CasaDeRemates::where('id', $usuario->id)->first();
-        // $casaDeRematesSubasta = $subasta->casaRemates ?? null;
-        // if (($casaDeRemates && $casaDeRemates->id !== $casaDeRematesSubasta?->id)) {
-        //     return response()->json(['error' => 'No tienes permiso para acceder a esta subasta'], 403);
-        // }
-        // return $usuario;
-
-        // Siempre permite para pruebas
+        $casaDeRemates = CasaDeRemates::where('id', $usuario->id)->first();
+        $casaDeRematesSubasta = $subasta->casaDeRemates;
+        
+        if (($casaDeRemates && $casaDeRemates->id !== $casaDeRematesSubasta?->id)) {
+            return response()->json(['error' => 'No tienes permiso para acceder a esta subasta'], 403);
+        }
+        
         return $usuario;
     }
     
     public function crearSubasta(array $data): mixed
     {
-        $usuario = $this->validarCasa();
-        
-        if (!$usuario instanceof Usuario) {
-            return $usuario;
-        }
-
-        $casaDeRemates = CasaDeRemates::where('id', $usuario->id)->first();
-        
-        if (!$casaDeRemates) {
+        // Verificar si se proporcionó el ID de la casa de remates en los datos.
+        if (!isset($data['casaDeRemates_id'])) {
             return response()->json([
                 'success' => false,
-                'error' => 'No se encontró una casa de remates asociada a este usuario'
+                'error' => 'El ID de la casa de remates es requerido.'
             ], 422);
+        }
+
+        $casaDeRematesId = $data['casaDeRemates_id'];
+
+        // Opcional: Verificar si la casa de remates existe.
+        $casaDeRematesExistente = CasaDeRemates::find($casaDeRematesId);
+        if (!$casaDeRematesExistente) {
+            return response()->json([
+                'success' => false,
+                'error' => 'La casa de remates especificada no existe.'
+            ], 404);
         }
 
         // Validar que el rematador pertenezca a esta casa de remates
         if (isset($data['rematador_id']) && $data['rematador_id'] !== null) {
-            $rematadorPertenece = $casaDeRemates->rematadores()->where('rematador_id', $data['rematador_id'])->exists();
-            
-            if (!$rematadorPertenece) {
-                return response()->json([
-                    'success' => false,
-                    'error' => 'El rematador especificado no pertenece a esta casa de remates'
-                ], 422);
-            }
+            // Se usa $casaDeRematesExistente que ya se buscó.
+            if ($casaDeRematesExistente) {
+                $rematadorPertenece = $casaDeRematesExistente->rematadores()->where('rematador_id', $data['rematador_id'])->exists();
+                
+                if (!$rematadorPertenece) {
+                    return response()->json([
+                        'success' => false,
+                        'error' => 'El rematador especificado no pertenece a esta casa de remates'
+                    ], 422);
+                }
+            } 
+            // No se necesita el 'else' aquí porque ya se validó la existencia de la casa de remates.
         }
 
         return Subasta::create([
-            'casaDeRemates_id' => $casaDeRemates->id,
+            'casaDeRemates_id' => $casaDeRematesId, // Se usa el ID de la casa de remates proporcionado en $data.
             'rematador_id' => $data['rematador_id'] ?? null,
             'mensajes' => $data['mensajes'] ?? [],
             'urlTransmision' => $data['urlTransmision'],
             'tipoSubasta' => $data['tipoSubasta'],
-            'estado' => EstadoSubasta::PENDIENTE,
+            'estado' => EstadoSubasta::PENDIENTE_APROBACION,
             'fechaInicio' => $data['fechaInicio'],
             'fechaCierre' => $data['fechaCierre'],
             'ubicacion' => $data['ubicacion']
