@@ -35,13 +35,44 @@ class CasaDeRematesService implements CasaDeRematesServiceInterface
             return $casaDeRemates;
         }
 
-        if (isset($data['id'])) {
-            unset($data['id']);
+        // Iniciar transacción
+        \DB::beginTransaction();
+
+        try {
+            // Extraer datos de usuario (email y teléfono)
+            $datosUsuario = [];
+            if (isset($data['email'])) {
+                $datosUsuario['email'] = $data['email'];
+                unset($data['email']);
+            }
+            if (isset($data['telefono'])) {
+                $datosUsuario['telefono'] = $data['telefono'];
+                unset($data['telefono']);
+            }
+
+            // Actualizar la casa de remates
+            $casaDeRemates->update($data);
+
+            // Si hay datos de usuario para actualizar
+            if (!empty($datosUsuario)) {
+                $usuario = \App\Models\Usuario::find($casaDeRemates->id);
+                if (!$usuario) {
+                    throw new \Exception('No se encontró el usuario asociado a la casa de remates');
+                }
+                $usuario->update($datosUsuario);
+            }
+
+            \DB::commit();
+            return CasaDeRemates::find($id);
+
+        } catch (\Exception $e) {
+            \DB::rollBack();
+            \Log::error('Error al actualizar casa de remates: ' . $e->getMessage());
+            return response()->json([
+                'success' => false,
+                'error' => 'Error al actualizar casa de remates: ' . $e->getMessage()
+            ], 500);
         }
-
-        $casaDeRemates->update($data);
-
-        return CasaDeRemates::find($id)->first();
     }
 
     public function obtenerRematadores(int $id): mixed

@@ -106,7 +106,7 @@ class UsuarioRegistradoService implements UsuarioRegistradoServiceInterface
         try {
             // Obtener los IDs de lotes donde el usuario ha pujado
             $loteIds = DB::table('pujas')
-                ->where('usuario_registrado_id', $usuarioId)
+                ->where('usuarioRegistrado_id', $usuarioId)
                 ->distinct()
                 ->pluck('lote_id');
                 
@@ -116,11 +116,15 @@ class UsuarioRegistradoService implements UsuarioRegistradoServiceInterface
                 ->get();
                 
             // Obtener información de la puja más alta del usuario en cada lote
+            // y verificar si es ganador
             foreach ($lotes as $lote) {
                 $lote->puja_maxima = DB::table('pujas')
                     ->where('lote_id', $lote->id)
-                    ->where('usuario_registrado_id', $usuarioId)
+                    ->where('usuarioRegistrado_id', $usuarioId)
                     ->max('monto');
+                    
+                // Verificar si este usuario es el ganador del lote
+                $lote->es_ganador = ($lote->ganador_id == $usuarioId);
             }
                     
             return $lotes;

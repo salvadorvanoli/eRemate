@@ -8,4 +8,10 @@ interface RematadorServiceInterface
     public function obtenerRematadorPorId(int $id);
     public function actualizarRematador(int $id, array $data);
     public function obtenerSubastasPorRematador(int $id);
+    
+    // Nuevos métodos
+    public function obtenerAgendaRematador(int $id);
+    public function obtenerSubastasSolicitadas(int $id);
+    public function aceptarSubasta(int $rematadorId, int $subastaId);
+    public function rechazarSubasta(int $rematadorId, int $subastaId);
 }

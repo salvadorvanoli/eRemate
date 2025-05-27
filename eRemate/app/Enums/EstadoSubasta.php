@@ -5,6 +5,9 @@ namespace App\Enums;
 enum EstadoSubasta: string
 {
     case PENDIENTE = 'pendiente';
+    case PENDIENTE_APROBACION = 'pendiente_aprobacion';
+    case ACEPTADA = 'aceptada';
+    case CANCELADA = 'cancelada';
     case INICIADA = 'iniciada';
     case CERRADA = 'cerrada';
 
@@ -12,6 +15,9 @@ enum EstadoSubasta: string
     {
         return match($this) {
             self::PENDIENTE => 'Pendiente',
+            self::PENDIENTE_APROBACION => 'Pendiente Aprobación',
+            self::ACEPTADA => 'Aceptada',
+            self::CANCELADA => 'Cancelada',
             self::INICIADA => 'Iniciada',
             self::CERRADA => 'Cerrada'
         };

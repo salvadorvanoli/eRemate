@@ -20,10 +20,12 @@ class CasaDeRematesController extends Controller
     {
         try {
             $data = $request->validate([
-            'identificacionFiscal' => 'sometimes|required|string|max:255',
-            'nombreLegal' => 'sometimes|required|string|max:255',
-            'domicilio' => 'sometimes|nullable|string|max:255'
-        ]);
+                'identificacionFiscal' => 'sometimes|required|string|max:255',
+                'nombreLegal' => 'sometimes|required|string|max:255',
+                'domicilio' => 'sometimes|nullable|string|max:255',
+                'email' => 'sometimes|nullable|email|max:255',
+                'telefono' => 'sometimes|nullable|string|max:255',
+            ]);
 
             $casaDeRemates = $this->casaDeRematesService->actualizarCasaDeRemates($id, $data);
 
@@ -43,7 +45,7 @@ class CasaDeRematesController extends Controller
                 'errors' => $e->errors(),
                 'message' => 'Error de validación'
             ], 422);
-            
+
         } catch (\Exception $e) {
             return response()->json([
                 'success' => false,
