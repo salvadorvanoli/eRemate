@@ -34,7 +34,6 @@ export class LotProductDetailsComponent implements OnInit, OnChanges {
       this.loadArticulos();
     }
   }
-
   loadArticulos() {
     if (!this.lote) return;
 
@@ -49,7 +48,16 @@ export class LotProductDetailsComponent implements OnInit, OnChanges {
       },
       error: (error) => {
         console.error('Error al cargar artículos:', error);
-        this.error = true;
+        
+        // Si el error es específicamente que no hay artículos, no lo tratamos como error
+        if (error.status === 404 && error.error?.message === 'No hay artículos para este lote') {
+          this.articulos = [];
+          this.articuloSeleccionado = undefined;
+          this.error = false;
+        } else {
+          this.error = true;
+        }
+        
         this.loading = false;
       }
     });

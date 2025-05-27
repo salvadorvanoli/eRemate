@@ -82,13 +82,6 @@
 
 /* Fixed bottom bar enhancements */
 .fixed.bottom-0 {
-  backdrop-filter: blur(10px);
-  background-color: rgba(255, 255, 255, 0.95);
-  
-  @supports not (backdrop-filter: blur(10px)) {
-    background-color: rgba(255, 255, 255, 0.98);
-  }
-  
   /* Ensure it stays above modals */
   z-index: 1040 !important;
   
@@ -100,6 +93,13 @@
   
   /* Smooth slide-up animation */
   animation: slideUp 0.3s ease-out;
+  
+  backdrop-filter: blur(10px);
+  background-color: rgba(255, 255, 255, 0.95);
+  
+  @supports not (backdrop-filter: blur(10px)) {
+    background-color: rgba(255, 255, 255, 0.98);
+  }
   
   @keyframes slideUp {
     from {
@@ -131,8 +131,8 @@
     &:focus {
       box-shadow: 0 0 0 3px rgba(59, 130, 246, 0.1);
     }
-    
-    /* Remove number input spinners */
+      /* Remove number input spinners */
+    appearance: textfield;
     -moz-appearance: textfield;
     
     &::-webkit-outer-spin-button,

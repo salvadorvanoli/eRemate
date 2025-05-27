@@ -26,9 +26,10 @@ export class SubastaService extends BaseHttpService<any, Subasta> {
   getUltimasSubastas(pagina: number, cantidad: number): Observable<Subasta[]> {
     return this.http.get<any>(`${this.baseUrl}/auction/page?pagina=${pagina}&cantidad=${cantidad}`);
   }
-
   getSubastaById(id: number): Observable<Subasta> {
-    return this.http.get<any>(`${this.baseUrl}/auction/${id}`).pipe(
+    return this.http.get<any>(`${this.baseUrl}/auction/${id}`, {
+      headers: this.getAuthHeaders()
+    }).pipe(
       map(response => {
         if (response.success) {
           return {

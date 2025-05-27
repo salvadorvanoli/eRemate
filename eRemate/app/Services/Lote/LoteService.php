@@ -48,7 +48,7 @@ class LoteService implements LoteServiceInterface
 
     private function buscarLotePorId(int $id)
     {
-        $lote = Lote::find($id)->first();
+        $lote = Lote::find($id);
 
         if (!$lote) {
             return response()->json([

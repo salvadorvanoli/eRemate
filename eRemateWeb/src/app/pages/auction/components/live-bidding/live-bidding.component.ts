@@ -28,7 +28,6 @@ export class LiveBiddingComponent implements OnInit, OnDestroy {  @Input() subas
   errorMessage = '';
   successMessage = '';
   
-  // Datos de puja
   pujaAmount: number = 0;
   pujando = false;
 
@@ -42,7 +41,6 @@ export class LiveBiddingComponent implements OnInit, OnDestroy {  @Input() subas
   }
 
   ngOnDestroy() {
-    // Cleanup subscriptions if any
   }  loadLoteActual() {
     if (!this.subasta?.id) {
       this.error = true;
@@ -53,10 +51,7 @@ export class LiveBiddingComponent implements OnInit, OnDestroy {  @Input() subas
     this.loading = true;
     this.error = false;
     this.errorMessage = '';
-    this.successMessage = '';
-
-    // Use SubastaService to get the current lot
-    this.subastaService.getLoteActual(this.subasta.id).subscribe({
+    this.successMessage = '';    this.subastaService.getLoteActual(this.subasta.id).subscribe({
       next: (lote: Lote) => {
         this.loteActual = lote;
         this.loading = false;
@@ -67,12 +62,11 @@ export class LiveBiddingComponent implements OnInit, OnDestroy {  @Input() subas
         this.errorMessage = error.message || 'Error al cargar el lote actual';
         this.loading = false;
       }
-    });
-  }
-
-  // Bidding methods
+    });  }
   get valorActual(): number {
-    return this.loteActual?.oferta || this.loteActual?.valorBase || 0;
+    if (!this.loteActual) return 0;
+    
+    return this.loteActual.valorBase + (this.loteActual.oferta || 0);
   }
 
   get pujaMinima(): number {
@@ -86,28 +80,20 @@ export class LiveBiddingComponent implements OnInit, OnDestroy {  @Input() subas
     return this.pujaAmount > 0 && 
            this.totalAPagar >= valorMinimo && 
            !this.pujando;
-  }realizarPuja() {
+  }
+  realizarPuja() {
     if (!this.puedeRealizar || !this.loteActual || !this.subasta) return;    this.pujando = true;
     this.errorMessage = '';
     this.successMessage = '';
-      console.log('Datos de la puja:', {
-      subastaId: this.subasta.id,
-      loteId: this.loteActual.id,
-      pujaAmount: this.pujaAmount, // Solo el monto de la puja (lo que se envía)
-      valorActual: this.valorActual,
-      pujaMinima: this.pujaMinima,
-      totalCalculado: this.totalAPagar // El total calculado para mostrar al usuario
-    });// Use SubastaService to place the bid with the input amount (not total)
-    this.subastaService.realizarPuja(this.subasta.id, this.loteActual.id, this.pujaAmount).subscribe({      next: (response) => {
-        console.log('Puja realizada exitosamente:', response);
-        // Update the current lot's offer value with the new total from backend
+    
+    this.subastaService.realizarPuja(this.subasta.id, this.loteActual.id, this.pujaAmount).subscribe({
+      next: (response) => {
         if (this.loteActual && response.data?.nuevo_total_lote) {
           this.loteActual.oferta = response.data.nuevo_total_lote;
         }
         this.pujaAmount = 0;
         this.pujando = false;
         this.successMessage = 'Puja realizada exitosamente';
-        // Clear success message after 3 seconds
         setTimeout(() => {
           this.successMessage = '';
         }, 3000);

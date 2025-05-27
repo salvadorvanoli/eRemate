@@ -50,7 +50,6 @@ export class AuctionComponent {
     this.loteSeleccionadoModal = lote; // guardo el lote q estoy mostrando
     this.showDetallesModal = true;
   }
-
   verPuja(): void {
     this.showPujaModal = true;
   }
@@ -66,9 +65,9 @@ export class AuctionComponent {
     this.getLotes();
 
   }
-
   getSubasta(): void {
     const id = Number(this.route.snapshot.paramMap.get('id'));
+    
     if (id) {
       this.subastaService.getSubastaById(id).subscribe(
         (data) => {
