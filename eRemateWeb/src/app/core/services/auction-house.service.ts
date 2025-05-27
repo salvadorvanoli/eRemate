@@ -5,6 +5,7 @@ import { BaseHttpService } from './base-http.service';
 import { Casa } from '../models/casa';
 import { UsuarioRematador } from '../models/usuario';
 import { Articulo } from '../models/articulo';
+import { Lote } from '../models/lote';
 import { catchError, map, tap } from 'rxjs/operators';
 
 @Injectable({
@@ -138,4 +139,6 @@ export class AuctionHouseService extends BaseHttpService<Casa, Casa> {
       })
     );
   }
+
+ 
 }

@@ -16,12 +16,14 @@ import { AccordionModule } from 'primeng/accordion';
 import { FileUploadModule } from 'primeng/fileupload';
 import { InputTextarea} from 'primeng/inputtextarea';
 import { TooltipModule } from 'primeng/tooltip';
+import { RadioButtonModule } from 'primeng/radiobutton';
+import { DropdownModule } from 'primeng/dropdown';
 import { finalize } from 'rxjs/operators';
 import { AuctionHouseService } from '../../../../core/services/auction-house.service';
 import { Lote } from '../../../../core/models/lote';
 import { Articulo } from '../../../../core/models/articulo';
 import { AddItemComponent } from '../add-item/add-item.component';
-
+import { SecurityService } from '../../../../core/services/security.service';
 
 interface Lot {
     id: string;
@@ -32,6 +34,7 @@ interface Lot {
     incrementoMinimo: number;
     condicionesEntrega: string; 
     articulos: Articulo[];
+    disponibilidad?: string;
 }
 
 @Component({
@@ -54,7 +57,9 @@ interface Lot {
     FileUploadModule,
     InputTextarea,
     TooltipModule,
-    AddItemComponent
+    AddItemComponent,
+    RadioButtonModule,
+    DropdownModule
   ],
   providers: [ConfirmationService],
   templateUrl: './table-lots.component.html',
@@ -73,7 +78,6 @@ export class TableLotsComponent implements OnInit, OnChanges {
     @Input() auctionId: number | null = null;
     @ViewChild('dt') dt!: Table;
 
-    
     articleDialog: boolean = false;
     currentArticle: Articulo = {
       nombre: '', 
@@ -84,25 +88,31 @@ export class TableLotsComponent implements OnInit, OnChanges {
     };
     editingArticleIndex: number = -1;
     submittedArticle: boolean = false;
-
     
     articlesManagementDialog: boolean = false;
     selectedLotForArticles: Lot | null = null;
     
+    vendedorExternoOption: string = '';
+    
     constructor(
         private messageService: MessageService,
         private confirmationService: ConfirmationService,
-        private auctionHouseService: AuctionHouseService
+        private auctionHouseService: AuctionHouseService,
+        private securityService: SecurityService
     ) {}
 
     ngOnInit() {
         this.configureTable();
+        
+        const currentUser = this.securityService.actualUser;
+        if (!currentUser) {
+            console.warn('No se pudo obtener el usuario');
+        }
     }
     
     ngOnChanges(changes: SimpleChanges) {
         if (changes['auctionId'] && changes['auctionId'].currentValue) {
             const newAuctionId = changes['auctionId'].currentValue;
-            console.log('Cambió ID de subasta:', newAuctionId);
             this.loadLotsByAuctionId(newAuctionId);
         }
     }
@@ -125,8 +135,6 @@ export class TableLotsComponent implements OnInit, OnChanges {
             .pipe(finalize(() => this.loading = false))
             .subscribe({
                 next: (data: any) => {
-                    console.log('Respuesta de getLotsByAuctionId:', data);
-                    
                     if (data && Array.isArray(data.data)) {
                         this.lots = data.data;
                     } else if (Array.isArray(data)) {
@@ -138,57 +146,39 @@ export class TableLotsComponent implements OnInit, OnChanges {
                     }
                 },
                 error: (error) => {
-                    console.error('Error al cargar lotes:', error);
                     this.lots = [];
                     this.messageService.add({ severity: 'error', summary: 'Error', detail: 'No se pudieron cargar los lotes', life: 3000 });
                 }
             });
     }
-    
 
     openArticlesDialog() {
         if (this.selectedLots && this.selectedLots.length === 1) {
             const selectedLot = this.selectedLots[0];
             
-            
             this.selectedLotForArticles = {...selectedLot};
             this.loading = true;
-            
             
             this.auctionHouseService.getItemsByLotId(selectedLot.id)
                 .pipe(finalize(() => this.loading = false))
                 .subscribe({
                     next: (response: any) => {
-                        console.log('Respuesta original de artículos:', response);
-                        
-                 
                         let articulos: Articulo[] = [];
                         
-                       
                         if (Array.isArray(response)) {
                             articulos = response;
-                        }
-                       
-                        else if (response && typeof response === 'object' && !response.data) {
+                        } else if (response && typeof response === 'object' && !response.data) {
                             articulos = [response as Articulo];
-                        }
-                
-                        else if (response && response.data && Array.isArray(response.data)) {
+                        } else if (response && response.data && Array.isArray(response.data)) {
                             articulos = response.data;
-                        }
-                       
-                        else if (response && response.data && typeof response.data === 'object') {
+                        } else if (response && response.data && typeof response.data === 'object') {
                             articulos = [response.data as Articulo];
                         }
                         
-                        console.log('Artículos procesados como array:', articulos);
-                        
-                      
                         this.selectedLotForArticles!.articulos = articulos;
                         this.articlesManagementDialog = true;
                     },
                     error: (error) => {
-                        console.error('Error al cargar artículos:', error);
                         this.messageService.add({
                             severity: 'error',
                             summary: 'Error',
@@ -203,48 +193,26 @@ export class TableLotsComponent implements OnInit, OnChanges {
         }
     }
     
- 
     editArticlesForLot(lot: Lot) {
         this.selectedLotForArticles = {...lot};
         this.loading = true;
-        
-        console.log('🔍 CARGANDO ARTÍCULOS PARA LOTE:', lot.id);
-        
         
         this.auctionHouseService.getItemsByLotId(lot.id)
             .pipe(finalize(() => this.loading = false))
             .subscribe({
                 next: (response: any) => {
-                    console.log('📦 RESPUESTA ORIGINAL:', JSON.stringify(response));
-                    
-                  
                     let articulos: Articulo[] = [];
-                    
                     
                     if (Array.isArray(response)) {
                         articulos = response;
-                        console.log('✅ RESPUESTA ES ARRAY');
-                    }
-                   
-                    else if (response && typeof response === 'object' && !response.data) {
+                    } else if (response && typeof response === 'object' && !response.data) {
                         articulos = [response as Articulo];
-                        console.log('✅ RESPUESTA ES OBJETO SIMPLE');
-                    }
-                  
-                    else if (response && response.data && Array.isArray(response.data)) {
+                    } else if (response && response.data && Array.isArray(response.data)) {
                         articulos = response.data;
-                        console.log('✅ RESPUESTA TIENE DATA ARRAY');
-                    }
-                    
-                    else if (response && response.data && typeof response.data === 'object') {
+                    } else if (response && response.data && typeof response.data === 'object') {
                         articulos = [response.data as Articulo];
-                        console.log('✅ RESPUESTA TIENE DATA OBJETO');
                     }
                     
-                    console.log('📋 ARTÍCULOS PROCESADOS:', JSON.stringify(articulos));
-                    console.log('📋 ARTÍCULOS NOMBRES:', articulos.map(a => a.nombre));
-                    
-                   
                     articulos = articulos.map(art => ({
                         id: art.id,
                         nombre: art.nombre || 'Sin nombre',
@@ -254,14 +222,10 @@ export class TableLotsComponent implements OnInit, OnChanges {
                         especificacionesTecnicas: art.especificacionesTecnicas || ''
                     }));
                     
-                   
                     this.selectedLotForArticles!.articulos = articulos;
-                    console.log('📋 ARTÍCULOS FINALES:', this.selectedLotForArticles!.articulos);
-                    
                     this.articlesManagementDialog = true;
                 },
                 error: (error) => {
-                    console.error('❌ ERROR AL CARGAR ARTÍCULOS:', error);
                     this.messageService.add({
                         severity: 'error',
                         summary: 'Error',
@@ -275,16 +239,13 @@ export class TableLotsComponent implements OnInit, OnChanges {
             });
     }
     
-  
     hideArticlesDialog() {
         this.articlesManagementDialog = false;
         this.selectedLotForArticles = null;
     }
     
-   
     saveArticleChanges() {
         if (this.selectedLotForArticles) {
-         
             const index = this.findIndexById(this.selectedLotForArticles.id);
             if (index >= 0) {
                 this.lots[index].articulos = [...this.selectedLotForArticles.articulos];
@@ -300,7 +261,6 @@ export class TableLotsComponent implements OnInit, OnChanges {
         this.selectedLotForArticles = null;
     }
     
-  
     addNewArticle() {
         this.submittedArticle = false;
         this.currentArticle = {
@@ -323,22 +283,21 @@ export class TableLotsComponent implements OnInit, OnChanges {
             valorBase: 0,
             incrementoMinimo: 0,
             condicionesEntrega: '', 
-            articulos: []
+            articulos: [],
+            disponibilidad: '' 
         };
+        this.vendedorExternoOption = ''; 
         this.submitted = false;
         this.lotDialog = true;
     }
     
-  
     editArticle(index: number) {
         if (!this.selectedLotForArticles) return;
         
         this.submittedArticle = false;
         this.editingArticleIndex = index;
-       
         this.currentArticle = {...this.selectedLotForArticles.articulos[index]};
         
-       
         if (!this.currentArticle.estado) {
             this.currentArticle.estado = '';
         }
@@ -349,41 +308,38 @@ export class TableLotsComponent implements OnInit, OnChanges {
         this.articleDialog = true;
     }
 
-    
     saveArticle(articulo?: Articulo) {
         this.submittedArticle = true;
         
-        console.log('⬇️ saveArticle RECIBIÓ:', articulo);
-        
-        
         const articuloToSave: Articulo = articulo ? {...articulo} : {...this.currentArticle};
         
-        console.log('🔄 ARTÍCULO A GUARDAR:', articuloToSave);
-        
-        if (!articuloToSave.nombre?.trim() || !this.selectedLotForArticles) {
-            console.error('❌ ERROR: Nombre vacío o lote no seleccionado');
+        if (!articuloToSave.nombre?.trim() || 
+            !articuloToSave.estado?.trim() || 
+            !articuloToSave.especificacionesTecnicas?.trim() || 
+            !this.selectedLotForArticles) {
+            
+            this.messageService.add({
+                severity: 'error',
+                summary: 'Error',
+                detail: 'Todos los campos del artículo son obligatorios',
+                life: 3000
+            });
+            
             return;
         }
         
-    
         articuloToSave.lote_id = parseInt(this.selectedLotForArticles.id);
-        
-     
         articuloToSave.imagenes = ["https://picsum.photos/id/237/200/300"];
         
         this.loading = true;
         
-        console.log('📤 ENVIANDO AL BACKEND:', articuloToSave);
-        
         if (this.editingArticleIndex >= 0 && this.selectedLotForArticles.articulos[this.editingArticleIndex].id) {
-     
             const articuloId = this.selectedLotForArticles.articulos[this.editingArticleIndex].id!;
             
             this.auctionHouseService.updateItem(articuloId, articuloToSave)
                 .pipe(finalize(() => this.loading = false))
                 .subscribe({
                     next: (response) => {
-                        console.log('✅ Artículo actualizado con éxito:', response);
                         this.messageService.add({
                             severity: 'success',
                             summary: 'Éxito',
@@ -391,7 +347,6 @@ export class TableLotsComponent implements OnInit, OnChanges {
                             life: 3000
                         });
                         
-                     
                         this.selectedLotForArticles!.articulos[this.editingArticleIndex] = {
                             ...response,
                             especificacionesTecnicas: articuloToSave.especificacionesTecnicas
@@ -399,7 +354,6 @@ export class TableLotsComponent implements OnInit, OnChanges {
                         this.articleDialog = false;
                     },
                     error: (error) => {
-                        console.error('❌ Error al actualizar artículo:', error);
                         this.messageService.add({
                             severity: 'error',
                             summary: 'Error',
@@ -409,15 +363,10 @@ export class TableLotsComponent implements OnInit, OnChanges {
                     }
                 });
         } else {
-          
-            console.log('🆕 CREANDO NUEVO ARTÍCULO');
             this.auctionHouseService.createItem(articuloToSave)
                 .pipe(finalize(() => this.loading = false))
                 .subscribe({
                     next: (response) => {
-                        console.log('✅ ARTÍCULO CREADO CON ÉXITO:', response);
-                        
-                       
                         const nuevoArticulo: Articulo = {
                             id: response.id || 0,
                             nombre: response.nombre || articuloToSave.nombre || 'Sin nombre',
@@ -427,19 +376,11 @@ export class TableLotsComponent implements OnInit, OnChanges {
                             especificacionesTecnicas: response.especificacionesTecnicas || articuloToSave.especificacionesTecnicas || ''
                         };
                         
-                        console.log('🆕 NUEVO ARTÍCULO ESTRUCTURADO:', nuevoArticulo);
-                        
-                        // Asegurarse de que el array de artículos existe
                         if (!this.selectedLotForArticles!.articulos) {
                             this.selectedLotForArticles!.articulos = [];
                         }
                         
-                        // Añadir el artículo al array
                         this.selectedLotForArticles!.articulos.push(nuevoArticulo);
-                        
-                        console.log('📋 ARRAY DE ARTÍCULOS ACTUALIZADO:', 
-                            this.selectedLotForArticles!.articulos);
-                        
                         this.articleDialog = false;
                         
                         this.messageService.add({
@@ -450,7 +391,6 @@ export class TableLotsComponent implements OnInit, OnChanges {
                         });
                     },
                     error: (error) => {
-                        console.error('❌ Error al crear artículo:', error);
                         this.messageService.add({
                             severity: 'error',
                             summary: 'Error',
@@ -481,17 +421,12 @@ export class TableLotsComponent implements OnInit, OnChanges {
             header: 'Confirmar eliminación',
             icon: 'pi pi-exclamation-triangle',
             accept: () => {
-                // Mostrar indicador de carga
                 this.loading = true;
                 
-                // Llamar al servicio para eliminar el lote en el backend
                 this.auctionHouseService.deleteLot(lot.id)
                     .pipe(finalize(() => this.loading = false))
                     .subscribe({
                         next: (response) => {
-                            console.log('Lote eliminado con éxito:', response);
-                            
-                            // Eliminar el lote de la lista local
                             this.lots = this.lots.filter(val => val.id !== lot.id);
                             
                             this.messageService.add({
@@ -502,7 +437,6 @@ export class TableLotsComponent implements OnInit, OnChanges {
                             });
                         },
                         error: (error) => {
-                            console.error('Error al eliminar lote:', error);
                             this.messageService.add({
                                 severity: 'error',
                                 summary: 'Error',
@@ -523,16 +457,30 @@ export class TableLotsComponent implements OnInit, OnChanges {
     saveLot() {
       this.submitted = true;
       
-      if (!this.lot.lote?.trim()) {
+      if (!this.lot.lote?.trim() || 
+          !this.vendedorExternoOption || 
+          !this.lot.valorBase || 
+          this.lot.valorBase <= 0 ||
+          !this.lot.incrementoMinimo || 
+          this.lot.incrementoMinimo <= 0 ||
+          !this.lot.disponibilidad?.trim() || 
+          !this.lot.condicionesEntrega?.trim()) {
+          
+          this.messageService.add({ 
+              severity: 'error', 
+              summary: 'Error', 
+              detail: 'Por favor complete todos los campos requeridos correctamente', 
+              life: 3000 
+          });
           return;
       }
       
-      // Asigna el ID de la subasta seleccionada
+      this.lot.vendedorExterno = this.vendedorExternoOption;
+      
       if (this.auctionId) {
           this.lot.subasta = this.auctionId.toString();
       }
       
-      // Verificar que los artículos tengan nombre
       if (this.lot.articulos && this.lot.articulos.length > 0) {
           const invalidArticles = this.lot.articulos.filter(a => !a.nombre.trim());
           if (invalidArticles.length > 0) {
@@ -546,14 +494,13 @@ export class TableLotsComponent implements OnInit, OnChanges {
           }
       }
       
-      // Preparar el objeto lote para enviar al servidor
       const lotToSave = {
           subasta_id: parseInt(this.lot.subasta),
           nombre: this.lot.lote,
-          descripcion: this.lot.vendedorExterno || '', // Usando vendedorExterno como descripción
+          descripcion: this.vendedorExternoOption === 'Sí' ? 'Con vendedor externo' : 'Sin vendedor externo',
           valorBase: this.lot.valorBase,
           pujaMinima: this.lot.incrementoMinimo,
-          disponibilidad: 'Disponible', // Valor predeterminado
+          disponibilidad: this.lot.disponibilidad,
           condicionesDeEntrega: this.lot.condicionesEntrega, 
           articulos: this.lot.articulos
       };
@@ -561,7 +508,6 @@ export class TableLotsComponent implements OnInit, OnChanges {
       this.loading = true;
 
       if (this.lot.id) {
-        
           const index = this.findIndexById(this.lot.id);
           this.lots[index] = this.lot;
           this.messageService.add({ severity: 'success', summary: 'Éxito', detail: 'Lote actualizado', life: 3000 });
@@ -574,12 +520,11 @@ export class TableLotsComponent implements OnInit, OnChanges {
               vendedorExterno: '',
               valorBase: 0,
               incrementoMinimo: 0,
-              condicionesEntrega: '', // Inicializar con valor vacío
+              condicionesEntrega: '', 
               articulos: []
           };
           this.loading = false;
       } else {
-          // Usar el servicio para crear lote
           this.auctionHouseService.createLot(lotToSave)
               .pipe(finalize(() => {
                   this.loading = false;
@@ -593,7 +538,6 @@ export class TableLotsComponent implements OnInit, OnChanges {
                           life: 3000 
                       });
                       
-                      // Recargar lotes para mostrar el nuevo lote
                       if (this.auctionId) {
                           this.loadLotsByAuctionId(this.auctionId);
                       }
@@ -606,12 +550,11 @@ export class TableLotsComponent implements OnInit, OnChanges {
                           vendedorExterno: '',
                           valorBase: 0,
                           incrementoMinimo: 0,
-                          condicionesEntrega: '', // Inicializar con valor vacío
+                          condicionesEntrega: '', 
                           articulos: []
                       };
                   },
                   error: (error) => {
-                      console.error('Error al crear lote:', error);
                       this.messageService.add({ 
                           severity: 'error', 
                           summary: 'Error', 
@@ -657,7 +600,6 @@ export class TableLotsComponent implements OnInit, OnChanges {
         }).format(value);
     }
 
-    // Eliminar un artículo
     removeArticle(index: number) {
         if (!this.selectedLotForArticles) return;
         
@@ -668,23 +610,17 @@ export class TableLotsComponent implements OnInit, OnChanges {
             header: 'Confirmar eliminación',
             icon: 'pi pi-exclamation-triangle',
             accept: () => {
-                // Si el artículo no tiene ID, es porque no se ha guardado en el backend
                 if (!articulo.id) {
                     this.selectedLotForArticles!.articulos.splice(index, 1);
                     return;
                 }
                 
-                // Mostrar indicador de carga
                 this.loading = true;
                 
-                // Llamar al servicio para eliminar el artículo en el backend
                 this.auctionHouseService.removeItemFromLot(this.selectedLotForArticles!.id, articulo.id)
                     .pipe(finalize(() => this.loading = false))
                     .subscribe({
                         next: (response) => {
-                            console.log('Artículo eliminado con éxito:', response);
-                            
-                            // Eliminar el artículo de la lista local
                             this.selectedLotForArticles!.articulos.splice(index, 1);
                             
                             this.messageService.add({
@@ -695,7 +631,6 @@ export class TableLotsComponent implements OnInit, OnChanges {
                             });
                         },
                         error: (error) => {
-                            console.error('Error al eliminar artículo:', error);
                             this.messageService.add({
                                 severity: 'error',
                                 summary: 'Error',
@@ -708,7 +643,6 @@ export class TableLotsComponent implements OnInit, OnChanges {
         });
     }
     
-    // Reemplazar el método onUpload actual
     onUpload(event: any) {
         const files = event.files;
         if (files && files.length > 0) {
@@ -717,7 +651,6 @@ export class TableLotsComponent implements OnInit, OnChanges {
             
             reader.readAsDataURL(file);
             reader.onload = () => {
-                // Usar imagenes (array) en lugar de imagen
                 if (!this.currentArticle.imagenes) {
                     this.currentArticle.imagenes = [];
                 }

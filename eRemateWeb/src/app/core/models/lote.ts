@@ -10,5 +10,5 @@ export interface Lote {
     pujaMinima: number;
     disponibilidad: string; 
     condicionesDeEntrega: string;
-
+    es_ganador?: boolean;
 }

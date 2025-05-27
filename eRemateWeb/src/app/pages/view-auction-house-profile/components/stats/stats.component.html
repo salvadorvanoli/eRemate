@@ -1,0 +1,30 @@
+<div class="stats-container">
+  
+  <div class="grid">
+    <!-- Gráfico de ventas mensuales -->
+    <div class="col-12 md:col-6 lg:col-6 mb-4">
+      <div class="card shadow-2">
+        
+        <p-chart type="bar" [data]="salesData" [options]="barOptions"></p-chart>
+      </div>
+    </div>
+    
+    <!-- Gráfico de categorías más vendidas (REDUCIDO) -->
+    <div class="col-12 md:col-6 lg:col-6 mb-4">
+      <div class="card shadow-2">
+       
+        <div class="pie-chart-container" style="max-width: 300px; margin: 0 auto;">
+          <p-chart type="pie" [data]="categoryData" [options]="pieOptions"></p-chart>
+        </div>
+      </div>
+    </div>
+    
+    <!-- Gráfico de pujas por subasta -->
+    <div class="col-12 md:col-6 lg:col-6 mb-4">
+      <div class="card shadow-2">
+        
+        <p-chart type="line" [data]="bidsData" [options]="lineOptions"></p-chart>
+      </div>
+    </div>
+  </div>
+</div>

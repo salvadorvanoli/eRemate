@@ -7,7 +7,8 @@
 }
 
 .view-container {
-  width: 1040px;
+  width: 100%; /* Cambiado de 1040px a 100% */
+  max-width: 1200px; /* Agregado un max-width para pantallas grandes */
   margin: 0 auto;
   padding: 20px 0;
 }
@@ -62,4 +63,17 @@ app-table-lots.has-selected::before {
   padding: 40px;
   text-align: center;
   color: #6c757d;
+}
+
+/* Media queries para responsividad */
+@media screen and (max-width: 768px) {
+  .view-container {
+    padding: 10px;
+  }
+  
+  .subasta-seleccionada {
+    margin-left: 0;
+    display: block;
+    width: 100%;
+  }
 }

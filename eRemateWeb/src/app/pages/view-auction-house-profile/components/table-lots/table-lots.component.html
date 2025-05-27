@@ -1,4 +1,4 @@
-<div class="table-container" style="width: 1040px; margin: 0 auto; margin-bottom: 40px;">
+<div class="table-container w-full max-w-full md:max-w-5xl mx-auto mb-8">
   <div *ngIf="loading" class="flex justify-content-center my-3">
     <p-progressSpinner strokeWidth="4" [style]="{'width': '50px', 'height': '50px'}" />
   </div>
@@ -17,63 +17,75 @@
     currentPageReportTemplate="Mostrando {first} a {last} de {totalRecords} elementos"
     [showCurrentPageReport]="lots.length > 0"
     [loading]="loading"
+    [responsive]="true"
+    [resizableColumns]="true"
+    styleClass="p-datatable-sm p-datatable-gridlines p-datatable-responsive lots-table"
+    [scrollable]="false"
+    class="lots-table"
   >
     <ng-template pTemplate="caption">
-      <div class="flex items-center" style="gap: 10px;">
+      <div class="flex flex-column md:flex-row md:justify-content-between md:align-items-center gap-2 p-2">
         <!-- Barra de búsqueda -->
-        <p-iconfield>
+        <p-iconfield class="w-full md:w-auto mb-2 md:mb-0">
             <p-inputicon styleClass="pi pi-search" />
-            <input pInputText type="text" (input)="onFilterGlobal($event)" placeholder="Buscar..." />
+            <input pInputText type="text" class="w-full" (input)="onFilterGlobal($event)" placeholder="Buscar..." />
         </p-iconfield>
         
-        <!-- Botón para agregar lote con color verde -->
-        <p-button 
-            label="Agregar Lote" 
-            icon="pi pi-plus" 
-            class="mr-2" 
-            (onClick)="openNew()" 
-            [style]="{'background-color': '#22C55E', 'border-color': '#22C55E'}" 
-        />
-        
-     
-        <p-button 
-            label="Artículos del Lote" 
-            icon="pi pi-list" 
-            [disabled]="!selectedLots || selectedLots.length !== 1"
-            (onClick)="openArticlesDialog()" 
-            [style]="{'background-color': '#3B82F6', 'border-color': '#3B82F6'}" 
-        />
+        <div class="flex flex-column sm:flex-row gap-2">
+          <!-- Botón para agregar lote con color verde -->
+          <p-button 
+              label="Agregar Lote" 
+              icon="pi pi-plus" 
+              class="w-full sm:w-auto" 
+              (onClick)="openNew()" 
+              [disabled]="!auctionId"
+              [style]="{'background-color': '#6334E3', 'border-color': '#6334E3'}" 
+              pTooltip="{{auctionId ? 'Agregar lote a la subasta' : 'Seleccione una subasta primero'}}"
+              tooltipPosition="bottom"
+          />
+          
+          <!-- Botón para artículos del lote -->
+          <p-button 
+              label="Artículos del Lote" 
+              icon="pi pi-list" 
+              class="w-full sm:w-auto"
+              [disabled]="!selectedLots || selectedLots.length !== 1"
+              (onClick)="openArticlesDialog()" 
+              [style]="{'background-color': '#3B82F6', 'border-color': '#3B82F6'}" 
+          />
+        </div>
       </div>
     </ng-template>
     
     <ng-template pTemplate="header">
       <tr style="background-color: rgba(0, 0, 0, 0.04);">
-        <th style="width: 5%; background-color: rgba(0, 0, 0, 0.04);">
+        <th style="width: 5%; min-width: 3rem; background-color: rgba(0, 0, 0, 0.04);">
           <p-tableHeaderCheckbox />
         </th>
-        <th *ngFor="let col of cols" [style.width]="'calc(84% / ' + cols.length + ')'" style="background-color: rgba(0, 0, 0, 0.04);">
+        <th *ngFor="let col of cols" [style]="{'background-color': 'rgba(0, 0, 0, 0.04)', 'min-width': '10rem'}" [ngStyle]="{'width': col.width || 'auto'}">
           {{ col.header }}
         </th>
-        <th style="width: 11%; background-color: rgba(0, 0, 0, 0.04);">Acciones</th>
+        <th style="width: 11%; min-width: 6rem; background-color: rgba(0, 0, 0, 0.04);">Acciones</th>
       </tr>
     </ng-template>
     
     <ng-template pTemplate="body" let-lot>
       <tr>
-        <td style="width: 5%">
+        <td style="width: 5%; min-width: 3rem;">
           <p-tableCheckbox [value]="lot" />
         </td>
         
-        <td [style.width]="'calc(84% / ' + cols.length + ')'" *ngFor="let col of cols">
-          <span *ngIf="col.field === 'valorBase' || col.field === 'incrementoMinimo'">
+        <td *ngFor="let col of cols" [ngStyle]="{'width': col.width || 'auto', 'min-width': '10rem'}">
+          <span class="p-column-title">{{col.header}}</span>
+          <span *ngIf="col.field === 'valorBase' || col.field === 'pujaMinima'">
             {{ formatCurrency(lot[col.field]) }}
           </span>
-          <span *ngIf="col.field !== 'valorBase' && col.field !== 'incrementoMinimo'">
+          <span *ngIf="col.field !== 'valorBase' && col.field !== 'pujaMinima'">
             {{ lot[col.field] }}
           </span>
         </td>
         
-        <td style="width: 11%">
+        <td style="width: 11%; min-width: 6rem;">
           <div class="flex gap-2 justify-center">
             <p-button icon="pi pi-list" severity="info" [rounded]="true" [outlined]="true" (click)="editArticlesForLot(lot)" pTooltip="Editar artículos" />
             <p-button icon="pi pi-trash" severity="danger" [rounded]="true" [outlined]="true" (click)="deleteLot(lot)" pTooltip="Eliminar lote" />
@@ -84,7 +96,7 @@
     
     <ng-template pTemplate="emptymessage">
       <tr>
-        <td colspan="7" class="text-center p-4">
+        <td colspan="8" class="text-center p-4">
           No hay lotes disponibles
         </td>
       </tr>
@@ -92,7 +104,15 @@
   </p-table>
 
   <!-- Modal de Lote (sin la sección de artículos) -->
-  <p-dialog [(visible)]="lotDialog" [style]="{ width: '700px' }" header="Detalles del Lote" [modal]="true">
+  <p-dialog [(visible)]="lotDialog" 
+  [style]="{width: '95vw'}" 
+  [maximizable]="true"
+  [contentStyle]="{overflow: 'auto', 'max-height': '80vh'}"
+  [breakpoints]="{'960px': '95vw', '640px': '100vw'}" 
+  [draggable]="false" 
+  [resizable]="false"
+  header="Detalles del Lote" 
+  [modal]="true">
     <ng-template pTemplate="content">
       <div class="flex flex-col gap-4">
         <!-- Datos básicos del lote -->
@@ -101,68 +121,96 @@
           
           <!-- Campos existentes -->
           <div>
-            <label for="subasta" class="block font-bold mb-2">Subasta</label>
+            <label for="subasta" class="block font-bold mb-2">Subasta <span class="text-red-500">*</span></label>
             <input type="text" pInputText id="subasta" [value]="auctionId" disabled class="w-full" />
           </div>
           
           <div class="mt-3">
-            <label for="lote" class="block font-bold mb-2">Nombre del Lote</label>
+            <label for="lote" class="block font-bold mb-2">Nombre del Lote <span class="text-red-500">*</span></label>
             <input type="text" pInputText id="lote" [(ngModel)]="lot.lote" required autofocus class="w-full" />
             <small class="text-red-500" *ngIf="submitted && !lot.lote?.trim()">El nombre del lote es requerido.</small>
           </div>
           
           <div class="mt-3">
-            <label for="vendedorExterno" class="block font-bold mb-2">Vendedor Externo</label>
-            <input type="text" pInputText id="vendedorExterno" [(ngModel)]="lot.vendedorExterno" class="w-full" />
+            <label for="vendedorExterno" class="block font-bold mb-2">¿Tiene Vendedor Externo? <span class="text-red-500">*</span></label>
+            <div class="flex gap-4">
+              <div class="field-radiobutton">
+                <p-radioButton inputId="vendedorExternoSi" name="vendedorExterno" value="Sí" [(ngModel)]="vendedorExternoOption"></p-radioButton>
+                <label for="vendedorExternoSi" class="ml-2">Sí</label>
+              </div>
+              <div class="field-radiobutton">
+                <p-radioButton inputId="vendedorExternoNo" name="vendedorExterno" value="No" [(ngModel)]="vendedorExternoOption"></p-radioButton>
+                <label for="vendedorExternoNo" class="ml-2">No</label>
+              </div>
+            </div>
+            <small class="text-red-500" *ngIf="submitted && !vendedorExternoOption">Debe seleccionar si tiene vendedor externo.</small>
           </div>
           
           <div class="mt-3">
-            <label for="valorBase" class="block font-bold mb-2">Valor Base ($)</label>
+            <label for="valorBase" class="block font-bold mb-2">Valor Base ($) <span class="text-red-500">*</span></label>
             <p-inputNumber id="valorBase" [(ngModel)]="lot.valorBase" mode="currency" currency="UYU" 
-              locale="es-UY" [minFractionDigits]="0" class="w-full" />
+              locale="es-UY" [minFractionDigits]="0" [min]="1" class="w-full" />
+            <small class="text-red-500" *ngIf="submitted && (!lot.valorBase || lot.valorBase <= 0)">El valor base debe ser mayor que cero.</small>
           </div>
           
           <div class="mt-3">
-            <label for="incrementoMinimo" class="block font-bold mb-2">Incremento Mínimo ($)</label>
+            <label for="incrementoMinimo" class="block font-bold mb-2">Incremento Mínimo ($) <span class="text-red-500">*</span></label>
             <p-inputNumber id="incrementoMinimo" [(ngModel)]="lot.incrementoMinimo" mode="currency" 
-              currency="UYU" locale="es-UY" [minFractionDigits]="0" class="w-full" />
+              currency="UYU" locale="es-UY" [minFractionDigits]="0" [min]="1" class="w-full" />
+            <small class="text-red-500" *ngIf="submitted && (!lot.incrementoMinimo || lot.incrementoMinimo <= 0)">El incremento mínimo debe ser mayor que cero.</small>
+          </div>
+
+          <div class="mt-3">
+            <label for="disponibilidad" class="block font-bold mb-2">Disponibilidad <span class="text-red-500">*</span></label>
+            <input type="text" pInputText id="disponibilidad" [(ngModel)]="lot.disponibilidad" required class="w-full" placeholder="Ej: Disponible, Reservado, etc." />
+            <small class="text-red-500" *ngIf="submitted && !lot.disponibilidad?.trim()">La disponibilidad es requerida.</small>
           </div>
           
-          <!-- Nuevo campo Condiciones de Entrega -->
           <div class="mt-3">
-            <label for="condicionesEntrega" class="block font-bold mb-2">Condiciones de Entrega</label>
+            <label for="condicionesEntrega" class="block font-bold mb-2">Condiciones de Entrega <span class="text-red-500">*</span></label>
             <textarea pInputTextarea id="condicionesEntrega" [(ngModel)]="lot.condicionesEntrega" rows="3" class="w-full"></textarea>
+            <small class="text-red-500" *ngIf="submitted && !lot.condicionesEntrega?.trim()">Las condiciones de entrega son requeridas.</small>
           </div>
         </div>
       </div>
     </ng-template>
 
     <ng-template pTemplate="footer">
-      <div class="flex justify-content-end gap-2">
+      <div class="flex flex-column sm:flex-row justify-content-end gap-2">
         <p-button 
             label="Cancelar" 
             icon="pi pi-times" 
             (onClick)="hideDialog()" 
+            class="w-full sm:w-auto mb-2 sm:mb-0"
             [style]="{'background-color': '#000000', 'border-color': '#000000', 'color': '#FFFFFF'}" 
         />
         <p-button 
             label="Guardar" 
             icon="pi pi-check" 
             (onClick)="saveLot()" 
+            class="w-full sm:w-auto"
             [style]="{'background-color': '#6334E3', 'border-color': '#6334E3'}" 
         />
       </div>
     </ng-template>
   </p-dialog>
 
-  <p-confirmDialog [style]="{ width: '450px' }" />
+  <p-confirmDialog [style]="{width: '95vw', maxWidth: '450px'}" />
 
   <!-- Modal para gestionar artículos del lote -->
-  <p-dialog [(visible)]="articlesManagementDialog" [style]="{ width: '800px' }" [header]="'Artículos del Lote: ' + (selectedLotForArticles?.lote || '')" [modal]="true">
+  <p-dialog [(visible)]="articlesManagementDialog" 
+  [style]="{width: '95vw'}" 
+  [maximizable]="true"
+  [contentStyle]="{overflow: 'auto', 'max-height': '80vh'}"
+  [breakpoints]="{'960px': '95vw', '640px': '100vw'}" 
+  [draggable]="false" 
+  [resizable]="false"
+  [header]="'Artículos del Lote: ' + (selectedLotForArticles?.lote || '')" 
+  [modal]="true">
     <ng-template pTemplate="content">
       <div class="flex flex-col gap-4">
-        <div class="flex justify-between items-center mb-3">
-          <h3 class="text-xl font-semibold">Artículos</h3>
+        <div class="flex flex-col md:flex-row md:justify-between md:items-center mb-3">
+          <h3 class="text-xl font-semibold mb-2 md:mb-0">Lista de Artículos</h3>
           <p-button 
               icon="pi pi-plus" 
               label="Agregar Artículo" 
@@ -171,8 +219,15 @@
           />
         </div>
         
-        <div *ngIf="selectedLotForArticles?.articulos " class="mb-4">
-          <table class="article-table">
+        <!-- Mensaje cuando no hay artículos -->
+        <div *ngIf="!selectedLotForArticles?.articulos?.length" 
+             class="p-4 text-center text-gray-500 bg-gray-50 border border-gray-200 rounded">
+          No hay artículos registrados para este lote.
+        </div>
+        
+        <!-- Vista desktop -->
+        <div *ngIf="selectedLotForArticles?.articulos?.length" class="hidden md:block">
+          <table class="article-table w-full">
             <thead>
               <tr class="bg-gray-100">
                 <th class="border border-gray-300 p-2 text-left">Nombre</th>
@@ -183,9 +238,9 @@
             </thead>
             <tbody>
               <tr *ngFor="let articulo of selectedLotForArticles?.articulos || []; let i = index" class="border-b border-gray-300">
-                <td class="border border-gray-300 p-2">{{articulo.nombre}}</td>
-                <td class="border border-gray-300 p-2">{{articulo.estado}}</td>
-                <td class="border border-gray-300 p-2">{{articulo.especificacionesTecnicas}}</td>
+                <td class="border border-gray-300 p-2" data-label="Nombre">{{articulo.nombre}}</td>
+                <td class="border border-gray-300 p-2" data-label="Estado">{{articulo.estado}}</td>
+                <td class="border border-gray-300 p-2" data-label="Especificaciones">{{articulo.especificacionesTecnicas}}</td>
                 <td class="border border-gray-300 p-2 text-center">
                   <div class="flex justify-center gap-2">
                     <button pButton pRipple icon="pi pi-pencil" class="p-button-rounded p-button-text" (click)="editArticle(i)"></button>
@@ -197,8 +252,27 @@
           </table>
         </div>
         
-        <div *ngIf="!selectedLotForArticles?.articulos" class="text-center p-4 bg-gray-100 rounded mb-3">
-          No hay artículos agregados. Use el botón "Agregar Artículo" para incluir artículos en este lote.
+        <!-- Vista móvil (cards) -->
+        <div class="block md:hidden article-cards">
+          <div *ngFor="let articulo of selectedLotForArticles?.articulos || []; let i = index" class="article-card">
+            <div class="article-header">
+              <h3>{{articulo.nombre}}</h3>
+            </div>
+            <div class="article-content">
+              <div class="article-info" *ngIf="articulo.estado">
+                <span class="label">Estado:</span>
+                <span>{{articulo.estado}}</span>
+              </div>
+              <div class="article-info" *ngIf="articulo.especificacionesTecnicas">
+                <span class="label">Especificaciones:</span>
+                <span>{{articulo.especificacionesTecnicas}}</span>
+              </div>
+            </div>
+            <div class="article-actions">
+              <button pButton pRipple icon="pi pi-pencil" class="p-button-rounded p-button-outlined" (click)="editArticle(i)"></button>
+              <button pButton pRipple icon="pi pi-trash" class="p-button-rounded p-button-outlined p-button-danger" (click)="removeArticle(i)"></button>
+            </div>
+          </div>
         </div>
       </div>
     </ng-template>
@@ -216,7 +290,7 @@
   </p-dialog>
 
   <!-- Diálogo para detalles del artículo (individual) -->
-  <p-dialog [(visible)]="articleDialog" [style]="{ width: '500px' }" header="Detalles del Artículo" [modal]="true">
+  <p-dialog [(visible)]="articleDialog" [style]="{width: '95vw', maxWidth: '500px'}" header="Detalles del Artículo" [modal]="true">
     <app-add-item 
       [articulo]="currentArticle" 
       [submitted]="submittedArticle"
@@ -225,3 +299,69 @@
     </app-add-item>
   </p-dialog>
 </div>
+
+<style>
+  /* Ocultar los títulos de columna repetidos en todas las vistas */
+  ::ng-deep .p-datatable .p-datatable-tbody > tr > td .p-column-title {
+    display: none !important;
+  }
+  
+  /* El resto de los estilos permanece igual */
+  @media screen and (max-width: 768px) {
+    /* Soporte para columnas en dispositivos móviles */
+    ::ng-deep .lots-table .p-datatable-responsive .p-datatable-tbody > tr > td {
+      display: block;
+      width: 100%;
+      text-align: left;
+      border: none;
+      padding: 0.5rem 1rem;
+    }
+    
+    ::ng-deep .lots-table .p-datatable-responsive .p-datatable-tbody > tr {
+      margin-bottom: 1rem;
+      border: 1px solid #e9ecef;
+      border-radius: 4px;
+    }
+    
+    /* Mostrar solo en móvil si es necesario (opcional) */
+    ::ng-deep .lots-table .p-datatable-responsive .p-datatable-tbody > tr > td .p-column-title {
+      display: inline-block !important;
+      font-weight: bold;
+      margin-right: 0.5rem;
+      min-width: 30%;
+      color: #6334E3;
+    }
+    
+    /* Ocultar encabezados de tabla en móviles */
+    ::ng-deep .lots-table .p-datatable-responsive .p-datatable-thead > tr > th {
+      display: none;
+    }
+    
+    /* Ajustar paginador en móviles */
+    ::ng-deep .lots-table .p-paginator {
+      flex-wrap: wrap;
+      justify-content: center;
+      padding: 0.5rem;
+    }
+    
+    ::ng-deep .lots-table .p-paginator-page-options {
+      margin-top: 0.5rem;
+      width: 100%;
+      display: flex;
+      justify-content: center;
+    }
+  }
+  
+  /* Estilos para inputs en dispositivos móviles */
+  @media screen and (max-width: 576px) {
+    ::ng-deep .p-fluid .p-inputtext,
+    ::ng-deep .p-fluid .p-button {
+      font-size: 14px;
+      padding: 0.5rem;
+    }
+    
+    ::ng-deep .p-dialog-content {
+      padding: 0.75rem !important;
+    }
+  }
+</style>

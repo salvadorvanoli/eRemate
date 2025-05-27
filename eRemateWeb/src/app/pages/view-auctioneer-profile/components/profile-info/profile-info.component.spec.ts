@@ -1,18 +1,18 @@
 import { ComponentFixture, TestBed } from '@angular/core/testing';
 
-import { TableLotsComponent } from './table-lots.component';
+import { ProfileInfoComponent } from './profile-info.component';
 
-describe('TableLotsComponent', () => {
-  let component: TableLotsComponent;
-  let fixture: ComponentFixture<TableLotsComponent>;
+describe('ProfileInfoComponent', () => {
+  let component: ProfileInfoComponent;
+  let fixture: ComponentFixture<ProfileInfoComponent>;
 
   beforeEach(async () => {
     await TestBed.configureTestingModule({
-      imports: [TableLotsComponent]
+      imports: [ProfileInfoComponent]
     })
     .compileComponents();
 
-    fixture = TestBed.createComponent(TableLotsComponent);
+    fixture = TestBed.createComponent(ProfileInfoComponent);
     component = fixture.componentInstance;
     fixture.detectChanges();
   });

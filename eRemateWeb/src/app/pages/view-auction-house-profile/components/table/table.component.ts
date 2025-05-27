@@ -88,17 +88,35 @@ export class TableComponent implements OnInit {
     
     ngOnInit() {
         this.configureTable();
+        this.loading = true;
         
-        // HARDCODEAR el ID de la casa a "1" para desarrollo
-        this.casaId = "1";
-        console.log('ID de casa HARDCODEADO:', this.casaId);
+        // Primero intentar obtener el usuario del BehaviorSubject
+        const currentUser = this.securityService.actualUser;
         
-        // Cargar datos con el ID hardcodeado
-        this.loadRematadoresData(this.casaId);
-        
-        // Mantener esto solo para diagnóstico
-        const usuario = this.securityService.actualUser;
-        console.log('Usuario actual (solo diagnóstico):', usuario);
+        if (currentUser) { // YA ESTÁ CORRECTO, SIN VERIFICACIÓN DE TIPO
+            this.casaId = currentUser.id.toString();
+            console.log('ID de casa obtenido del BehaviorSubject:', this.casaId);
+            this.loadRematadoresData(this.casaId);
+        } else {
+            // Si no, intentar obtenerlo de la API
+            this.securityService.getActualUser().subscribe({
+                next: (user) => {
+                    if (user) { // ELIMINADA VERIFICACIÓN DE TIPO
+                        this.casaId = user.id.toString();
+                        console.log('ID de casa obtenido de la API:', this.casaId);
+                    } else {
+                        console.warn('No se pudo obtener el usuario');
+                        this.casaId = "1"; // Fallback para desarrollo
+                    }
+                    this.loadRematadoresData(this.casaId);
+                },
+                error: (error) => {
+                    console.error('Error al obtener usuario:', error);
+                    this.casaId = "1"; // Fallback para desarrollo
+                    this.loadRematadoresData(this.casaId);
+                }
+            });
+        }
     }
     
     configureTable() {
@@ -378,10 +396,9 @@ export class TableComponent implements OnInit {
                     this.messageService.add({
                         severity: 'error',
                         summary: 'Error',
-                        detail: 'No se encontraron rematadores con ese email.',
+                        detail: 'No se encontró un rematador con ese email.',
                         life: 3000
                     });
-                    this.products = [];
                 }
             });
     } catch (error) {
@@ -390,10 +407,9 @@ export class TableComponent implements OnInit {
         this.messageService.add({
             severity: 'error',
             summary: 'Error',
-            detail: 'No hay rematadores',
+            detail: 'Ocurrió un error inesperado',
             life: 3000
         });
-        this.products = [];
     }
 }
 

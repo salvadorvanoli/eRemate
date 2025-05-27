@@ -1,0 +1,63 @@
+<div class="profile-container">
+  <!-- Spinner de carga -->
+  <div *ngIf="loading" class="loading-container">
+    <p-progressSpinner strokeWidth="4" [style]="{'width': '50px', 'height': '50px'}"></p-progressSpinner>
+  </div>
+  
+  <div *ngIf="!loading" class="profile-content">
+    <div class="form-section">
+      <div class="form-group">
+        <label class="form-label">Nombre</label>
+        <input type="text" pInputText [(ngModel)]="profile.nombre" class="form-input" />
+      </div>
+      
+      <div class="form-group">
+        <label class="form-label">Apellido</label>
+        <input type="text" pInputText [(ngModel)]="profile.apellido" class="form-input" />
+      </div>
+      
+      <div class="form-group">
+        <label class="form-label">Número de Matrícula</label>
+        <input type="text" pInputText [(ngModel)]="profile.numeroMatricula" class="form-input" />
+      </div>
+      
+
+      <div class="form-group">
+        <label class="form-label">Email</label>
+        <input type="email" pInputText [(ngModel)]="profile.email" class="form-input" />
+      </div>
+      
+      <div class="form-group">
+        <label class="form-label">Teléfono</label>
+        <input type="tel" pInputText [(ngModel)]="profile.telefono" class="form-input" />
+      </div>
+      
+      <div class="form-group">
+        <label class="form-label">Dirección Fiscal</label>
+        <input type="text" pInputText [(ngModel)]="profile.direccionFiscal" class="form-input" />
+      </div>
+
+      <div class="button-container">
+        <button (click)="updateProfile()" class="update-button">
+          Actualizar datos
+        </button>
+      </div>
+    </div>
+    
+    <div class="image-section">
+      <div class="profile-image-container">
+        <img [src]="profileImage" alt="Perfil" class="profile-image" *ngIf="profileImage" />
+        <div class="no-image" *ngIf="!profileImage">
+          <i class="pi pi-user" style="font-size: 5rem; color: #ccc;"></i>
+        </div>
+      </div>
+      <div class="upload-button-container">
+        <p-button label="Subir imagen" icon="pi pi-upload" (click)="onImageUpload($event)" 
+                 [style]="{'background-color': '#6334E3', 'border-color': '#6334E3'}"
+                 styleClass="p-button-responsive"></p-button>
+      </div>
+    </div>
+  </div>
+</div>
+
+<p-toast></p-toast>

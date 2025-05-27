@@ -47,15 +47,12 @@ export class AddItemComponent {
     if (file) {
       const reader = new FileReader();
       reader.onload = () => {
-        // Convertir a string y agregar al array de imágenes
         const imagenBase64 = reader.result as string;
         
-        // Inicializar el array si no existe
         if (!this.articulo.imagenes) {
           this.articulo.imagenes = [];
         }
         
-        // Por ahora solo manejamos una imagen (la primera)
         if (this.articulo.imagenes.length === 0) {
           this.articulo.imagenes.push(imagenBase64);
         } else {
@@ -68,18 +65,13 @@ export class AddItemComponent {
 
 
   onSave() {
-    console.log('Guardando desde add-item:', this.articulo);
-    console.log('Nombre del artículo:', this.articulo.nombre);
-    
-
-    if (!this.articulo.nombre || this.articulo.nombre.trim() === '') {
-      console.error('Error: Nombre vacío, no se emitirá el evento save');
-      return; 
+    if (!this.articulo.nombre?.trim() || !this.articulo.estado?.trim() || !this.articulo.especificacionesTecnicas?.trim()) {
+      this.submitted = true;
+      return;
     }
     
 
-    const articuloToEmit = { ...this.articulo };
-    this.save.emit(articuloToEmit);
+    this.save.emit(this.articulo);
   }
 
   onCancel() {

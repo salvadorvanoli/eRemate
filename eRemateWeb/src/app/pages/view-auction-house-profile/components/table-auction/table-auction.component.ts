@@ -1,5 +1,5 @@
 import { Component, OnInit, ViewChild, Output, EventEmitter } from '@angular/core';
-import { CommonModule } from '@angular/common';
+import { CommonModule, DatePipe } from '@angular/common';  
 import { FormsModule } from '@angular/forms';
 import { TableModule, Table } from 'primeng/table';
 import { ButtonModule } from 'primeng/button';
@@ -15,6 +15,7 @@ import { finalize } from 'rxjs/operators';
 import { AuctionHouseService } from '../../../../core/services/auction-house.service';
 import { Subasta } from '../../../../core/models/subasta';
 import { UsuarioRematador, RematadorResponse } from '../../../../core/models/usuario';
+import { SecurityService } from '../../../../core/services/security.service'; 
 
 @Component({
   selector: 'app-table-auction',
@@ -30,7 +31,8 @@ import { UsuarioRematador, RematadorResponse } from '../../../../core/models/usu
     InputTextModule,
     IconFieldModule,
     InputIconModule,
-    ProgressSpinnerModule
+    ProgressSpinnerModule,
+    DatePipe  
   ],
   providers: [ConfirmationService],
   templateUrl: './table-auction.component.html',
@@ -48,23 +50,76 @@ export class TableAuctionComponent implements OnInit {
     rematadorEmail: string = '';
     emailError: string = '';
     rematadores: RematadorResponse[] = [];
-    casaId: number = 1; // ID hardcodeado de la casa de remates
+    casaId: number | null = null; 
     
+    minDate: string = '';
+    minEndDate: string = '';
+    dateErrors: { startDate: string, endDate: string } = { startDate: '', endDate: '' };
+
     @ViewChild('dt') dt!: Table;
 
- 
     @Output() auctionSelected = new EventEmitter<number>();
 
     constructor(
         private messageService: MessageService,
         private confirmationService: ConfirmationService,
-        private auctionHouseService: AuctionHouseService
-    ) {}
+        private auctionHouseService: AuctionHouseService,
+        private securityService: SecurityService
+    ) {
+        console.log('[CONSTRUCTOR] SecurityService actualUser:', this.securityService.actualUser);
+    }
 
     ngOnInit() {
+        this.loading = true;
+        console.log('[NGONINIT_START] Intentando obtener usuario. Current securityService.actualUser:', this.securityService.actualUser);
+        const currentUser = this.securityService.actualUser;
+        
+        if (currentUser && currentUser.id) {
+            this.casaId = currentUser.id;
+            console.log(`[NGONINIT_BEHAVIORSUBJECT_SUCCESS] ID de casa obtenido del BehaviorSubject: ${this.casaId}. User:`, currentUser);
+            this.initializeComponent();
+        } else {
+            console.log('[NGONINIT_BEHAVIORSUBJECT_FAIL] No hay usuario en BehaviorSubject o no tiene ID. User:', currentUser);
+            this.securityService.getActualUser().subscribe({
+                next: (user) => {
+                    console.log('[NGONINIT_API_RESPONSE] Respuesta de getActualUser API:', user);
+                    if (user && user.id) {
+                        this.casaId = user.id;
+                        console.log(`[NGONINIT_API_SUCCESS] ID de casa obtenido de la API: ${this.casaId}. User:`, user);
+                        this.initializeComponent();
+                    } else {
+                        console.error('[NGONINIT_API_FAIL] ERROR CRÍTICO: No se pudo obtener el usuario o no tiene ID desde API. User:', user);
+                        this.messageService.add({ 
+                            severity: 'error', 
+                            summary: 'Error de autenticación', 
+                            detail: 'No hay usuario autenticado. Por favor inicie sesión.', 
+                            life: 5000,
+                            sticky: true
+                        });
+                        this.loading = false;
+                    }
+                },
+                error: (error) => {
+                    console.error('[NGONINIT_API_ERROR] ERROR CRÍTICO: Error al obtener usuario:', error);
+                    this.messageService.add({ 
+                        severity: 'error', 
+                        summary: 'Error de conexión', 
+                        detail: 'No se pudo obtener información del usuario. Por favor recargue la página.', 
+                        life: 5000,
+                        sticky: true
+                    });
+                    this.loading = false;
+                }
+            });
+        }
+    }
+    
+    private initializeComponent() {
+        console.log(`[INITIALIZE_COMPONENT] Iniciando con casaId: ${this.casaId}`);
         this.configureTable();
         this.loadAuctionsData();
         this.loadRematadores();
+        this.loading = false; 
     }
     
     configureTable() {
@@ -81,26 +136,33 @@ export class TableAuctionComponent implements OnInit {
 
     loadAuctionsData() {
         this.loading = true;
-        this.auctionHouseService.getAuctionsByHouseId('1')
+        console.log(`[LOAD_AUCTIONS_DATA_START] Cargando subastas para casaId: ${this.casaId}`);
+        
+        if (!this.casaId) {
+            console.error('[LOAD_AUCTIONS_DATA_ERROR] ERROR CRÍTICO: Intentando cargar subastas sin ID de casa válido');
+            this.messageService.add({ 
+                severity: 'error', 
+                summary: 'Error', 
+                detail: 'No se puede cargar datos sin identificar la casa de remates', 
+                life: 3000 
+            });
+            this.loading = false;
+            return; 
+        }
+        
+        this.auctionHouseService.getAuctionsByHouseId(this.casaId.toString())
             .pipe(finalize(() => this.loading = false))
             .subscribe({
                 next: (data: any) => {
                     console.log('Respuesta de getAuctionsByHouseId:', data);
 
-                 
                     if (data && Array.isArray(data.data)) {
                         this.auctions = data.data;
-                    }
-                  
-                    else if (Array.isArray(data)) {
+                    } else if (Array.isArray(data)) {
                         this.auctions = data;
-                    }
-                
-                    else if (typeof data === 'object' && data !== null) {
+                    } else if (typeof data === 'object' && data !== null) {
                         this.auctions = [data];
-                    }
-                  
-                    else {
+                    } else {
                         this.auctions = [];
                     }
 
@@ -114,6 +176,18 @@ export class TableAuctionComponent implements OnInit {
     }
     
     loadRematadores() {
+        console.log(`[LOAD_REMATADORES_START] Cargando rematadores para casaId: ${this.casaId}`);
+        if (!this.casaId) {
+            console.error('[LOAD_REMATADORES_ERROR] ERROR CRÍTICO: Intentando cargar rematadores sin ID de casa válido');
+            this.messageService.add({ 
+                severity: 'error', 
+                summary: 'Error', 
+                detail: 'No se puede cargar rematadores sin identificar la casa', 
+                life: 3000 
+            });
+            return; 
+        }
+        
         this.auctionHouseService.getAllAuctioneersByHouse(this.casaId.toString())
             .subscribe({
                 next: (response: any) => {
@@ -134,8 +208,31 @@ export class TableAuctionComponent implements OnInit {
     }
     
     openNew() {
+        console.log('[OPEN_NEW_START] Abriendo nuevo diálogo de subasta.');
+        const currentUser = this.securityService.actualUser;
+        console.log('[OPEN_NEW] securityService.actualUser al abrir diálogo:', currentUser);
+
+        if (!currentUser || !currentUser.id) {
+            console.error('[OPEN_NEW_ERROR] ERROR CRÍTICO: No hay usuario autenticado o sin ID al crear nueva subasta. User:', currentUser);
+            this.messageService.add({ 
+                severity: 'error', 
+                summary: 'Error de autenticación', 
+                detail: 'No se puede crear subastas sin autenticación válida', 
+                life: 3000 
+            });
+            return; 
+        }
+        
+        const casaIdForNewAuction = currentUser.id;
+        console.log(`[OPEN_NEW] ID de casa para nueva subasta (desde currentUser.id): ${casaIdForNewAuction}`);
+        
+        const today = new Date();
+        this.minDate = this.formatDateForInput(today);
+        this.minEndDate = this.minDate; 
+        
         this.auction = {
-            casaDeRemates_id: this.casaId,
+            id: 0,
+            casaDeRemates_id: casaIdForNewAuction, 
             rematador_id: 0,
             mensajes: '',
             urlTransmision: 'https://ejemplo.com/stream',
@@ -143,11 +240,12 @@ export class TableAuctionComponent implements OnInit {
             estado: 'pendiente',
             pujaHabilitada: false,
             fechaInicio: new Date(),
-            fechaCierre: new Date(),
+            fechaCierre: new Date(today.getTime() + 86400000), 
             ubicacion: ''
         };
         this.rematadorEmail = '';
         this.emailError = '';
+        this.dateErrors = { startDate: '', endDate: '' };
         this.submitted = false;
         this.auctionDialog = true;
     }
@@ -208,7 +306,6 @@ export class TableAuctionComponent implements OnInit {
         console.log('Buscando email:', email);
         console.log('Rematadores disponibles:', this.rematadores);
         
-        // Busca el rematador con ese email en el objeto usuario
         const rematador = this.rematadores.find(r => r.usuario?.email === email);
         
         if (rematador) {
@@ -219,51 +316,110 @@ export class TableAuctionComponent implements OnInit {
         return null;
     }
     
+    formatDateForInput(date: Date): string {
+        return date.toISOString().slice(0, 16); 
+    }
+
+
+    validateDates(): void {
+        const now = new Date();
+        const startDate = new Date(this.auction.fechaInicio);
+        const endDate = new Date(this.auction.fechaCierre);
+        
+        this.dateErrors = { startDate: '', endDate: '' };
+        
+ 
+        if (startDate < now) {
+            this.dateErrors.startDate = 'La fecha de inicio debe ser posterior a la fecha actual';
+        } else {
+ 
+            this.minEndDate = this.formatDateForInput(startDate);
+        }
+ 
+        if (endDate <= startDate) {
+            this.dateErrors.endDate = 'La fecha de cierre debe ser posterior a la fecha de inicio';
+        }
+    }
+
     saveAuction() {
         this.submitted = true;
         this.emailError = '';
+        console.log('[SAVE_AUCTION_START] Iniciando guardado de subasta.');
+        console.log('[SAVE_AUCTION_START] this.auction (antes de obtener currentUser):', JSON.parse(JSON.stringify(this.auction)));
+        console.log('[SAVE_AUCTION_START] this.rematadorEmail:', this.rematadorEmail);
         
-        // Validar campos requeridos
-        if (!this.auction.tipoSubasta?.trim() || !this.auction.ubicacion?.trim() || 
-            !this.auction.fechaInicio || !this.auction.fechaCierre || !this.rematadorEmail?.trim()) {
+
+        this.validateDates();
+        
+        if (!this.auction.tipoSubasta?.trim() || 
+            !this.auction.ubicacion?.trim() || 
+            !this.auction.fechaInicio || 
+            !this.auction.fechaCierre || 
+            !this.rematadorEmail?.trim() ||
+            this.dateErrors.startDate ||
+            this.dateErrors.endDate) {
+            console.warn('[SAVE_AUCTION_VALIDATION_FAIL] Faltan campos requeridos o hay errores de validación.');
             return;
         }
         
-        // Buscar el ID del rematador por email
         const rematadorId = this.findRematadorByEmail(this.rematadorEmail);
+        console.log(`[SAVE_AUCTION] Resultado de findRematadorByEmail: ${rematadorId}`);
         
         if (!rematadorId) {
             this.emailError = 'No se encontró un rematador con ese email';
+            console.warn('[SAVE_AUCTION_REMATADOR_FAIL] No se encontró rematador con email:', this.rematadorEmail);
             return;
         }
         
-        // Asignar el ID del rematador encontrado
-        this.auction.rematador_id = rematadorId;
+        const currentUser = this.securityService.actualUser;
+        console.log('[SAVE_AUCTION] securityService.actualUser (obtenido justo antes de usar su ID):', currentUser);
         
-        // Preparar datos para enviar
+
+        if (!currentUser || !currentUser.id) {
+            console.error('⛔ [SAVE_AUCTION_USER_ID_FAIL] ERROR CRÍTICO: No hay usuario autenticado o no tiene ID. User:', currentUser);
+            this.messageService.add({ 
+                severity: 'error', 
+                summary: 'Error de autenticación', 
+                detail: 'No se pudo identificar la casa de remates. Por favor inicie sesión nuevamente.', 
+                life: 5000,
+                sticky: true
+            });
+            return; 
+        }
+        
+        this.auction.rematador_id = rematadorId;
+        console.log(`[SAVE_AUCTION] this.auction.rematador_id asignado: ${this.auction.rematador_id}`);
+ 
+        const casaIdToSave = currentUser.id;
+        console.log(`🔴 [SAVE_AUCTION_CASA_ID_VERIFIED] ID DE CASA VERIFICADO ANTES DE CREAR SUBASTA (currentUser.id): ${casaIdToSave}`);
+        
+       
         const subastaData = {
-            casaDeRemates_id: this.casaId,
+            casaDeRemates_id: casaIdToSave, 
             rematador_id: this.auction.rematador_id,
             urlTransmision: this.auction.urlTransmision,
             tipoSubasta: this.auction.tipoSubasta,
-            estado: 'pendiente',
+            estado: 'pendiente_aprobacion',
             fechaInicio: this.auction.fechaInicio,
             fechaCierre: this.auction.fechaCierre,
             ubicacion: this.auction.ubicacion,
-            mensajes: []
+            mensajes: [] 
         };
         
-        console.log('Datos de subasta a crear:', subastaData);
+        console.log('[SAVE_AUCTION_SUBMIT_DATA] Datos de subasta a crear (ID casa FINAL):', subastaData);
         
-        // Llamar al servicio para crear la subasta
+       
         this.loading = true;
         this.auctionHouseService.createAuction(subastaData)
-            .pipe(finalize(() => this.loading = false))
+            .pipe(finalize(() => {
+                this.loading = false;
+                console.log('[SAVE_AUCTION_FINALIZE] Finalizó la llamada a createAuction.');
+            }))
             .subscribe({
                 next: (response) => {
-                    console.log('Respuesta del servidor:', response);
+                    console.log('[SAVE_AUCTION_SUCCESS] Respuesta del servidor:', response);
                     
-                    // Actualizar la interfaz
+                 
                     if (response && response.data) {
                         this.auction.id = response.data.id;
                         this.auctions.push(response.data);
@@ -310,11 +466,11 @@ export class TableAuctionComponent implements OnInit {
         }
     }
 
-    // Agregar este método para detectar cambios en la selección
+ 
     onSelectionChange() {
         console.log('Selección cambiada:', this.selectedAuction);
         
-        // Si hay una subasta seleccionada, emitir su ID
+
         if (this.selectedAuction && this.selectedAuction.id) {
             console.log('Emitiendo ID de subasta seleccionada:', this.selectedAuction.id);
             this.auctionSelected.emit(this.selectedAuction.id);

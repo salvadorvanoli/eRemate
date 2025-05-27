@@ -1,0 +1,25 @@
+<p-toast></p-toast>
+
+<div class="profile-container">
+  <div *ngIf="loading" class="loading-container">
+    <p-progressSpinner></p-progressSpinner>
+    <span>Cargando perfil...</span>
+  </div>
+
+  <ng-container *ngIf="!loading">
+    <!-- Casa de Remates Profile -->
+    <app-view-auction-house-profile *ngIf="isAuctionHouse"></app-view-auction-house-profile>
+    
+    <!-- Usuario Registrado Profile -->
+    <app-view-registered-user-profile *ngIf="isRegisteredUser"></app-view-registered-user-profile>
+    
+    <!-- Rematador Profile -->
+    <app-view-auctioneer-profile *ngIf="isAuctioneer"></app-view-auctioneer-profile>
+    
+    <!-- No supported profile type -->
+    <div *ngIf="!isAuctionHouse && !isRegisteredUser && !isAuctioneer" class="no-profile">
+      <h2>Perfil no disponible</h2>
+      <p>El tipo de usuario actual no tiene un perfil disponible para visualización.</p>
+    </div>
+  </ng-container>
+</div>

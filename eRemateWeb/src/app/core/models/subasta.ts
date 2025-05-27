@@ -1,6 +1,6 @@
 export interface Subasta {
 
-    id?: number; 
+    id: number; 
     casaDeRemates_id: number;
     rematador_id: number;
     mensajes: string;

@@ -1,1 +1,71 @@
-<p>table-lots works!</p>
+<div class="table-container" style="width: 1040px; margin: 0 auto; margin-bottom: 40px;">
+  <div *ngIf="loading" class="flex justify-content-center my-3">
+    <p-progressSpinner strokeWidth="4" [style]="{'width': '50px', 'height': '50px'}" />
+  </div>
+
+  <p-table
+    #dt
+    [value]="lots"
+    [rows]="5"
+    [columns]="cols"
+    [paginator]="lots.length > 0"
+    [globalFilterFields]="globalFilterFields"
+    [tableStyle]="{ width: '100%', marginBottom: '1rem' }"
+    [rowHover]="true"
+    dataKey="id"
+    currentPageReportTemplate="Mostrando {first} a {last} de {totalRecords} elementos"
+    [showCurrentPageReport]="lots.length > 0"
+    [loading]="loading"
+  >
+    <ng-template pTemplate="caption">
+      <div class="flex items-center" style="gap: 10px;">
+        <p-iconfield>
+            <p-inputicon styleClass="pi pi-search" />
+            <input pInputText type="text" (input)="onFilterGlobal($event)" placeholder="Buscar..." />
+        </p-iconfield>
+      </div>
+    </ng-template>
+    
+    <ng-template pTemplate="header">
+      <tr style="background-color: rgba(0, 0, 0, 0.04);">
+        <th *ngFor="let col of cols" [style.width]="'calc(89% / ' + cols.length + ')'" style="background-color: rgba(0, 0, 0, 0.04);">
+          {{ col.header }}
+        </th>
+        <th style="width: 11%; background-color: rgba(0, 0, 0, 0.04);">Acciones</th>
+      </tr>
+    </ng-template>
+    
+    <ng-template pTemplate="body" let-lot>
+      <tr>
+        <td [style.width]="'calc(89% / ' + cols.length + ')'" *ngFor="let col of cols">
+          <span *ngIf="col.field === 'valorBase' || col.field === 'pujaMinima'">
+            {{ formatCurrency(lot[col.field]) }}
+          </span>
+          <span *ngIf="col.field !== 'valorBase' && col.field !== 'pujaMinima'">
+            {{ lot[col.field] }}
+          </span>
+        </td>
+        
+        <td style="width: 11%">
+          <div class="flex gap-2 justify-center">
+            <p-button *ngIf="lot.es_ganador" 
+                      icon="pi pi-comment" 
+                      severity="info" 
+                      [rounded]="true" 
+                      [outlined]="true" 
+                      (click)="sendMessage(lot)" 
+                      pTooltip="Enviar mensaje" />
+          </div>
+        </td>
+      </tr>
+    </ng-template>
+    
+    <ng-template pTemplate="emptymessage">
+      <tr>
+        <td colspan="7" class="text-center p-4">
+          No has realizado pujas en ningún lote
+        </td>
+      </tr>
+    </ng-template>
+  </p-table>
+</div>

@@ -1,4 +1,4 @@
-<div class="table-container" style="width: 1040px; margin: 0 auto; margin-bottom: 40px;">
+<div class="table-container w-full max-w-full md:max-w-5xl mx-auto mb-8">
   <div *ngIf="loading" class="flex justify-content-center my-3">
     <p-progressSpinner strokeWidth="4" [style]="{'width': '50px', 'height': '50px'}" />
   </div>
@@ -19,20 +19,25 @@
     [showCurrentPageReport]="auctions.length > 0"
     [loading]="loading"
     (selectionChange)="onSelectionChange()"
+    [responsive]="true"
+    [resizableColumns]="true"
+    styleClass="p-datatable-sm p-datatable-gridlines p-datatable-responsive"
+    [scrollable]="false"
+    class="auction-table"
   >
     <ng-template pTemplate="caption">
-      <div class="flex items-center" style="gap: 10px;">
+      <div class="flex flex-column md:flex-row md:justify-content-between md:align-items-center gap-2 p-2">
         <!-- Barra de búsqueda -->
-        <p-iconfield>
+        <p-iconfield class="w-full md:w-auto mb-2 md:mb-0">
             <p-inputicon styleClass="pi pi-search" />
-            <input pInputText type="text" (input)="onFilterGlobal($event)" placeholder="Buscar..." />
+            <input pInputText type="text" class="w-full" (input)="onFilterGlobal($event)" placeholder="Buscar..." />
         </p-iconfield>
         
         <!-- Botón para agregar subasta con color violeta -->
         <p-button 
             label="Agregar Subasta" 
-            icon="pi pi-plus" 
-            class="mr-2" 
+            icon="pi pi-plus"
+            class="w-full md:w-auto"
             (onClick)="openNew()" 
             [style]="{'background-color': '#6334E3', 'border-color': '#6334E3'}" 
         />
@@ -41,20 +46,26 @@
     
     <ng-template pTemplate="header">
       <tr style="background-color: rgba(0, 0, 0, 0.04);">
-        <th *ngFor="let col of cols" [style.width]="'calc(84% / ' + cols.length + ')'" style="background-color: rgba(0, 0, 0, 0.04);">
+        <th *ngFor="let col of cols" [style]="{'background-color': 'rgba(0, 0, 0, 0.04)', 'min-width': '10rem'}" [ngStyle]="{'width': col.width || 'auto'}">
           {{ col.header }}
         </th>
-        <th style="width: 11%; background-color: rgba(0, 0, 0, 0.04);">Acciones</th>
+        <th style="width: 11%; min-width: 6rem; background-color: rgba(0, 0, 0, 0.04);">Acciones</th>
       </tr>
     </ng-template>
     
     <ng-template pTemplate="body" let-auction>
       <tr [pSelectableRow]="auction">
-        <td [style.width]="'calc(84% / ' + cols.length + ')'" *ngFor="let col of cols">
-          {{ auction[col.field] }}
+        <td *ngFor="let col of cols" [ngStyle]="{'width': col.width || 'auto', 'min-width': '10rem'}">
+          <span class="p-column-title">{{col.header}}</span>
+          <span *ngIf="col.field === 'fechaInicio' || col.field === 'fechaCierre'">
+            {{ auction[col.field] | date:'dd/MM/yyyy HH:mm' }}
+          </span>
+          <span *ngIf="col.field !== 'fechaInicio' && col.field !== 'fechaCierre'">
+            {{ auction[col.field] }}
+          </span>
         </td>
         
-        <td style="width: 11%">
+        <td style="width: 11%; min-width: 6rem;">
           <div class="flex gap-2 justify-center">
             <p-button icon="pi pi-trash" severity="danger" [rounded]="true" [outlined]="true" (click)="deleteAuction(auction)" pTooltip="Eliminar subasta" />
           </div>
@@ -64,39 +75,53 @@
     
     <ng-template pTemplate="emptymessage">
       <tr>
-        <td colspan="8" class="text-center p-4">
+        <td [attr.colspan]="cols.length + 1" class="text-center p-4">
           No hay subastas disponibles
         </td>
       </tr>
     </ng-template>
   </p-table>
 
-  <p-dialog [(visible)]="auctionDialog" [style]="{ width: '500px' }" header="Detalles de la Subasta" [modal]="true">
+  <p-dialog 
+    [(visible)]="auctionDialog" 
+    [style]="{width: '95vw'}" 
+    [contentStyle]="{overflow: 'auto', 'max-height': '80vh'}"
+    [breakpoints]="{'960px': '95vw', '640px': '100vw'}" 
+    [maximizable]="true"
+    [draggable]="false" 
+    [resizable]="false"
+    header="Detalles de la Subasta" 
+    [modal]="true"
+  >
     <ng-template pTemplate="content">
-      <div class="flex flex-col gap-4">
-        <div>
-          <label for="tipoSubasta" class="block font-bold mb-2">Tipo de Subasta</label>
-          <input type="text" pInputText id="tipoSubasta" [(ngModel)]="auction.tipoSubasta" required autofocus />
+      <div class="flex flex-col gap-4 p-fluid">
+        <div class="field">
+          <label for="tipoSubasta" class="block font-bold mb-2">Tipo de Subasta <span class="text-red-500">*</span></label>
+          <input type="text" pInputText id="tipoSubasta" [(ngModel)]="auction.tipoSubasta" required autofocus class="w-full" />
           <small class="text-red-500" *ngIf="submitted && !auction.tipoSubasta?.trim()">El tipo de subasta es requerido.</small>
         </div>
-        <div>
-          <label for="fechaInicio" class="block font-bold mb-2">Fecha de Inicio</label>
-          <input type="datetime-local" pInputText id="fechaInicio" [(ngModel)]="auction.fechaInicio" required />
+        <div class="field">
+          <label for="fechaInicio" class="block font-bold mb-2">Fecha de Inicio <span class="text-red-500">*</span></label>
+          <input type="datetime-local" pInputText id="fechaInicio" [(ngModel)]="auction.fechaInicio" required class="w-full" 
+            [min]="minDate" (change)="validateDates()" />
           <small class="text-red-500" *ngIf="submitted && !auction.fechaInicio">La fecha de inicio es requerida.</small>
+          <small class="text-red-500" *ngIf="submitted && dateErrors.startDate">{{dateErrors.startDate}}</small>
         </div>
-        <div>
-          <label for="fechaCierre" class="block font-bold mb-2">Fecha de Cierre</label>
-          <input type="datetime-local" pInputText id="fechaCierre" [(ngModel)]="auction.fechaCierre" required />
+        <div class="field">
+          <label for="fechaCierre" class="block font-bold mb-2">Fecha de Cierre <span class="text-red-500">*</span></label>
+          <input type="datetime-local" pInputText id="fechaCierre" [(ngModel)]="auction.fechaCierre" required class="w-full"
+            [min]="minEndDate" (change)="validateDates()" />
           <small class="text-red-500" *ngIf="submitted && !auction.fechaCierre">La fecha de cierre es requerida.</small>
+          <small class="text-red-500" *ngIf="submitted && dateErrors.endDate">{{dateErrors.endDate}}</small>
         </div>
-        <div>
-          <label for="ubicacion" class="block font-bold mb-2">Ubicación</label>
-          <input type="text" pInputText id="ubicacion" [(ngModel)]="auction.ubicacion" required />
+        <div class="field">
+          <label for="ubicacion" class="block font-bold mb-2">Ubicación <span class="text-red-500">*</span></label>
+          <input type="text" pInputText id="ubicacion" [(ngModel)]="auction.ubicacion" required class="w-full" />
           <small class="text-red-500" *ngIf="submitted && !auction.ubicacion?.trim()">La ubicación es requerida.</small>
         </div>
-        <div>
-          <label for="rematadorEmail" class="block font-bold mb-2">Email del Rematador</label>
-          <input type="email" pInputText id="rematadorEmail" [(ngModel)]="rematadorEmail" required />
+        <div class="field">
+          <label for="rematadorEmail" class="block font-bold mb-2">Email del Rematador <span class="text-red-500">*</span></label>
+          <input type="email" pInputText id="rematadorEmail" [(ngModel)]="rematadorEmail" required class="w-full" />
           <small class="text-red-500" *ngIf="submitted && !rematadorEmail?.trim()">El email del rematador es requerido.</small>
           <small class="text-red-500" *ngIf="submitted && emailError">{{emailError}}</small>
         </div>
@@ -104,22 +129,92 @@
     </ng-template>
 
     <ng-template pTemplate="footer">
-      <div class="flex justify-content-end gap-2">
+      <div class="flex flex-column sm:flex-row justify-content-end gap-2">
         <p-button 
             label="Cancelar" 
             icon="pi pi-times" 
             (onClick)="hideDialog()" 
+            class="w-full sm:w-auto mb-2 sm:mb-0"
             [style]="{'background-color': '#000000', 'border-color': '#000000', 'color': '#FFFFFF'}" 
         />
         <p-button 
             label="Guardar" 
             icon="pi pi-check" 
             (onClick)="saveAuction()" 
+            class="w-full sm:w-auto"
             [style]="{'background-color': '#6334E3', 'border-color': '#6334E3'}" 
         />
       </div>
     </ng-template>
   </p-dialog>
 
-  <p-confirmDialog [style]="{ width: '450px' }" />
+  <p-confirmDialog [style]="{width: '95vw', maxWidth: '450px'}" />
 </div>
+
+<style>
+  /* Ocultar títulos de columnas en vista desktop (pantallas medianas y grandes) */
+  @media screen and (min-width: 769px) {
+    ::ng-deep .auction-table .p-datatable .p-datatable-tbody > tr > td .p-column-title {
+      display: none !important;
+    }
+  }
+  
+  /* Mostrar títulos en vista móvil */
+  @media screen and (max-width: 768px) {
+    /* Soporte para columnas en dispositivos móviles */
+    ::ng-deep .auction-table .p-datatable-responsive .p-datatable-tbody > tr > td {
+      display: block;
+      width: 100%;
+      text-align: left;
+      border: none;
+      padding: 0.5rem 1rem;
+    }
+    
+    ::ng-deep .auction-table .p-datatable-responsive .p-datatable-tbody > tr {
+      margin-bottom: 1rem;
+      border: 1px solid #e9ecef;
+      border-radius: 4px;
+    }
+    
+    /* Mostrar explícitamente los títulos en móvil */
+    ::ng-deep .auction-table .p-datatable-responsive .p-datatable-tbody > tr > td .p-column-title {
+      display: inline-block !important; 
+      font-weight: bold;
+      margin-right: 0.5rem;
+      min-width: 30%;
+      color: #6334E3;
+    }
+    
+    /* Ocultar encabezados de tabla en móviles */
+    ::ng-deep .auction-table .p-datatable-responsive .p-datatable-thead > tr > th {
+      display: none;
+    }
+    
+    /* Ajustar paginador en móviles */
+    ::ng-deep .auction-table .p-paginator {
+      flex-wrap: wrap;
+      justify-content: center;
+      padding: 0.5rem;
+    }
+    
+    ::ng-deep .auction-table .p-paginator-page-options {
+      margin-top: 0.5rem;
+      width: 100%;
+      display: flex;
+      justify-content: center;
+    }
+  }
+  
+  /* Estilos para inputs en dispositivos móviles */
+  @media screen and (max-width: 576px) {
+    ::ng-deep .p-fluid .p-inputtext,
+    ::ng-deep .p-fluid .p-button {
+      font-size: 14px;
+      padding: 0.5rem;
+    }
+    
+    ::ng-deep .p-dialog-content {
+      padding: 0.75rem !important;
+    }
+  }
+</style>

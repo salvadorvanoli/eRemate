@@ -1,9 +1,27 @@
-<div class="container">
-  
-  <div class="profile-section">
+<p-toast></p-toast>
+
+<div class="view-container">
+  <div class="info-selector-wrapper">
+    <app-select-info-type 
+      [defaultOption]="selectedInfoType" 
+      (optionChanged)="onInfoTypeChange($event)">
+    </app-select-info-type>
+  </div>
+
+  <!-- Información del perfil -->
+  <div *ngIf="selectedInfoType === 'profile'">
     <app-profile-info></app-profile-info>
+  </div>
+
+  <!-- Lotes pujados -->
+  <div *ngIf="selectedInfoType === 'bidded-lots'" class="bidded-lots-container">
+    <!-- Contenedor alineado para el título -->
+    <div class="title-container mx-auto" style="width: 1040px;">
+      <app-bold-subtitle text="Lotes Pujados"></app-bold-subtitle>
+    </div>
+    <app-table-lots></app-table-lots>
   </div>
   
 </div>
 
-<p-toast></p-toast>
+

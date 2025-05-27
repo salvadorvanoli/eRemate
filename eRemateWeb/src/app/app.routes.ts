@@ -11,6 +11,7 @@ import { NotFoundComponent } from './pages/not-found/not-found.component';
 import { CompleteProfileComponent } from './pages/complete-profile/complete-profile.component';
 import { ViewAuctionHouseProfileComponent } from './pages/view-auction-house-profile/view-auction-house-profile.component';
 import { ViewRegisteredUserProfileComponent } from './pages/view-registered-user-profile/view-registered-user-profile.component';
+import { ViewProfileComponent } from './pages/view-profile/view-profile.component';
 
 
 export const routes: Routes = [
@@ -25,6 +26,7 @@ export const routes: Routes = [
     { path: 'subasta/:id', component: AuctionComponent },
     { path: '404', component: NotFoundComponent },
 
+    { path: 'perfil', component: ViewProfileComponent },
     { path: 'perfil-casa', component: ViewAuctionHouseProfileComponent },
     { path: 'perfil-usuario', component: ViewRegisteredUserProfileComponent },
 

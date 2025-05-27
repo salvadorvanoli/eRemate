@@ -1,4 +1,4 @@
-<div class="table-container" style="width: 1040px; margin: 0 auto; margin-bottom: 40px;">
+<div class="table-container w-full max-w-full md:max-w-5xl mx-auto mb-8">
   <div *ngIf="loading" class="flex justify-content-center my-3">
     <p-progressSpinner strokeWidth="4" [style]="{'width': '50px', 'height': '50px'}" />
   </div>
@@ -17,19 +17,22 @@
     currentPageReportTemplate="Mostrando {first} a {last} de {totalRecords} elementos"
     [showCurrentPageReport]="products.length > 0"
     [loading]="loading"
-    styleClass="custom-paginator"
+    styleClass="custom-paginator p-datatable-sm p-datatable-gridlines"
+    [responsive]="true"
+    [resizableColumns]="true"
+    [scrollable]="true"
   >
     <ng-template pTemplate="caption">
-        <div class="flex items-center" style="gap: 10px;">
-            <p-iconfield>
+        <div class="flex flex-column md:flex-row md:justify-content-between md:align-items-center gap-2 p-2">
+            <p-iconfield class="w-full md:w-auto mb-2 md:mb-0">
                 <p-inputicon styleClass="pi pi-search" />
-                <input pInputText type="text" (input)="onFilterGlobal($event)" placeholder="Buscar..." />
+                <input pInputText type="text" class="w-full" (input)="onFilterGlobal($event)" placeholder="Buscar..." />
             </p-iconfield>
             
             <p-button 
                 label="Agregar Rematador" 
                 icon="pi pi-user-plus" 
-                class="mr-2" 
+                class="w-full md:w-auto"
                 (onClick)="openAssignDialog()" 
                 [style]="{'background-color': '#6334E3', 'border-color': '#6334E3'}" 
             />
@@ -37,26 +40,27 @@
     </ng-template>
     <ng-template pTemplate="header">
         <tr style="background-color: rgba(0, 0, 0, 0.04);">
-            <th style="width: 5%; background-color: rgba(0, 0, 0, 0.04);">
+            <th style="width: 5%; min-width: 3rem; background-color: rgba(0, 0, 0, 0.04);">
                 <p-tableHeaderCheckbox />
             </th>
-            <th *ngFor="let col of cols" [style.width]="'calc(84% / ' + cols.length + ')'" style="background-color: rgba(0, 0, 0, 0.04);">
+            <th *ngFor="let col of cols" [style]="{'background-color': 'rgba(0, 0, 0, 0.04)', 'min-width': '10rem'}" [ngStyle]="{'width': col || 'auto'}">
                 {{ col.header }}
             </th>
-            <th style="width: 11%; background-color: rgba(0, 0, 0, 0.04);">Acciones</th>
+            <th style="width: 11%; min-width: 6rem; background-color: rgba(0, 0, 0, 0.04);">Acciones</th>
         </tr>
     </ng-template>
     <ng-template pTemplate="body" let-item>
         <tr>
-            <td style="width: 5%">
+            <td style="width: 5%; min-width: 3rem;">
                 <p-tableCheckbox [value]="item" />
             </td>
             
-            <td [style.width]="'calc(84% / ' + cols.length + ')'" *ngFor="let col of cols">
+            <td *ngFor="let col of cols" [ngStyle]="{'width': col || 'auto', 'min-width': '10rem'}">
+                <span class="p-column-title">{{col.header}}</span>
                 {{ item[col.field] }}
             </td>
             
-            <td style="width: 11%">
+            <td style="width: 11%; min-width: 6rem;">
                 <div class="flex gap-2 justify-center">
                     <p-button icon="pi pi-trash" severity="danger" [rounded]="true" [outlined]="true" (click)="removeRematador(item)" pTooltip="Eliminar rematador" />
                 </div>
@@ -73,45 +77,47 @@
     </ng-template>
   </p-table>
   
-  <p-dialog [(visible)]="productDialog" [style]="{ width: '450px' }" [header]="getDialogHeader()" [modal]="true">
+  <p-dialog [(visible)]="productDialog" [style]="{width: '95vw', maxWidth: '450px'}" [header]="getDialogHeader()" [modal]="true">
     <ng-template pTemplate="content">
         <div class="flex flex-col gap-6">
-            <div>
+            <div class="field">
                 <label for="nombre" class="block font-bold mb-3">Nombre</label>
-                <input type="text" pInputText id="nombre" [(ngModel)]="product.nombre" required autofocus />
+                <input type="text" pInputText id="nombre" [(ngModel)]="product.nombre" required autofocus class="w-full" />
                 <small class="text-red-500" *ngIf="submitted && !product.nombre">Nombre es requerido.</small>
             </div>
-            <div>
+            <div class="field">
                 <label for="apellido" class="block font-bold mb-3">Apellido</label>
-                <input type="text" pInputText id="apellido" [(ngModel)]="product.apellido" required />
+                <input type="text" pInputText id="apellido" [(ngModel)]="product.apellido" required class="w-full" />
                 <small class="text-red-500" *ngIf="submitted && !product.apellido">Apellido es requerido.</small>
             </div>
-            <div>
+            <div class="field">
                 <label for="numeroMatricula" class="block font-bold mb-3">Número de Matrícula</label>
-                <input type="text" pInputText id="numeroMatricula" [(ngModel)]="product.numeroMatricula" />
+                <input type="text" pInputText id="numeroMatricula" [(ngModel)]="product.numeroMatricula" class="w-full" />
             </div>
-            <div>
+            <div class="field">
                 <label for="email" class="block font-bold mb-3">Email</label>
-                <input type="email" pInputText id="email" [(ngModel)]="product.email" />
+                <input type="email" pInputText id="email" [(ngModel)]="product.email" class="w-full" />
             </div>
-            <div>
+            <div class="field">
                 <label for="telefono" class="block font-bold mb-3">Teléfono</label>
-                <input type="text" pInputText id="telefono" [(ngModel)]="product.telefono" />
+                <input type="text" pInputText id="telefono" [(ngModel)]="product.telefono" class="w-full" />
             </div>
-            <div>
+            <div class="field">
                 <label for="direccionFiscal" class="block font-bold mb-3">Dirección Fiscal</label>
-                <textarea id="direccionFiscal" pTextarea [(ngModel)]="product.direccionFiscal" rows="3" cols="20"></textarea>
+                <textarea id="direccionFiscal" pTextarea [(ngModel)]="product.direccionFiscal" rows="3" class="w-full"></textarea>
             </div>
         </div>
     </ng-template>
 
     <ng-template pTemplate="footer">
-        <p-button label="Cancelar" icon="pi pi-times" text (click)="hideDialog()" />
-        <p-button label="Guardar" icon="pi pi-check" (click)="saveProduct()" />
+        <div class="flex flex-wrap justify-content-end gap-2">
+            <p-button label="Cancelar" icon="pi pi-times" text (click)="hideDialog()" />
+            <p-button label="Guardar" icon="pi pi-check" (click)="saveProduct()" />
+        </div>
     </ng-template>
   </p-dialog>
   
-  <p-dialog [(visible)]="assignDialog" [style]="{ width: '450px' }" header="Agregar Rematador" [modal]="true" [closable]="false">
+  <p-dialog [(visible)]="assignDialog" [style]="{width: '95vw', maxWidth: '450px'}" header="Agregar Rematador" [modal]="true" [closable]="false">
     <ng-template pTemplate="content">
         <!-- Spinner de carga durante la asignación -->
         <div *ngIf="loading" class="flex justify-content-center my-3">
@@ -119,9 +125,10 @@
         </div>
 
         <div class="flex flex-col gap-4">
-            <div>
+            <div class="field">
                 <label for="email" class="block font-bold mb-2">Email del Rematador</label>
                 <input type="email" pInputText id="email" [(ngModel)]="rematadorEmail" required autofocus 
+                       class="w-full"
                        [class.ng-invalid]="emailSubmitted && !rematadorEmail.trim()" 
                        [class.ng-dirty]="emailSubmitted && !rematadorEmail.trim()" />
                 <small class="text-red-500" *ngIf="emailSubmitted && !rematadorEmail?.trim()">El email es requerido.</small>
@@ -132,7 +139,7 @@
     </ng-template>
 
     <ng-template pTemplate="footer">
-        <div class="flex justify-content-end gap-2">
+        <div class="flex flex-wrap justify-content-end gap-2">
             <p-button 
                 label="Cancelar" 
                 icon="pi pi-times" 
@@ -150,7 +157,7 @@
     </ng-template>
   </p-dialog>
 
-  <p-confirmDialog [style]="{ width: '450px' }" />
+  <p-confirmDialog [style]="{width: '95vw', maxWidth: '450px'}" />
 </div>
 
 <style>
@@ -171,5 +178,20 @@
 
   ::ng-deep .custom-paginator .p-paginator .p-paginator-pages .p-paginator-page:hover {
     background-color: rgba(155, 133, 214, 0.1) !important;
+  }
+  
+  /* Estilos responsivos para tablas */
+  @media screen and (max-width: 768px) {
+    .p-datatable-responsive .p-datatable-tbody > tr > td .p-column-title {
+      display: block;
+      font-weight: bold;
+      margin-bottom: 0.5rem;
+    }
+    
+    /* Ajustar paginador en móviles */
+    ::ng-deep .p-paginator {
+      flex-wrap: wrap;
+      justify-content: center;
+    }
   }
 </style>

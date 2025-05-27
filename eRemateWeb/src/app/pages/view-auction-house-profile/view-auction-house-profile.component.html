@@ -1,7 +1,7 @@
 <p-toast></p-toast>
 
-<div class="view-container">
-  <div class="info-selector-wrapper">
+<div class="view-container p-2 md:p-4">
+  <div class="info-selector-wrapper w-full mb-4">
     <app-select-info-type 
       [defaultOption]="selectedInfoType" 
       (optionChanged)="onInfoTypeChanged($event)">
@@ -9,42 +9,43 @@
   </div>
 
   <!-- Información del perfil -->
-  <div *ngIf="selectedInfoType === 'profile'">
+  <div *ngIf="selectedInfoType === 'profile'" class="w-full">
     <app-profile-info></app-profile-info>
   </div>
 
   <!-- Rematadores -->
-  <div *ngIf="selectedInfoType === 'auctioneers'">
-    <div class="titulos">
-      Gestión de Rematadores
+  <div *ngIf="selectedInfoType === 'auctioneers'" class="w-full">
+    <div class="title-container mx-auto" style="width: 1040px;">
+      <app-bold-subtitle text="Gestión de Rematadores"></app-bold-subtitle>
     </div>
     <app-table></app-table>
   </div>
 
-  <!-- Subastas y Lotes -->
-  <div *ngIf="selectedInfoType === 'auctions'">
-    <div class="titulos">
-      Gestión de Subastas
+  <!-- Subastas -->
+  <div *ngIf="selectedInfoType === 'auctions'" class="w-full">
+    <div class="title-container mx-auto" style="width: 1040px;">
+      <app-bold-subtitle text="Gestión de Subastas"></app-bold-subtitle>
     </div>
     <app-table-auction (auctionSelected)="onAuctionSelected($event)"></app-table-auction>
 
-    <div class="titulos">
-      <span>Gestión de Lotes</span>
-      <span *ngIf="selectedAuctionId" class="subasta-seleccionada">
-        (Subasta seleccionada: #{{selectedAuctionId}})
-      </span>
+    <!-- Lotes -->
+    <div class="title-container mx-auto" style="width: 1040px; margin-top: 1.5rem;">
+      <div class="subtitle-container flex flex-wrap items-center gap-2">
+        <app-bold-subtitle text="Gestión de Lotes"></app-bold-subtitle>
+        <span *ngIf="selectedAuctionId" class="subasta-seleccionada text-sm md:text-base">
+          (Subasta seleccionada: #{{selectedAuctionId}})
+        </span>
+      </div>
     </div>
     <app-table-lots [auctionId]="selectedAuctionId"></app-table-lots>
   </div>
 
-  <!-- Panel de Estadísticas -->
-  <div *ngIf="selectedInfoType === 'statistics'">
-    <div class="titulos">
-      Panel de Estadísticas
+  <!-- Estadísticas -->
+  <div *ngIf="selectedInfoType === 'statistics'" class="w-full">
+    <div class="title-container mx-auto" style="width: 1040px;">
+      <app-bold-subtitle text="Panel de Estadísticas"></app-bold-subtitle>
     </div>
-    <div class="statistics-placeholder">
-      <p>Aquí se mostrarán las estadísticas de la casa de remates.</p>
-    </div>
+    <app-stats></app-stats>
   </div>
 </div>
 

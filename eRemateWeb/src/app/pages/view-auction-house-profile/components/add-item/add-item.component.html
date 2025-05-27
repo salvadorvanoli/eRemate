@@ -1,54 +1,48 @@
-<div class="flex flex-col gap-4">
-  <div>
-    <label for="articuloNombre" class="block font-bold mb-2">Nombre *</label>
-    <input 
-      type="text" 
-      pInputText 
-      id="articuloNombre" 
-      [(ngModel)]="articulo.nombre" 
-      required 
-      autofocus 
-      class="w-full"
-      (ngModelChange)="checkNombre($event)" 
-    />
-    <small class="text-red-500" *ngIf="submitted && !articulo.nombre?.trim()">
-      El nombre del artículo es requerido.
-    </small>
+<div class="p-fluid">
+  <div class="field">
+    <label for="nombre" class="block font-bold mb-2">Nombre <span class="text-red-500">*</span></label>
+    <input type="text" pInputText id="nombre" [(ngModel)]="articulo.nombre" required class="w-full" />
+    <small class="text-red-500" *ngIf="submitted && !articulo.nombre?.trim()">El nombre del artículo es obligatorio.</small>
   </div>
   
-  <div>
-    <label for="articuloEstado" class="block font-bold mb-2">Estado</label>
-    <input type="text" pInputText id="articuloEstado" [(ngModel)]="articulo.estado" class="w-full" />
+  <div class="field mt-3">
+    <label for="estado" class="block font-bold mb-2">Estado <span class="text-red-500">*</span></label>
+    <input type="text" pInputText id="estado" [(ngModel)]="articulo.estado" required class="w-full" 
+      placeholder="Ej: Nuevo, Usado, Refaccionado, etc." />
+    <small class="text-red-500" *ngIf="submitted && !articulo.estado?.trim()">El estado del artículo es obligatorio.</small>
   </div>
   
-  <div>
-    <label for="articuloEspecificaciones" class="block font-bold mb-2">Especificaciones Técnicas</label>
-    <textarea pInputTextarea id="articuloEspecificaciones" [(ngModel)]="articulo.especificacionesTecnicas" rows="4" class="w-full"></textarea>
+  <div class="field mt-3">
+    <label for="especificacionesTecnicas" class="block font-bold mb-2">Especificaciones Técnicas <span class="text-red-500">*</span></label>
+    <textarea pInputTextarea id="especificacionesTecnicas" [(ngModel)]="articulo.especificacionesTecnicas" 
+      rows="3" required class="w-full" placeholder="Detalle las características técnicas del artículo..."></textarea>
+    <small class="text-red-500" *ngIf="submitted && !articulo.especificacionesTecnicas?.trim()">Las especificaciones técnicas son obligatorias.</small>
   </div>
   
-  <div>
-    <label class="block font-bold mb-2">Imagen</label>
+  <div class="field mt-4">
+    <label class="block font-bold mb-2">Imagen (Opcional)</label>
     <p-fileUpload mode="basic" chooseLabel="Seleccionar Imagen" [auto]="true" 
                  (uploadHandler)="onUpload($event)" [customUpload]="true"
-                 accept="image/*" [maxFileSize]="1000000" />
+                 accept="image/*" [maxFileSize]="1000000" styleClass="w-full" />
     
-    <div *ngIf="imagenPrincipal" class="mt-3">
-      <img [src]="imagenPrincipal" alt="Vista previa" style="max-width: 100%; max-height: 200px;" />
+    <div *ngIf="imagenPrincipal" class="mt-3 text-center">
+      <img [src]="imagenPrincipal" alt="Vista previa" class="max-w-full h-auto max-h-48 border rounded shadow-sm" />
     </div>
   </div>
-</div>
 
-<div class="flex justify-content-end gap-2 mt-4">
-  <p-button 
-      label="Cancelar" 
-      icon="pi pi-times" 
-      (onClick)="onCancel()"
-      [style]="{'background-color': '#000000', 'border-color': '#000000', 'color': '#FFFFFF'}" 
-  />
-  <p-button 
-      label="Guardar" 
-      icon="pi pi-check" 
-      (onClick)="onSave()" 
-      [style]="{'background-color': '#6334E3', 'border-color': '#6334E3'}" 
-  />
+  <div class="flex justify-end mt-4 gap-2">
+    <p-button 
+        label="Cancelar" 
+        icon="pi pi-times" 
+        (onClick)="onCancel()" 
+        class="p-button-outlined"
+        [style]="{'background-color': '#ffffff', 'border-color': '#6c757d', 'color': '#6c757d'}"
+    ></p-button>
+    <p-button 
+        label="Guardar" 
+        icon="pi pi-check" 
+        (onClick)="onSave()"
+        [style]="{'background-color': '#6334E3', 'border-color': '#6334E3'}"
+    ></p-button>
+  </div>
 </div>

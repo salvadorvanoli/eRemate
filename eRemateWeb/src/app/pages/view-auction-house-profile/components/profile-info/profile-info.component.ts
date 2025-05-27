@@ -10,6 +10,7 @@ import { ProgressSpinnerModule } from 'primeng/progressspinner';
 import { finalize } from 'rxjs';
 import { MessageService } from 'primeng/api';
 import { ToastModule } from 'primeng/toast';
+import { SecurityService } from '../../../../core/services/security.service';
 
 
 interface CasaProfile {
@@ -50,21 +51,60 @@ export class ProfileInfoComponent implements OnInit {
   loading: boolean = false;
   
   
-  private userId: number = 1;
-  private casaId: number = 1;
+
+  private userId: number | null = null;
+  private casaId: number | null = null;
 
   constructor(
     private userService: UserService,
     private auctionHouseService: AuctionHouseService,
-    private messageService: MessageService
+    private messageService: MessageService,
+    private securityService: SecurityService 
   ) { }
 
   ngOnInit(): void {
-    this.loadProfileData();
+
+    const currentUser = this.securityService.actualUser;
+    
+    if (currentUser) { 
+      this.userId = currentUser.id;
+      this.casaId = currentUser.id; 
+      console.log('ID de usuario/casa obtenido:', this.userId);
+      this.loadProfileData();
+    } else {
+      console.warn('No se pudo obtener el ID del usuario, verificando API');
+      this.securityService.getActualUser().subscribe({
+        next: (user) => {
+          if (user) {
+            this.userId = user.id;
+            this.casaId = user.id;
+            console.log('ID de usuario/casa obtenido de API:', this.userId);
+          } else {
+            console.warn('No se pudo obtener el usuario');
+            this.messageService.add({
+              severity: 'warning',
+              summary: 'Advertencia',
+              detail: 'No se pudo identificar el usuario',
+              life: 3000
+            });
+          }
+          this.loadProfileData();
+        },
+        error: (error) => {
+          console.error('Error al obtener usuario:', error);
+          this.loadProfileData(); 
+        }
+      });
+    }
   }
 
   loadProfileData(): void {
     this.loading = true;
+    
+    if (!this.userId) {
+      console.warn('Usando ID de desarrollo porque no se pudo obtener el usuario');
+      this.userId = 1;
+    }
     
     console.log('Cargando datos del perfil para el usuario con ID:', this.userId);
     
@@ -74,11 +114,11 @@ export class ProfileInfoComponent implements OnInit {
         next: (response) => {
           console.log('Datos del perfil recibidos:', response);
           
-          // Verificar que existan los objetos casa y usuario en la respuesta
+          
           if (response && response.casa && response.usuario) {
             const { casa, usuario } = response;
             
-            // Mapear los datos combinando casa y usuario
+            
             this.profile = {
               nombreLegal: casa.nombreLegal || '',
               identificacionFiscal: casa.identificacionFiscal || '',
@@ -107,7 +147,7 @@ export class ProfileInfoComponent implements OnInit {
             life: 5000
           });
           
-          // Usar datos de desarrollo para continuar trabajando
+          
           this.profile = {
             nombreLegal: 'Casa de Remates Ejemplo S.A.',
             identificacionFiscal: '30-12345678-9',
@@ -127,12 +167,18 @@ export class ProfileInfoComponent implements OnInit {
   updateProfile(): void {
     this.loading = true;
     
-    // Preparar los datos para actualizar - SOLO los campos aceptados por el backend
+    if (!this.casaId) {
+      console.warn('Usando ID de desarrollo porque no se pudo obtener la casa');
+      this.casaId = 1; 
+    }
+    
+   
     const casaData = {
       nombreLegal: this.profile.nombreLegal,
       identificacionFiscal: this.profile.identificacionFiscal,
-      domicilio: this.profile.domicilio
-      // No incluir datos de usuario ni otros campos para evitar error de "unprocesable content"
+      domicilio: this.profile.domicilio,
+      email: this.profile.email,          
+      telefono: this.profile.telefono    
     };
     
     console.log('📤 Enviando datos de actualización:', casaData);

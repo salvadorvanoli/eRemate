@@ -9,8 +9,8 @@ import { ProgressSpinnerModule } from 'primeng/progressspinner';
 import { finalize } from 'rxjs';
 import { MessageService } from 'primeng/api';
 import { ToastModule } from 'primeng/toast';
+import { SecurityService } from '../../../../core/services/security.service'; 
 
-// Interfaz para el perfil de usuario registrado
 interface UserProfile {
   nombre: string;
   direccion: string;
@@ -45,19 +45,48 @@ export class ProfileInfoComponent implements OnInit {
   };
   loading: boolean = false;
   
-  // ID hardcodeado para desarrollo
-  private userId: number = 1;
+  private userId: number | null = null;
 
   constructor(
     private userService: UserService,
-    private messageService: MessageService
+    private messageService: MessageService,
+    private securityService: SecurityService 
   ) { }
 
   ngOnInit(): void {
-    this.loadProfileData();
+    const currentUser = this.securityService.actualUser;
+    
+    if (currentUser) {
+      this.userId = currentUser.id;
+      console.log('ID de usuario obtenido del SecurityService:', this.userId);
+      this.loadProfileData();
+    } else {
+      this.securityService.getActualUser().subscribe({
+        next: (user) => {
+          if (user) {
+            this.userId = user.id;
+            console.log('ID de usuario obtenido de la API:', this.userId);
+          } else {
+            console.warn('No se pudo obtener el usuario');
+            this.userId = 1; 
+          }
+          this.loadProfileData();
+        },
+        error: (error) => {
+          console.error('Error al obtener usuario:', error);
+          this.userId = 1; 
+          this.loadProfileData();
+        }
+      });
+    }
   }
 
   loadProfileData(): void {
+    if (!this.userId) {
+      console.warn('No se ha establecido el ID del usuario, usando valor por defecto');
+      this.userId = 1;
+    }
+    
     this.loading = true;
     
     console.log('Cargando datos del perfil para el usuario con ID:', this.userId);
@@ -68,11 +97,9 @@ export class ProfileInfoComponent implements OnInit {
         next: (response) => {
           console.log('Datos del perfil recibidos:', response);
           
-          // Verificar que exista el objeto usuario en la respuesta
           if (response && response.usuario) {
             const { usuario } = response;
             
-            // Mapear los datos del usuario
             this.profile = {
               nombre: usuario.nombre || '',
               direccion: usuario.direccion || '',
@@ -100,7 +127,6 @@ export class ProfileInfoComponent implements OnInit {
             life: 5000
           });
           
-          // Usar datos de desarrollo para continuar trabajando
           this.profile = {
             nombre: 'Usuario Ejemplo',
             direccion: 'Av. Ejemplo 1234, Ciudad',
@@ -113,13 +139,16 @@ export class ProfileInfoComponent implements OnInit {
 
   onImageUpload(event: any): void {
     console.log('Imagen seleccionada:', event);
-    // No hacer nada con la imagen seleccionada
   }
   
   updateProfile(): void {
+    if (!this.userId) {
+      console.warn('No se ha establecido el ID del usuario, usando valor por defecto');
+      this.userId = 1;
+    }
+    
     this.loading = true;
     
-    // Preparar los datos para actualizar
     const userData = {
       nombre: this.profile.nombre,
       direccion: this.profile.direccion,
@@ -127,7 +156,7 @@ export class ProfileInfoComponent implements OnInit {
       email: this.profile.email
     };
     
-    console.log('📤 Enviando datos de actualización:', userData);
+    console.log(`📤 Enviando datos de actualización para usuario ID ${this.userId}:`, userData);
     
     
     setTimeout(() => {
@@ -142,29 +171,5 @@ export class ProfileInfoComponent implements OnInit {
     }, 1000);
     
 
-    /*
-    this.userService.updateUserProfile(this.userId, userData)
-      .pipe(finalize(() => this.loading = false))
-      .subscribe({
-        next: (response) => {
-          console.log('✅ Perfil actualizado con éxito:', response);
-          this.messageService.add({
-            severity: 'success',
-            summary: 'Éxito',
-            detail: 'Información del usuario actualizada correctamente',
-            life: 3000
-          });
-        },
-        error: (error) => {
-          console.error('❌ Error al actualizar perfil:', error);
-          this.messageService.add({
-            severity: 'error',
-            summary: 'Error',
-            detail: 'No se pudo actualizar la información del usuario',
-            life: 3000
-          });
-        }
-      });
-    */
   }
 }
