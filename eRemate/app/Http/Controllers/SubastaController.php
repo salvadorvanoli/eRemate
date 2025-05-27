@@ -261,4 +261,41 @@ class SubastaController extends Controller
             ], 500);
         }
     }
+
+     public function realizarPuja(Request $request, $id)
+    {
+        try {
+            $validator = Validator::make($request->all(), [
+                'monto' => 'required|numeric|min:0',
+                'lote_id' => 'required|exists:lotes,id'
+            ]);
+
+            if ($validator->fails()) {
+                return response()->json([
+                    'error' => 'Error de validación',
+                    'details' => $validator->errors()
+                ], 422);
+            }
+            
+            $data = $validator->validated();
+            
+            $puja = $this->subastaService->realizarPuja($data, $id);
+
+            if ($puja instanceof JsonResponse) {
+                return $puja;
+            }
+
+            return response()->json([
+                'success' => true,
+                'data' => $puja,
+                'message' => 'Puja realizada correctamente'
+            ], 200);
+        
+        } catch (\Exception $e) {
+            return response()->json([
+                'success' => false,
+                'message' => 'Error al realizar la puja: ' . $e->getMessage()
+            ], 500);
+        }
+    }
 }

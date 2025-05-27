@@ -21,8 +21,6 @@ class LoteController extends Controller
         try {
             $validator = Validator::make($request->all(), [
                 'subasta_id' => 'required|exists:subastas,id',
-                'compra_id' => 'nullable|exists:compras,id',
-                'ganador_id' => 'nullable|exists:usuarios_registrados,id',
                 'nombre' => 'required|string|max:255',
                 'descripcion' => 'required|string',
                 'valorBase' => 'required|numeric|min:0',
@@ -89,8 +87,6 @@ class LoteController extends Controller
         try {
             $data = $request->validate([
                 'subasta_id' => 'sometimes|required|exists:subastas,id',
-                'compra_id' => 'sometimes|nullable|exists:compras,id',
-                'ganador_id' => 'sometimes|nullable|exists:usuarios_registrados,id',
                 'nombre' => 'sometimes|required|string|max:255',
                 'descripcion' => 'sometimes|required|string',
                 'valorBase' => 'sometimes|required|numeric|min:0',

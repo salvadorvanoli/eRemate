@@ -31,11 +31,21 @@ class ChatController extends Controller
     public function show($id)
     {
         try {
-            return response()->json($this->chatService->buscarPorId($id));
+            $chat = $this->chatService->buscarPorId($id);
+            return response()->json([
+                'success' => true,
+                'data' => $chat
+            ]);
         } catch (ModelNotFoundException $e) {
-            return response()->json(['error' => 'Chat no encontrado'], 404);
+            return response()->json([
+                'success' => false,
+                'error' => 'Chat no encontrado'
+            ], 404);
         } catch (Exception $e) {
-            return response()->json(['error' => 'Error al mostrar el chat: ' . $e->getMessage()], 500);
+            return response()->json([
+                'success' => false,
+                'error' => 'Error al mostrar el chat: ' . $e->getMessage()
+            ], 500);
         }
     }
 

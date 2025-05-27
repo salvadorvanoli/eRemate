@@ -1,0 +1,210 @@
+<div class="lot-product-details max-w-full overflow-hidden">
+  <!-- Info lote -->
+  <div class="lot-header mb-6 lg:mb-8">
+    <h2 class="text-2xl sm:text-3xl lg:text-4xl font-bold text-gray-800 mb-4">
+      Lote #{{ lote?.id }}
+    </h2>
+    <div class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4 lg:gap-6">
+      <div class="bg-blue-50 p-4 rounded-lg border border-blue-100">
+        <p class="text-xs uppercase tracking-wider font-semibold text-blue-600 mb-1">Valor Base</p>
+        <p class="text-lg lg:text-xl font-bold text-blue-900">${{ lote?.valorBase | number:'1.2-2' }}</p>
+      </div>
+      <div class="bg-green-50 p-4 rounded-lg border border-green-100">
+        <p class="text-xs uppercase tracking-wider font-semibold text-green-600 mb-1">Puja Mínima</p>
+        <p class="text-lg lg:text-xl font-bold text-green-900">${{ lote?.pujaMinima | number:'1.2-2' }}</p>
+      </div>
+      <div class="bg-purple-50 p-4 rounded-lg border border-purple-100">
+        <p class="text-xs uppercase tracking-wider font-semibold text-purple-600 mb-1">Disponibilidad</p>
+        <p class="text-sm lg:text-base font-medium text-purple-900 break-words">{{ lote?.disponibilidad }}</p>
+      </div>      <div class="bg-orange-50 p-4 rounded-lg border border-orange-100">
+        <p class="text-xs uppercase tracking-wider font-semibold text-orange-600 mb-1">Condiciones</p>
+        <p class="text-sm lg:text-base font-medium text-orange-900 break-words">{{ lote?.condicionesDeEntrega }}</p>
+      </div>
+    </div>
+  </div>
+
+  <!-- cargando  -->
+  @if (loading) {
+    <div class="flex justify-center items-center py-8">
+      <div class="animate-spin rounded-full h-8 w-8 border-b-2 border-blue-600"></div>
+      <span class="ml-2 text-gray-600">Cargando artículos...</span>
+    </div>
+  }
+
+  <!-- Error  -->
+  @if (error && !loading) {
+    <div class="bg-red-50 border border-red-200 rounded-lg p-4 text-center">
+      <p class="text-red-700">Error al cargar los artículos del lote</p>
+      <button 
+        (click)="loadArticulos()" 
+        class="mt-2 px-4 py-2 bg-red-600 text-white rounded hover:bg-red-700 transition-colors">
+        Reintentar
+      </button>
+    </div>
+  }
+
+  <!-- Sin articulos -->
+  @if (!loading && !error && articulos.length === 0) {
+    <div class="bg-gray-50 border border-gray-200 rounded-lg p-6 text-center">
+      <p class="text-gray-600">No hay artículos disponibles en este lote</p>
+    </div>
+  }
+
+  <!-- articulos -->
+  @if (!loading && !error && articulos.length > 0) {
+    <div class="articles-section">
+      <h3 class="text-lg font-semibold text-gray-800 mb-4">
+        Artículos del Lote ({{ articulos.length }})
+      </h3>      <!-- navegacion de articulos -->
+      @if (articulos.length > 1) {
+        <div class="articles-navigation mb-6 lg:mb-8">
+          <h3 class="text-sm font-semibold text-gray-700 mb-3 flex items-center">
+            <svg class="w-4 h-4 mr-2 text-gray-500" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+              <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 6h16M4 10h16M4 14h16M4 18h16"></path>
+            </svg>
+            Seleccionar Artículo ({{ articulos.length }} disponibles)
+          </h3>
+          <div class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-3">
+            @for (articulo of articulos; track articulo.id) {
+              <button
+                (click)="selectArticulo(articulo)"
+                class="p-3 lg:p-4 rounded-lg border transition-all duration-200 hover:shadow-md focus:outline-none focus:ring-2 focus:ring-blue-500 focus:ring-opacity-50"
+                [class.bg-blue-600]="articuloSeleccionado?.id === articulo.id"
+                [class.text-white]="articuloSeleccionado?.id === articulo.id"
+                [class.border-blue-600]="articuloSeleccionado?.id === articulo.id"
+                [class.shadow-lg]="articuloSeleccionado?.id === articulo.id"
+                [class.bg-white]="articuloSeleccionado?.id !== articulo.id"
+                [class.text-gray-700]="articuloSeleccionado?.id !== articulo.id"
+                [class.border-gray-200]="articuloSeleccionado?.id !== articulo.id"
+                [class.hover:bg-gray-50]="articuloSeleccionado?.id !== articulo.id"
+                [class.hover:border-gray-300]="articuloSeleccionado?.id !== articulo.id">
+                <div class="text-left">
+                  <p class="font-medium text-sm lg:text-base truncate" [title]="articulo.nombre">
+                    {{ articulo.nombre }}
+                  </p>
+                  <p class="text-xs opacity-75 mt-1">ID: {{ articulo.id }}</p>
+                </div>
+              </button>
+            }
+          </div>
+        </div>
+      }<!-- detalles del articulo -->
+      @if (articuloSeleccionado) {
+        <div class="selected-article">
+          <div class="grid grid-cols-1 xl:grid-cols-2 gap-6 lg:gap-8">
+              <!-- imagenes -->
+            <div class="article-images order-1 xl:order-1">
+              <div class="w-full">
+                @if (getArticleImages().length > 1) {
+                  <div class="mb-4">
+                    <h5 class="text-sm font-semibold text-gray-700 mb-2 flex items-center justify-between">
+                      <span class="flex items-center">
+                        <svg class="w-4 h-4 mr-2 text-gray-500" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                          <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 16l4.586-4.586a2 2 0 012.828 0L16 16m-2-2l1.586-1.586a2 2 0 012.828 0L20 14m-6-6h.01M6 2h12a2 2 0 012 2v12a2 2 0 01-2 2H6a2 2 0 01-2-2V4a2 2 0 012-2z"></path>
+                        </svg>
+                        Imágenes del Artículo
+                      </span>
+                      <span class="inline-flex items-center px-2 py-1 bg-blue-100 text-blue-800 rounded-full text-xs font-medium">
+                        {{ getArticleImages().length }} fotos
+                      </span>
+                    </h5>
+                  </div>
+                  <app-dynamic-carousel
+                    [items]="getArticleImages()"
+                    [showPrice]="false"
+                    [showLink]="false"
+                    [itemsPerPage]="1"
+                    [scrollsPerScroll]="1"
+                    [getTitle]="getImageTitle"
+                    [getImageUrl]="getCarouselImageUrl"
+                    class="w-full">
+                  </app-dynamic-carousel>
+                } @else {
+                  <div class="w-full h-64 sm:h-72 md:h-80 lg:h-96 bg-gray-200 rounded-lg overflow-hidden shadow-md">
+                    <img 
+                      [src]="getArticleImages()[0]" 
+                      alt="{{ articuloSeleccionado.nombre }}"
+                      class="w-full h-full object-contain hover:scale-105 transition-transform duration-300">
+                  </div>
+                }
+              </div>
+            </div>
+
+            <!-- info del articulo -->
+            <div class="article-info order-2 xl:order-2 space-y-6">
+              <div class="header-section">
+                <h4 class="text-xl sm:text-2xl lg:text-3xl font-bold text-gray-800 mb-3 leading-tight">
+                  {{ articuloSeleccionado.nombre }}
+                </h4>                <div class="flex flex-wrap gap-2 mb-4">
+                  <span class="inline-flex items-center px-3 py-1 bg-green-100 text-green-800 rounded-full text-sm font-medium">
+                    <div class="w-2 h-2 bg-green-400 rounded-full mr-2"></div>
+                    {{ articuloSeleccionado.estado }}
+                  </span>
+                  @if (articuloSeleccionado.categoria?.nombre) {
+                    <span class="inline-flex items-center px-3 py-1 bg-blue-100 text-blue-800 rounded-full text-sm">
+                      <svg class="w-3 h-3 mr-1" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M7 7h.01M7 3h5c.512 0 1.024.195 1.414.586l7 7a2 2 0 010 2.828l-7 7a2 2 0 01-2.828 0l-7-7A1.994 1.994 0 013 12V7a4 4 0 014-4z"></path>
+                      </svg>
+                      {{ articuloSeleccionado.categoria?.nombre }}
+                    </span>
+                  }
+                </div>
+              </div>
+
+              @if (getArticleSpecifications().length > 0) {
+                <div class="specifications-section">
+                  <h5 class="text-lg font-semibold text-gray-800 mb-4 flex items-center">
+                    <svg class="w-5 h-5 mr-2 text-gray-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                      <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 12h6m-6 4h6m2 5H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z"></path>
+                    </svg>
+                    Especificaciones Técnicas
+                  </h5>
+                  
+                  <div class="bg-gradient-to-br from-gray-50 to-gray-100 rounded-xl p-4 lg:p-6 border border-gray-200 shadow-sm">
+                    <div class="grid grid-cols-1 sm:grid-cols-2 gap-3 lg:gap-4">
+                      @for (spec of getArticleSpecifications(); track $index) {
+                        <div class="spec-item bg-white rounded-lg p-3 lg:p-4 border border-gray-150 hover:shadow-sm transition-shadow duration-200">
+                          <div class="flex flex-col space-y-1">
+                            <span class="text-xs uppercase tracking-wider font-semibold text-gray-500 leading-tight">
+                              {{ spec.label }}
+                            </span>
+                            <span class="text-sm lg:text-base text-gray-800 font-medium break-words">
+                              {{ spec.value }}
+                            </span>
+                          </div>
+                        </div>
+                      }
+                    </div>
+                  </div>
+                </div>
+              }
+
+              <div class="info-section">
+                <h5 class="text-lg font-semibold text-gray-800 mb-3 flex items-center">
+                  <svg class="w-5 h-5 mr-2 text-gray-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M13 16h-1v-4h-1m1-4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z"></path>
+                  </svg>
+                  Información del Artículo
+                </h5>
+                
+                <div class="bg-gray-50 rounded-lg p-4 border border-gray-200">
+                  <div class="grid grid-cols-1 sm:grid-cols-2 gap-3 text-sm">
+                    <div class="flex justify-between">
+                      <span class="font-medium text-gray-700">ID del Artículo:</span>
+                      <span class="text-gray-900 font-mono">#{{ articuloSeleccionado.id }}</span>
+                    </div>                    @if (articuloSeleccionado.categoria?.nombre) {
+                      <div class="flex justify-between">
+                        <span class="font-medium text-gray-700">Categoría:</span>
+                        <span class="text-gray-900">{{ articuloSeleccionado.categoria?.nombre }}</span>
+                      </div>
+                    }
+                  </div>
+                </div>
+              </div>
+            </div>
+          </div>
+        </div>
+      }
+    </div>
+  }
+</div>

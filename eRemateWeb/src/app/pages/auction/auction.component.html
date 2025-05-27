@@ -2,6 +2,7 @@
     [item]="subasta"
     [item2]="loteSeleccionado"
     [getImageUrl]="getImageUrl"
+    [youtubeUrl]="youtubeUrl"
     (onPuja)="verPuja()">
 </app-auction-info>
 
@@ -29,12 +30,12 @@
 }
 
 <!-- Modal de Detalles -->
-<app-modal [visible]="showDetallesModal" (closed)="onModalClose()">
-    <div modal-title>
-        Detalles del Lote
-    </div>
+<app-modal [visible]="showDetallesModal" [size]="'large'" (closed)="onModalClose()">
+
     <div>
-        <p>Contenido del modal de detalles</p>
+        @if (loteSeleccionadoModal) {
+            <app-lot-product-details [lote]="loteSeleccionadoModal"></app-lot-product-details>
+        }
     </div>
     <div modal-action>
         <app-primary-button 
@@ -45,12 +46,11 @@
 </app-modal>
 
 <!-- Modal de Puja -->
-<app-modal [visible]="showPujaModal" (closed)="onModalClose()">
-    <div modal-title>
-        Realizar Puja
-    </div>
+<app-modal [visible]="showPujaModal" [size]="'extra-large'" (closed)="onModalClose()">
     <div>
-        <p>Contenido del modal de puja</p>
+        @if (subasta) {
+            <app-live-bidding [subasta]="subasta"></app-live-bidding>
+        }
     </div>
     <div modal-action>
         <app-primary-button 

@@ -46,12 +46,31 @@ class LoteService implements LoteServiceInterface
         return response()->json($usuario);
     }
 
+    private function buscarLotePorId(int $id)
+    {
+        $lote = Lote::find($id);
+
+        if (!$lote) {
+            return response()->json([
+                'success' => false,
+                'error' => 'Lote no encontrado'
+            ], 404);
+        }
+
+        return $lote;
+    }
+
     public function crearLote(array $data): mixed
     {
-        // Elimina la búsqueda por nombre
-        // $lote = Lote::where('subasta_id', $data['subasta_id'])
-        //     ->where('nombre', $data['nombre'])
-        //     ->first();
+        $usuario = $this->validarUsuario();
+
+        if (!$usuario instanceof Usuario) {
+            return $usuario;
+        }
+
+        $lote = Lote::where('subasta_id', $data['subasta_id'])
+            ->where('nombre', $data['nombre'])
+            ->first();
 
         // if ($lote) {
         //     return response()->json(
@@ -78,16 +97,7 @@ class LoteService implements LoteServiceInterface
 
     public function obtenerLote(int $id)
     {
-        $lote = Lote::find($id)->first();
-
-        if (!$lote) {
-            return response()->json([
-                'success' => false,
-                'message' => 'Lote no encontrado'
-            ], 404);
-        }
-
-        return $lote;
+        return $this->buscarLotePorId($id);
     }
 
     public function actualizarLote(int $id, array $data): mixed
@@ -98,12 +108,9 @@ class LoteService implements LoteServiceInterface
         //     return $usuario;
         // }
 
-        $lote = Lote::find($id)->first();
-        if (!$lote) {
-            return response()->json([
-                'success' => false,
-                'error' => 'Lote no encontrado'
-            ], 404);
+        $lote = $this->buscarLotePorId($id);
+        if (!$lote instanceof Lote) {
+            return $lote;
         }
 
         // $chequeo = $this->verificarUsuario($usuario, $lote->subasta);
@@ -118,6 +125,18 @@ class LoteService implements LoteServiceInterface
             ], 400);
         }
 
+        if (isset($data['subasta_id'])) {
+            unset($data['subasta_id']);
+        }
+
+        if (isset($data['ganador_id'])) {
+            unset($data['ganador_id']);
+        }
+
+        if (isset($data['compra_id'])) {
+            unset($data['compra_id']);
+        }
+
         $lote->update($data);
 
         return Lote::find($id)->first();
@@ -125,20 +144,16 @@ class LoteService implements LoteServiceInterface
 
     public function obtenerArticulos(int $id): mixed
     {
-        // Incorrecto: find() ya devuelve un único modelo, no una colección
         $lote = Lote::find($id)->first();
-        
-        // Debería ser:
-        $lote = Lote::find($id);
 
-        if (!$lote) {
+        if ($lote->articulos()->count() === 0) {
             return response()->json([
                 'success' => false,
-                'error' => 'Lote no encontrado'
+                'message' => 'No hay artículos para este lote'
             ], 404);
         }
 
-        return $lote->articulos()->get();
+        return $lote->articulos()->with('categoria')->get();
     }
 
     public function agregarArticulo(int $id, int $articuloId): mixed
@@ -148,13 +163,9 @@ class LoteService implements LoteServiceInterface
         //     return $usuario;
         // }
         
-        $lote = Lote::find($id)->first();
-
-        if (!$lote) {
-            return response()->json([
-                'success' => false,
-                'error' => 'Lote no encontrado'
-            ], 404);
+        $lote = $this->buscarLotePorId($id);
+        if (!$lote instanceof Lote) {
+            return $lote;
         }
 
         // $chequeo = $this->verificarUsuario($usuario, $lote->subasta);
@@ -172,7 +183,12 @@ class LoteService implements LoteServiceInterface
 
     public function removerArticulo(int $id, int $articuloId): mixed
     {
-        $lote = Lote::find($id);
+        $usuario = $this->validarUsuario();
+        if (!$usuario instanceof Usuario) {
+            return $usuario;
+        }
+
+        $lote = Lote::find($id)->first();
 
         if (!$lote) {
             return response()->json([

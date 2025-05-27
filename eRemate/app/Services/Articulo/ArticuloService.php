@@ -49,6 +49,16 @@ class ArticuloService implements ArticuloServiceInterface
 
         return $usuario;
     }
+
+    private function buscarArticuloPorId(int $id)
+    {
+        $articulo = $this->buscarArticuloPorId($id);
+        if (!$articulo instanceof Articulo) {
+            return $articulo;
+        }
+
+        return $articulo;
+    }
     
     public function crearArticulo(array $data): mixed
     {
@@ -60,6 +70,7 @@ class ArticuloService implements ArticuloServiceInterface
 
         return Articulo::create([
             'lote_id' => $data['lote_id'],
+            'nombre' => $data['nombre'],
             'imagenes' => $data['imagenes'] ?? [],
             'especificacionesTecnicas' => $data['especificacionesTecnicas'] ?? '', // Cambiado de [] a ''
             'estado' => $data['estado'],
@@ -89,12 +100,9 @@ class ArticuloService implements ArticuloServiceInterface
             return $usuario;
         }
 
-        $articulo = Articulo::find($id)->first();
-        if (!$articulo) {
-            return response()->json([
-                'success' => false,
-                'error' => 'Artículo no encontrado'
-            ], 404);
+        $articulo = $this->buscarArticuloPorId($id);
+        if (!$articulo instanceof Articulo) {
+            return $articulo;
         }
 
         $chequeo = $this->verificarUsuario($usuario, $articulo->lote->subasta);
@@ -107,6 +115,10 @@ class ArticuloService implements ArticuloServiceInterface
                 'success' => false,
                 'error' => 'No se puede modificar un artículo que pertenece a un lote con compra asociada'
             ], 400);
+        }
+
+        if (isset($data['lote_id'])) {
+            unset($data['lote_id']);
         }
 
         $articulo->update($data);

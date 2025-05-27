@@ -1,9 +1,8 @@
-<div class="card flex justify-center">
-    <p-dialog 
+<div class="card flex justify-center">    <p-dialog 
         [(visible)]="visible"
         [modal]="true"
         [closable]="false"
-        [style]="{ width: '466px', maxWidth: '600px' }"
+        [style]="{ width: modalWidth, maxWidth: modalMaxWidth }"
         [contentStyle]="{ padding: '0' }"
         [baseZIndex]="10000"
         [draggable]="false"

@@ -19,6 +19,8 @@ use App\Http\Controllers\CompraController;
 use App\Http\Controllers\CalificacionController;
 use App\Http\Controllers\UsuarioRegistradoController;
 use App\Http\Controllers\ContactoController;
+use App\Http\Controllers\PayPalController;
+use App\Http\Controllers\PaymentRequestController;
 
 // Rutas de Chat
 Route::get('chats', [ChatController::class, 'index']);
@@ -123,6 +125,7 @@ Route::prefix('auction-house')->group(function () {
     Route::post('/{id}/auctioneers/assign', [CasaDeRematesController::class, 'asignarRematador']);
 });
 
+
 Route::prefix('auction')->group(function () {
     Route::post('/', [SubastaController::class, 'crearSubasta']);
     Route::put('/{id}', [SubastaController::class, 'actualizarSubasta']);
@@ -137,6 +140,20 @@ Route::prefix('auction')->group(function () {
     */
 });
 
+    Route::prefix('auction')->group(function () {
+        Route::post('/', [SubastaController::class, 'crearSubasta']);
+        Route::put('/{id}', [SubastaController::class, 'actualizarSubasta']);
+        Route::post('/{id}/start', [SubastaController::class, 'iniciarSubasta']);
+        Route::post('/{id}/end', [SubastaController::class, 'cerrarSubasta']);
+        Route::post('/{id}/bid', [SubastaController::class, 'realizarPuja']);
+        Route::get('/{id}/bids', [SubastaController::class, 'obtenerPujas']);
+        /* Resto de endpoints de subasta
+        Route::post('/{id}/auto-bid', [SubastaController::class, 'realizarPujaAutomatica']);
+        Route::post('/{id}/live-stream', [SubastaController::class, 'obtenerTransmisionEnVivo']);
+        */
+    });
+
+
 Route::prefix('lot')->group(function () {
     Route::post('/', [LoteController::class, 'crearLote']);
     Route::put('/{id}', [LoteController::class, 'actualizarLote']);
@@ -147,6 +164,22 @@ Route::prefix('lot')->group(function () {
 Route::prefix('item')->group(function () {
     Route::post('/', [ArticuloController::class, 'crearArticulo']);
     Route::put('/{id}', [ArticuloController::class, 'actualizarArticulo']);
+});
+
+// Rutas de PayPal
+Route::prefix('paypal')->group(function () {
+    // Rutas públicas
+    Route::get('/verify-credentials', [PayPalController::class, 'verificarCredenciales']);
+    Route::get('/success', [PayPalController::class, 'pagoExitoso'])->name('paypal.success');
+    Route::get('/cancel', [PayPalController::class, 'pagoCancelado'])->name('paypal.cancel');
+    
+    // Rutas que requieren autenticación
+    Route::middleware('auth:sanctum')->group(function () {
+        Route::post('/create-payment', [PayPalController::class, 'crearPago']);
+        Route::post('/create-payment-from-chat', [PayPalController::class, 'crearPagoDesdeChatId']);
+        Route::post('/execute-payment', [PayPalController::class, 'ejecutarPago']);
+        Route::get('/payment-status/{paymentId}', [PayPalController::class, 'obtenerEstadoPago']);
+    });
 });
 
 Route::prefix('auction-house')->group(function () {
@@ -179,6 +212,15 @@ Route::post('/contacto', [ContactoController::class, 'enviarFormulario']);
 
 Route::delete('lot/{id}', [LoteController::class, 'eliminarLote']);
 Route::delete('auction/{id}', [SubastaController::class, 'eliminarSubasta']);
+
+// Rutas de Solicitudes de Pago
+Route::prefix('payment-requests')->middleware('auth:sanctum')->group(function () {
+    Route::get('/', [PaymentRequestController::class, 'index']);
+    Route::post('/', [PaymentRequestController::class, 'store']);
+    Route::get('/{id}', [PaymentRequestController::class, 'show']);
+    Route::put('/{id}/status', [PaymentRequestController::class, 'updateStatus']);
+    Route::get('/user/{userId}', [PaymentRequestController::class, 'getByUser']);
+});
 
 // Google OAuth routes
 Route::post('/auth/google', [GoogleAuthController::class, 'googleAuth']);

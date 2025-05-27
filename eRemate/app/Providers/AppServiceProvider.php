@@ -29,6 +29,8 @@ use App\Services\Usuario\UsuarioServiceInterface;
 use App\Services\Usuario\UsuarioService;
 use App\Services\UsuarioRegistrado\UsuarioRegistradoServiceInterface;
 use App\Services\UsuarioRegistrado\UsuarioRegistradoService;
+use App\Services\PayPal\PayPalServiceInterface;
+use App\Services\PayPal\PayPalService;
 
 class AppServiceProvider extends ServiceProvider
 {
@@ -113,6 +115,12 @@ class AppServiceProvider extends ServiceProvider
         $this->app->bind(
             UsuarioRegistradoServiceInterface::class,
             UsuarioRegistradoService::class
+        );
+
+        //Servicio para PayPal
+        $this->app->bind(
+            PayPalServiceInterface::class,
+            PayPalService::class
         );
     }
 
