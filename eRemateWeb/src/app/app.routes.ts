@@ -9,6 +9,9 @@ import { ContactUsComponent } from './pages/contact-us/contact-us.component';
 import { AuctionComponent } from './pages/auction/auction.component';
 import { NotFoundComponent } from './pages/not-found/not-found.component';
 import { CompleteProfileComponent } from './pages/complete-profile/complete-profile.component';
+import { ViewAuctionHouseProfileComponent } from './pages/view-auction-house-profile/view-auction-house-profile.component';
+import { ViewRegisteredUserProfileComponent } from './pages/view-registered-user-profile/view-registered-user-profile.component';
+
 
 export const routes: Routes = [
     { path: 'inicio', component: HomeComponent },    { path: 'registro', component: RegisterComponent },
@@ -18,8 +21,13 @@ export const routes: Routes = [
     { path: 'catalogo', component: CatalogComponent },
     { path: 'producto/:id', component: ViewProductComponent },
     { path: 'contacto', component: ContactUsComponent },
+
     { path: 'subasta/:id', component: AuctionComponent },
     { path: '404', component: NotFoundComponent },
+
+    { path: 'perfil-casa', component: ViewAuctionHouseProfileComponent },
+    { path: 'perfil-usuario', component: ViewRegisteredUserProfileComponent },
+
     { path: '', redirectTo: '/inicio', pathMatch: 'full' },
     { path: '**', redirectTo: '/404' }
 
