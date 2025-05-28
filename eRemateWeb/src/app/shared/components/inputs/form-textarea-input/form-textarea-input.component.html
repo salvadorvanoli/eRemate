@@ -1,0 +1,15 @@
+<div class="textarea-container">
+    <label class="textarea-label">{{ placeholder }}</label>
+    <p-editor 
+        [ngModel]="text()"
+        (onTextChange)="onTextChange($event)"
+        [style]="{'height':'200px'}"
+        [placeholder]="placeholder"
+        [modules]="editorModules"
+        class="w-full custom-editor">
+    </p-editor>
+</div>
+
+@if (showErrorMessage()) {
+    <p-message class="w-full" severity="error" variant="simple" size="small">{{ errorMessage }}</p-message>
+}

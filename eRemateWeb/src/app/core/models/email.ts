@@ -3,6 +3,7 @@ export interface EmailRequest {
     from: string;
     subject: string;
     body: string;
+    isHtml?: boolean;
 }
 
 export interface EmailResponse {
