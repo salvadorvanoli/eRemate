@@ -156,9 +156,9 @@ export class CompleteProfileComponent implements OnInit, OnDestroy {
     });
     this.router.navigate(['/register']);
   }
+  
   ngOnDestroy() {
     if (!this.profileCompletionSuccessful && this.images.length > 0) {
-      console.log('🧹 Complete-profile: Limpiando imágenes al abandonar vista sin completar perfil');
       this.cleanupPreviousImages();
     }
   }

@@ -34,7 +34,9 @@ export class ViewProfileComponent implements OnInit {
 
   ngOnInit(): void {
     this.checkUserType();
-  }  checkUserType(): void {
+  } 
+  
+  checkUserType(): void {
     this.securityService.getActualUser().subscribe({
       next: (user: any) => {
         if (user) {
