@@ -33,9 +33,7 @@ export const routes: Routes = [
     { path: 'catalogo', component: CatalogComponent },
     { path: 'producto/:id', component: ViewProductComponent },
     { path: 'contacto', component: ContactUsComponent },
-
     { path: 'subasta/:id', component: AuctionComponent },
-
     {
         path: 'chat-detail/:id',
         component: ChatDetailComponent,
@@ -52,15 +50,10 @@ export const routes: Routes = [
         canActivate: [AuthGuard]
     },
     { path: 'pago/cancelado', redirectTo: '/pago', pathMatch: 'full' },
-
-
-    { path: '404', component: NotFoundComponent },
-
     { path: 'perfil', component: ViewProfileComponent },
     { path: 'perfil-casa', component: ViewAuctionHouseProfileComponent },
     { path: 'perfil-usuario', component: ViewRegisteredUserProfileComponent },
-
     { path: '', redirectTo: '/inicio', pathMatch: 'full' },
-    { path: '**', redirectTo: '/inicio' }
-
+    { path: '404', component: NotFoundComponent },
+    { path: '**', redirectTo: '/404' }
 ];
