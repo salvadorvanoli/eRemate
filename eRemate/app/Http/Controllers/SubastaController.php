@@ -45,7 +45,7 @@ class SubastaController extends Controller
             if (!$subasta instanceof Subasta) {
                 return $subasta;
             }
-            
+
             return response()->json([
                 'success' => true,
                 'message' => 'Subasta creada exitosamente',
@@ -151,6 +151,68 @@ class SubastaController extends Controller
             return response()->json([
                 'success' => false,
                 'message' => 'Error al obtener subastas: ' . $e->getMessage()
+            ], 500);
+        }
+    }
+
+    public function obtenerSubastasOrdenadas()
+    {
+        try {
+            $subastas = $this->subastaService->obtenerSubastasOrdenadas();
+
+            if ($subastas instanceof JsonResponse) {
+                return $subastas;
+            }
+
+            return response()->json([
+                'success' => true,
+                'data' => $subastas,
+                'message' => 'Subastas ordenadas obtenidas correctamente'
+            ], 200);
+        
+        } catch (\Exception $e) {
+            return response()->json([
+                'success' => false,
+                'message' => 'Error al obtener subastas ordenadas: ' . $e->getMessage()
+            ], 500);
+        }
+    }
+
+    public function obtenerSubastasFiltradas(Request $request)
+    {
+        try {
+            $validator = Validator::make($request->all(), [
+                'cerrada' => 'sometimes|nullable|boolean',
+                'categoria' => 'sometimes|nullable|numeric|exists:categorias,id',
+                'ubicacion' => 'sometimes|nullable|string',
+                'fechaCierreLimite' => 'sometimes|nullable|date'
+            ]);
+
+            if ($validator->fails()) {
+                return response()->json([
+                    'error' => 'Error de validación',
+                    'details' => $validator->errors()
+                ], 422);
+            }
+            
+            $data = $validator->validated();
+
+            $subastas = $this->subastaService->obtenerSubastasFiltradas($data);
+
+            if ($subastas instanceof JsonResponse) {
+                return $subastas;
+            }
+
+            return response()->json([
+                'success' => true,
+                'data' => $subastas,
+                'message' => 'Subastas filtradas obtenidas correctamente'
+            ], 200);
+        
+        } catch (\Exception $e) {
+            return response()->json([
+                'success' => false,
+                'message' => 'Error al obtener subastas filtradas: ' . $e->getMessage()
             ], 500);
         }
     }
@@ -283,6 +345,66 @@ class SubastaController extends Controller
             return response()->json([
                 'success' => false,
                 'message' => 'Error al realizar la puja: ' . $e->getMessage()
+            ], 500);
+        }
+    }
+
+    public function realizarPujaAutomatica(Request $request, $id)
+    {
+        try {
+            $validator = Validator::make($request->all(), [
+                'presupuesto' => 'required|numeric|min:0',
+                'lote_id' => 'required|exists:lotes,id'
+            ]);
+
+            if ($validator->fails()) {
+                return response()->json([
+                    'error' => 'Error de validación',
+                    'details' => $validator->errors()
+                ], 422);
+            }
+            
+            $data = $validator->validated();
+            
+            $pujaAutomatica = $this->subastaService->realizarPujaAutomatica($data, $id);
+
+            if ($pujaAutomatica instanceof JsonResponse) {
+                return $pujaAutomatica;
+            }
+
+            return response()->json([
+                'success' => true,
+                'data' => $pujaAutomatica,
+                'message' => 'Puja automática creada correctamente'
+            ], 200);
+        
+        } catch (\Exception $e) {
+            return response()->json([
+                'success' => false,
+                'message' => 'Error al crear la puja automática: ' . $e->getMessage()
+            ], 500);
+        }
+    }
+
+    public function obtenerTransmisionEnVivo(int $id)
+    {
+        try {
+            $urlTransmision = $this->subastaService->obtenerTransmisionEnVivo($id);
+
+            if ($urlTransmision instanceof JsonResponse) {
+                return $urlTransmision;
+            }
+
+            return response()->json([
+                'success' => true,
+                'data' => $urlTransmision,
+                'message' => 'Enlace de la transmisión obtenido correctamente'
+            ], 200);
+        
+        } catch (\Exception $e) {
+            return response()->json([
+                'success' => false,
+                'message' => 'Error al obtener enlace de la transmisión: ' . $e->getMessage()
             ], 500);
         }
     }

@@ -2,6 +2,7 @@
 
 
 namespace App\Services\Subasta;
+use App\Models\PujaAutomatica;
 use App\Models\Subasta;
 use App\Models\CasaDeRemates;
 use App\Models\Usuario;
@@ -10,6 +11,7 @@ use App\Enums\EstadoSubasta;
 use App\Models\UsuarioRegistrado;
 use App\Models\Lote;
 use App\Events\NuevaPujaEvent;
+use App\Jobs\ProcesarPujasAutomaticas;
 use Illuminate\Support\Facades\Auth;
 use Illuminate\Http\JsonResponse;
 
@@ -201,6 +203,63 @@ class SubastaService implements SubastaServiceInterface
         return $subastas;
     }
 
+    public function obtenerSubastasOrdenadas() 
+    {
+        $subastas = Subasta::whereIn('estado', [EstadoSubasta::PENDIENTE, EstadoSubasta::INICIADA])
+            ->orderBy('fechaInicio', 'asc')
+            ->get();
+
+        if ($subastas->isEmpty()) {
+            return response()->json([
+                'success' => false,
+                'message' => 'No hay subastas disponibles'
+            ], 404);
+        }
+
+        return $subastas;
+    }
+
+    public function obtenerSubastasFiltradas(array $data)
+    {
+        $query = Subasta::query();
+
+        $cerrada = $data['cerrada'] ?? false;
+        $categoria = $data['categoria'] ?? null;
+        $ubicacion = $data['ubicacion'] ?? null;
+        $fechaCierreLimite = $data['fechaCierreLimite'] ?? null;
+
+        if ($cerrada) {
+            $query->where('estado', EstadoSubasta::CERRADA);
+        } else {
+            $query->whereIn('estado', [EstadoSubasta::PENDIENTE, EstadoSubasta::INICIADA]);
+        }
+
+        if ($categoria) {
+            $query->whereHas('lotes.articulos', function($q) use ($categoria) {
+                $q->where('categoria_id', $categoria); 
+            });
+        }
+
+        if ($ubicacion) {
+            $query->where('ubicacion', $ubicacion);
+        }
+
+        if ($fechaCierreLimite) {
+            $query->where('fechaCierre', '<=', $fechaCierreLimite);
+        }
+
+        $subastas = $query->get();
+
+        if ($subastas->isEmpty()) {
+            return response()->json([
+                'success' => false,
+                'message' => 'No hay subastas disponibles con los filtros aplicados'
+            ], 404);
+        }
+
+        return $subastas;
+    }
+
     public function obtenerSubastasOrdenadasPorCierre($pagina = 1, $cantidad = 10)
     {
         $subastas = Subasta::where('fechaCierre', '>', now())
@@ -251,8 +310,8 @@ class SubastaService implements SubastaServiceInterface
 
         $fechaActual = now();
         $fechaInicio = $subasta->fechaInicio;
-        $diferencia = $fechaInicio->diffInMinutes($fechaActual);
-        if ($diferencia > 30) {
+        $diferencia = $fechaInicio->diffInMinutes($fechaActual, true);
+        if ($diferencia > 15) {
             return response()->json([
                 'success' => false,
                 'message' => 'No se puede iniciar la subasta a más de 15 minutos de su fecha de inicio'
@@ -270,6 +329,8 @@ class SubastaService implements SubastaServiceInterface
         $subasta->estado = EstadoSubasta::INICIADA;
         $subasta->loteActual_id = $primerLote->id;
         $subasta->save();
+
+        $this->iniciarProcesoDeAutomatizacion($subasta, $primerLote);
 
         return response()->json([
             'success' => true,
@@ -297,22 +358,50 @@ class SubastaService implements SubastaServiceInterface
             ], 422);
         }
 
-        $lotes = $subasta->lotes;
-        foreach ($lotes as $lote) {
-            if ($lote->ganador === null) {
-                return response()->json([
-                    'success' => false,
-                    'message' => 'No se puede cerrar la subasta porque hay lotes que no han sido subastados'
-                ], 422);
-            }
+        $loteActual = $subasta->loteActual;
+        if (!$loteActual) {
+            return response()->json([
+                'success' => false,
+                'message' => 'No hay un lote siendo subastado actualmente'
+            ], 404);
+        }
+        if ($loteActual->fechaUltimaPuja === null) {
+            return response()->json([
+                'success' => false,
+                'message' => 'No se puede cerrar la subasta porque no se han realizado pujas en el lote actual'
+            ], 422);
         }
 
-        $subasta->estado = EstadoSubasta::CERRADA;
-        $subasta->save();
+        $loteActual->update([
+            'ganador_id' => $loteActual->pujas()->latest()->first()->usuarioRegistrado_id
+        ]);
+
+        $lotesSinGanador = $subasta->lotes()->where('ganador_id', null)->count();
+
+        if ($lotesSinGanador === 0) {
+            $subasta->update([
+                'estado' => EstadoSubasta::CERRADA,
+                'loteActual_id' => null
+            ]);
+
+            return response()->json([
+                'success' => true,
+                'message' => 'Subasta cerrada correctamente',
+                'data' => $subasta
+            ]);
+        }
+
+        $nuevoLoteActual = $subasta->lotes()->where('ganador_id', null)->first();
+
+        $subasta->update([
+            'loteActual_id' => $nuevoLoteActual->id
+        ]);
+
+        $this->iniciarProcesoDeAutomatizacion($subasta, $nuevoLoteActual);
 
         return response()->json([
             'success' => true,
-            'message' => 'Subasta cerrada correctamente',
+            'message' => 'Lote subastado correctamente',
             'data' => $subasta
         ]);
     }
@@ -353,10 +442,36 @@ class SubastaService implements SubastaServiceInterface
 
         $loteActual = $subasta->lotes()->find($loteActual_id);
 
-        if ($puja['monto'] <= ($loteActual->oferta + $loteActual->pujaMinima)) {
+        $ultimaPuja = $loteActual->pujas()->latest()->first();
+        if ($ultimaPuja && $ultimaPuja->usuarioRegistrado_id === $usuario->id) {
             return response()->json([
                 'success' => false,
-                'message' => 'La puja debe ser mayor a la oferta actual más la puja mínima'
+                'message' => 'No puedes realizar una puja inmediatamente después de tu última puja'
+            ], 422);
+        }
+
+        $fechaUltimaPuja = $loteActual->fechaUltimaPuja ?? null;
+        $tiempoMinimoPujas = 3;
+        
+        if ($fechaUltimaPuja && now()->diffInSeconds($fechaUltimaPuja, true) < $tiempoMinimoPujas) {
+            return response()->json([
+                'success' => false,
+                'message' => "Debe esperar {$tiempoMinimoPujas} segundos entre pujas"
+            ], 429);
+        }
+
+        $montoMinimo = null;
+
+        if ($loteActual->oferta === 0) {
+            $montoMinimo = $loteActual->valorBase + $loteActual->pujaMinima;
+        } else {
+            $montoMinimo = $loteActual->oferta + $loteActual->pujaMinima;
+        }
+
+        if ($puja['monto'] < $montoMinimo) {
+            return response()->json([
+                'success' => false,
+                'message' => 'La puja debe ser de al menos $'.$montoMinimo
             ], 422);
         }
 
@@ -372,16 +487,21 @@ class SubastaService implements SubastaServiceInterface
             'usuarioRegistrado_id' => $usuario->id
         ]);
 
-        $pujaData = [
+        $loteActual->update([
+            'oferta' => $puja['monto'],
+            'fechaUltimaPuja' => now()
+        ]);
+
+        $nuevaPujaData = [
             'id' => $pujaCreada->id,
             'monto' => $pujaCreada->monto,
             'lote_id' => $loteActual->id,
             'lote_nombre' => $loteActual->nombre,
+            'subasta_id' => $subasta->id,
             'usuario_id' => $pujaCreada->usuarioRegistrado_id
         ];
 
-        // Disparar evento para WebSockets
-        event(new NuevaPujaEvent($pujaData, $subasta->id));
+        event(new NuevaPujaEvent($nuevaPujaData));
 
         return response()->json([
             'success' => true,
@@ -409,15 +529,76 @@ class SubastaService implements SubastaServiceInterface
             ], 404);
         }
 
-        return $loteActual->pujas;
+        return $loteActual->pujas()->get();
     }
 
-    public function realizarPujaAutomatica(int $id)
+    public function realizarPujaAutomatica(array $pujaAutomatica, int $id)
     {
-        
+        $usuario = $this->validarUsuario();
+        if (!$usuario instanceof Usuario) {
+            return $usuario;
+        }
+
+        if ($usuario->tipo !== 'registrado') {
+            return response()->json([
+                'success' => false,
+                'message' => 'Solo los usuarios registrados pueden crear pujas automáticas'
+            ], 422);
+        }
+
+        $subasta = $this->buscarSubastaPorId($id);
+        if (!$subasta instanceof Subasta) {
+            return $subasta;
+        }
+
+        if ($subasta->estado !== EstadoSubasta::PENDIENTE) {
+            return response()->json([
+                'success' => false,
+                'message' => 'Solo se pueden crear pujas automáticas en subastas pendientes'
+            ], 422);
+        }
+
+        $lote = $subasta->lotes()->find($pujaAutomatica['lote_id']);
+        if (!$lote) {
+            return response()->json([
+                'success' => false,
+                'message' => 'Lote no encontrado en esta subasta'
+            ], 404);
+        }
+
+        $presupuestoMinimo = $lote->valorBase + $lote->pujaMinima;
+
+        if ($pujaAutomatica['presupuesto'] < $presupuestoMinimo) {
+            return response()->json([
+                'success' => false,
+                'message' => 'El presupuesto debe ser de al menos $'.$presupuestoMinimo
+            ], 422);
+        }
+
+        $pujaAutomaticaRepetida = PujaAutomatica::where('lote_id', $lote->id)
+            ->where('usuarioRegistrado_id', $usuario->id)
+            ->first();
+
+        if ($pujaAutomaticaRepetida) {
+            return response()->json([
+                'success' => false,
+                'message' => 'Ya existe una puja automática para este lote y usuario'
+            ], 422);
+        }
+
+        PujaAutomatica::create([
+            'presupuesto' => $pujaAutomatica['presupuesto'],
+            'lote_id' => $lote->id,
+            'usuarioRegistrado_id' => $usuario->id
+        ]);
+
+        return response()->json([
+            'success' => true,
+            'message' => 'Puja automática creada correctamente'
+        ]);
     }
     
-    public function obtenerTransmisionEnVivo(int $id)
+    public function obtenerTransmisionEnVivo(int $id): mixed
     {
         $subasta = Subasta::find($id);
 
@@ -429,5 +610,99 @@ class SubastaService implements SubastaServiceInterface
         }
 
         return $subasta->urlTransmision;
+    }
+
+    public function iniciarProcesoDeAutomatizacion(Subasta $subasta, Lote $lote)
+    {
+        $pujasAutomaticas = PujaAutomatica::where('lote_id', $lote->id)->get();
+        
+        if ($pujasAutomaticas->isEmpty()) {
+            return;
+        }
+        
+        $pujasAutomaticasArray = $pujasAutomaticas->map(function ($pa) {
+            return [
+                'id' => $pa->id,
+                'presupuesto' => $pa->presupuesto,
+                'lote_id' => $pa->lote_id,
+                'usuarioRegistrado_id' => $pa->usuarioRegistrado_id
+            ];
+        })->toArray();
+        
+        ProcesarPujasAutomaticas::dispatch($subasta, $lote, $pujasAutomaticasArray)
+            ->delay(now()->addSeconds(3));
+    }
+
+    public function realizarPujaInterna(array $puja, int $subastaId, int $usuarioId)
+    {
+        $usuario = Usuario::find($usuarioId);
+        if (!$usuario || $usuario->tipo !== 'registrado') {
+            return response()->json([
+                'success' => false,
+                'message' => 'Usuario no válido para realizar pujas automáticas'
+            ], 422);
+        }
+
+        $subasta = $this->buscarSubastaPorId($subastaId);
+        if (!$subasta instanceof Subasta) {
+            return $subasta;
+        }
+
+        if ($subasta->estado !== EstadoSubasta::INICIADA) {
+            return response()->json([
+                'success' => false,
+                'message' => 'La subasta no está en curso'
+            ], 422);
+        }
+
+        $loteActual = $subasta->lotes()->find($subasta->loteActual_id);
+        if (!$loteActual || $loteActual->id !== $puja['lote_id']) {
+            return response()->json([
+                'success' => false,
+                'message' => 'El lote no es el que se está subastando actualmente'
+            ], 422);
+        }
+
+        $fechaUltimaPuja = $loteActual->fechaUltimaPuja ?? null;
+        $tiempoMinimoPujas = 3;
+        
+        if ($fechaUltimaPuja && now()->diffInSeconds($fechaUltimaPuja, true) < $tiempoMinimoPujas) {
+            return response()->json([
+                'success' => false,
+                'message' => "Debe esperar {$tiempoMinimoPujas} segundos entre pujas"
+            ], 429);
+        }
+
+        $ultimaPuja = $loteActual->pujas()->latest()->first();
+        if ($ultimaPuja && $ultimaPuja->usuarioRegistrado_id === $usuario->id) {
+            return response()->json([
+                'success' => false,
+                'message' => 'Este usuario ya realizó la última puja'
+            ], 422);
+        }
+
+        // Crear la puja
+        $pujaCreada = $loteActual->pujas()->create([
+            'monto' => $puja['monto'],
+            'usuarioRegistrado_id' => $usuario->id
+        ]);
+
+        $loteActual->update([
+            'oferta' => $puja['monto'],
+            'fechaUltimaPuja' => now()
+        ]);
+
+        $nuevaPujaData = [
+            'id' => $pujaCreada->id,
+            'monto' => $pujaCreada->monto,
+            'lote_id' => $loteActual->id,
+            'lote_nombre' => $loteActual->nombre,
+            'subasta_id' => $subasta->id,
+            'usuario_id' => $pujaCreada->usuarioRegistrado_id
+        ];
+
+        event(new NuevaPujaEvent($nuevaPujaData));
+
+        return $pujaCreada;
     }
 }

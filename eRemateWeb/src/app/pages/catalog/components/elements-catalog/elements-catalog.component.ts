@@ -1,53 +1,47 @@
 import { Component, EventEmitter, Input, Output } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { DataView } from 'primeng/dataview';
-import { SelectButton } from 'primeng/selectbutton';
 import { FormsModule } from "@angular/forms";
 import { DropdownModule } from 'primeng/dropdown';
-import { SelectItem } from 'primeng/api';
 import { SearchBarComponent } from '../../../../shared/components/inputs/search-bar/search-bar.component';
-import { ProductRowComponent } from "../product-row/product-row.component";
-import { ProductCardComponent } from "../product-card/product-card.component";
-import { Producto } from '../../../../core/models/producto';
+import { ElementRowComponent } from "../element-row/element-row.component";
+import { FormSelectInputComponent } from '../../../../shared/components/inputs/form-select-input/form-select-input.component';
 
 @Component({
-  selector: 'app-products-catalog',
+  selector: 'app-elements-catalog',
   standalone: true,
   imports: [
     CommonModule,
     DataView,
-    SelectButton,
     FormsModule,
-    DropdownModule,
+    FormSelectInputComponent,
     SearchBarComponent,
-    ProductRowComponent,
-    ProductCardComponent
+    ElementRowComponent
 ],
-  templateUrl: './products-catalog.component.html',
-  styleUrl: './products-catalog.component.scss'
+  templateUrl: './elements-catalog.component.html',
+  styleUrl: './elements-catalog.component.scss'
 })
-export class ProductsCatalogComponent {
-
-  // Attributes for layout
-  layout: 'list' | 'grid' = 'grid';
-  options = ['list', 'grid'];
+export class ElementsCatalogComponent {
   
-  // Attributes for pagination
-  rows: number = 6;
+  rows: number = 10;
   first: number = 0;
-  rowsPerPageOptions: number[] = [6, 12, 18];
+  rowsPerPageOptions: number[] = [10, 20, 30];
 
-  // Attributes for sorting
-  sortOptions: SelectItem[] = [
+  sortByTerminationOptions: { label: string, value: any }[] = [
     { label: 'Precio ascendente', value: '!precio' },
     { label: 'Precio descendente', value: 'precio' },
   ];
   sortOrder!: number;
   sortField!: string;
 
-  @Input() products!: Producto[];
+  @Input() elements!: any[];
+  @Input() dataType: 'item' | 'auction' = 'item';
 
   @Output() searchTextChange = new EventEmitter<string>();
+
+  ngOnInit() {
+
+  }
 
   onPageChange(event: any) {
     this.first = event.first;

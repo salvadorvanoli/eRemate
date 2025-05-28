@@ -117,10 +117,8 @@ Route::middleware('auth:sanctum')->group(function () {
         Route::post('/{id}/end', [SubastaController::class, 'cerrarSubasta']);
         Route::post('/{id}/bid', [SubastaController::class, 'realizarPuja']);
         Route::get('/{id}/bids', [SubastaController::class, 'obtenerPujas']);
-        /* Resto de endpoints de subasta
         Route::post('/{id}/auto-bid', [SubastaController::class, 'realizarPujaAutomatica']);
         Route::post('/{id}/live-stream', [SubastaController::class, 'obtenerTransmisionEnVivo']);
-        */
     });
 
     Route::prefix('lot')->group(function () {
@@ -144,6 +142,8 @@ Route::prefix('auction-house')->group(function () {
 
 Route::prefix('auction')->group(function () {
     Route::get('/', [SubastaController::class, 'obtenerSubastas']);
+    Route::get('/ordered', [SubastaController::class, 'obtenerSubastasOrdenadas']);
+    Route::get('/filtered', [SubastaController::class, 'obtenerSubastasFiltradas']);
     Route::get('/{id}', [SubastaController::class, 'obtenerSubasta']);
     Route::get('/{id}/lots', [SubastaController::class, 'obtenerLotes']);
 

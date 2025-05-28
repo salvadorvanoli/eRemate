@@ -1,64 +1,67 @@
-import { Component } from '@angular/core';
-import { CategoryTreeComponent } from '../../shared/components/category-tree/category-tree.component';
-import { ProductsCatalogComponent } from './components/products-catalog/products-catalog.component';
+import { Component, Input } from '@angular/core';
+import { ElementsCatalogComponent } from './components/elements-catalog/elements-catalog.component';
 import { MessageComponent } from '../../shared/components/message/message.component';
 import { ProductService } from '../../core/services/product.service';
-import { Producto } from '../../core/models/producto';
+import { Articulo } from '../../core/models/articulo';
+import { Subasta } from '../../core/models/subasta';
 
 @Component({
   selector: 'app-catalog',
   standalone: true,
   imports: [
-    CategoryTreeComponent,
-    ProductsCatalogComponent,
+    ElementsCatalogComponent,
     MessageComponent
   ],
   templateUrl: './catalog.component.html',
   styleUrl: './catalog.component.scss'
 })
-export class CatalogComponent {
+export class CatalogComponent<T extends { id: number }> {
 
-  products!: Producto[];
-  filteredProducts: Producto[] = [];
-  selectedCategoriesProducts: number[] = [];
-  searchText: string = '';
-
-  constructor(
-    private productService: ProductService
-  ) {}
+  elements: T[] = [];
+  @Input() dataType: 'item' | 'auction' = 'item';
+  @Input() closedSelected: boolean = false;
+  @Input() selectedCategory: number | null = null;
+  @Input() selectedLocation: string | null = null;
+  @Input() searchText: string = '';
+  @Input() service: any;
 
   ngOnInit() {
-    this.productService.getAll().subscribe((data) => {
-      this.products = data;
-      this.filteredProducts = data;
+    if (this.service && this.elements.length === 0) {
+      this.service.getAll().subscribe((data: T[]) => {
+        this.elements = data;
+      });
+    }
+  }
+
+  filterElements() {
+    this.service.getFiltered(
+      this.closedSelected,
+      this.selectedCategory,
+      this.selectedLocation,
+      this.searchText
+    ).subscribe((data: T[]) => {
+      this.elements = data;
     });
   }
 
-  filterProducts() {
-    if (this.selectedCategoriesProducts.length > 0) {
-      this.filteredProducts = this.products.filter(product =>
-        this.selectedCategoriesProducts.some(productId => productId === product.id)
-      );
-    } else {
-      this.filteredProducts = this.products;
-    }
-
-    if (this.searchText) {
-      this.filteredProducts = this.filteredProducts.filter(product =>
-        product.nombre.toLowerCase().includes(this.searchText.toLowerCase()) ||
-        product.descripcion.toLocaleLowerCase().includes(this.searchText.toLowerCase())
-      );
-    }
+  onClosedCheck(closed: boolean) {
+    this.closedSelected = closed;
+    this.filterElements();
   }
 
-  onCategorySelection(categoriesProducts: number[]) {
-    this.selectedCategoriesProducts = categoriesProducts;
-    this.filterProducts();
+  onCategorySelection(category: number) {
+    this.selectedCategory = category;
+    this.filterElements();
+  }
+
+  onLocationSelection(location: string) {
+    this.selectedLocation = location;
+    this.filterElements();
   }
 
   onSearchTextChange(searchText: string) {
     this.searchText = searchText;
-    this.filterProducts();
+    this.filterElements();
   }
 
 }

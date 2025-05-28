@@ -18,8 +18,13 @@ class Lote extends Model
         'valorBase',
         'pujaMinima',
         'oferta',
+        'fechaUltimaPuja',
         'disponibilidad',
         'condicionesDeEntrega'
+    ];
+
+    protected $casts = [
+        'fechaUltimaPuja' => 'datetime'
     ];
 
     public function subasta()

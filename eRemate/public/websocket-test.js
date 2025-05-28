@@ -23,7 +23,7 @@ document.addEventListener('DOMContentLoaded', function() {
   // Variables globales
   let pusher = null;
   let channel = null;
-  let userToken = "1|dtGm4ngXJLfTknstjH67dszIFExA11MgPCabMDE31a4c094e"; // Reemplazar con el token de usuario real
+  let userToken = "1|F5FVTwJh2gErjDMVAHAgIbBmPLPWhp2m86XvVMP673dacb2b"; // Reemplazar con el token de usuario real
 
   // Estado inicial
   updateStatus('Desconectado', false);

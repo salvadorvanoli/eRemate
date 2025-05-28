@@ -18,7 +18,6 @@ class Subasta extends Model
         'urlTransmision',
         'tipoSubasta',
         'estado',
-        'pujaHabilitada',
         'fechaInicio',
         'fechaCierre',
         'ubicacion'
@@ -26,7 +25,6 @@ class Subasta extends Model
 
     protected $casts = [
         'mensajes' => 'array',
-        'pujaHabilitada' => 'boolean',
         'fechaInicio' => 'datetime',
         'fechaCierre' => 'datetime',
         'estado' => EstadoSubasta::class,

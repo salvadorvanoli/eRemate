@@ -18,6 +18,7 @@ return new class extends Migration
             $table->float('valorBase');
             $table->float('pujaMinima');
             $table->float('oferta')->default(0);
+            $table->timestamp('fechaUltimaPuja')->nullable()->default(null);
             $table->string('disponibilidad');
             $table->string('condicionesDeEntrega');
         });

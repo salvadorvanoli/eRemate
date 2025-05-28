@@ -3,7 +3,8 @@ import { HomeComponent } from './pages/home/home.component';
 import { RegisterComponent } from './pages/register/register.component';
 import { LoginComponent } from './pages/login/login.component';
 import { ControlPanelComponent } from './pages/control-panel/control-panel.component';
-import { CatalogComponent } from './pages/catalog/catalog.component';
+import { ItemsCatalogComponent } from './pages/items-catalog/items-catalog.component';
+import { AuctionsCatalogComponent } from './pages/auctions-catalog/auctions-catalog.component';
 import { ViewProductComponent } from './pages/view-product/view-product.component';
 import { ContactUsComponent } from './pages/contact-us/contact-us.component';
 import { AuctionComponent } from './pages/auction/auction.component';
@@ -15,7 +16,8 @@ export const routes: Routes = [
     { path: 'completar-perfil', component: CompleteProfileComponent },
     { path: 'inicio-sesion', component: LoginComponent },
     { path: 'panel', component: ControlPanelComponent},
-    { path: 'catalogo', component: CatalogComponent },
+    { path: 'articulo', component: ItemsCatalogComponent },
+    { path: 'subasta', component: AuctionsCatalogComponent },
     { path: 'producto/:id', component: ViewProductComponent },
     { path: 'contacto', component: ContactUsComponent },
     { path: 'subasta/:id', component: AuctionComponent },
