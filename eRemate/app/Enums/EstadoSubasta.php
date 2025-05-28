@@ -10,7 +10,6 @@ enum EstadoSubasta: string
     case CANCELADA = 'cancelada';
     case INICIADA = 'iniciada';
     case CERRADA = 'cerrada';
-    case CANCELADA = 'cancelada';
 
     public function label(): string
     {
@@ -20,8 +19,7 @@ enum EstadoSubasta: string
             self::ACEPTADA => 'Aceptada',
             self::CANCELADA => 'Cancelada',
             self::INICIADA => 'Iniciada',
-            self::CERRADA => 'Cerrada',
-            self::CANCELADA => 'Cancelada'
+            self::CERRADA => 'Cerrada'
         };
     }
     
