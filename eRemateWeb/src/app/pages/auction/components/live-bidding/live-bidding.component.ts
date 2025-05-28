@@ -86,7 +86,7 @@ export class LiveBiddingComponent implements OnInit, OnDestroy {  @Input() subas
     this.errorMessage = '';
     this.successMessage = '';
     
-    this.subastaService.realizarPuja(this.subasta.id, this.loteActual.id, this.pujaAmount).subscribe({
+    this.subastaService.realizarPuja(this.subasta.id, this.loteActual.id!, this.pujaAmount).subscribe({
       next: (response) => {
         if (this.loteActual && response.data?.nuevo_total_lote) {
           this.loteActual.oferta = response.data.nuevo_total_lote;

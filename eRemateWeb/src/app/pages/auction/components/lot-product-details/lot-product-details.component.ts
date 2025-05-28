@@ -40,7 +40,7 @@ export class LotProductDetailsComponent implements OnInit, OnChanges {
     this.loading = true;
     this.error = false;
 
-    this.loteService.getArticulosByLote(this.lote.id).subscribe({
+    this.loteService.getArticulosByLote(this.lote.id!).subscribe({
       next: (articulos: Articulo[]) => {
         this.articulos = articulos;
         this.articuloSeleccionado = articulos.length > 0 ? articulos[0] : undefined;

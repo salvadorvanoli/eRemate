@@ -11,4 +11,5 @@ export interface Lote {
     disponibilidad: string; 
     condicionesDeEntrega: string;
     es_ganador?: boolean;
+    oferta?: number;
 }
