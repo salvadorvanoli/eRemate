@@ -127,7 +127,8 @@ class GoogleAuthController extends Controller
                 'apellido' => 'required_if:tipo,rematador|string|max:255',
                 'numeroMatricula' => 'required_if:tipo,rematador|string|max:50',
                 'direccionFiscal' => 'required_if:tipo,rematador|string|max:255',
-                'imagen' => 'nullable|string',
+                'imagenes' => 'nullable|array',
+                'imagenes.*' => 'nullable|array',
                 // Campos para casa de remates
                 'identificacionFiscal' => 'required_if:tipo,casa|string|max:50',
                 'nombreLegal' => 'required_if:tipo,casa|string|max:255',
@@ -145,13 +146,27 @@ class GoogleAuthController extends Controller
                     'id' => $user->id
                 ]);
             } elseif ($request->tipo === 'rematador') {
+                // Procesar las imágenes del frontend
+                $imagenUrl = null;
+                if ($request->has('imagenes') && is_array($request->imagenes) && count($request->imagenes) > 0) {
+                    // Tomar la primera imagen del array (para rematadores solo debe ser 1)
+                    $primeraImagen = $request->imagenes[0];
+                    
+                    // Si la imagen tiene la estructura esperada del frontend
+                    if (is_array($primeraImagen) && isset($primeraImagen['url'])) {
+                        $imagenUrl = $primeraImagen['url'];
+                    } elseif (is_string($primeraImagen)) {
+                        $imagenUrl = $primeraImagen;
+                    }
+                }
+
                 Rematador::create([
                     'id' => $user->id,
                     'nombre' => $request->nombre,
                     'apellido' => $request->apellido,
                     'numeroMatricula' => $request->numeroMatricula,
                     'direccionFiscal' => $request->direccionFiscal,
-                    'imagen' => $request->imagen ?? ''
+                    'imagen' => $imagenUrl ?? ''
                 ]);
             } elseif ($request->tipo === 'casa') {
                 CasaDeRemates::create([

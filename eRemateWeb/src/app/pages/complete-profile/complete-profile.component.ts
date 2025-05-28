@@ -1,24 +1,26 @@
-import { Component, computed, signal, OnInit } from '@angular/core';
+import { Component, computed, signal, OnInit, OnDestroy } from '@angular/core';
 import { Router } from '@angular/router';
 import { Toast } from 'primeng/toast';
 import { MessageService } from 'primeng/api';
 import { SecurityService } from '../../core/services/security.service';
+import { ImageService } from '../../core/services/image.service';
 import { ViewChild } from '@angular/core';
 import { CommonModule } from '@angular/common';
 
 import { FormTextInputComponent } from '../../shared/components/inputs/form-text-input/form-text-input.component';
 import { PrimaryButtonComponent } from '../../shared/components/buttons/primary-button/primary-button.component';
 import { FormSelectInputComponent } from '../../shared/components/inputs/form-select-input/form-select-input.component';
+import { ImageUploadInputComponent } from '../../shared/components/inputs/image-upload-input/image-upload-input.component';
 
 @Component({
   selector: 'app-complete-profile',
-  standalone: true,
-  imports: [
+  standalone: true,  imports: [
     CommonModule,
     Toast,
     FormTextInputComponent,
     PrimaryButtonComponent,
-    FormSelectInputComponent
+    FormSelectInputComponent,
+    ImageUploadInputComponent
   ],
   providers: [
     MessageService,
@@ -27,7 +29,8 @@ import { FormSelectInputComponent } from '../../shared/components/inputs/form-se
   templateUrl: './complete-profile.component.html',
   styleUrl: './complete-profile.component.scss'
 })
-export class CompleteProfileComponent implements OnInit {
+
+export class CompleteProfileComponent implements OnInit, OnDestroy {
 
   // Campo de usuario compartido
   @ViewChild('phoneInput') phoneInput: any;
@@ -46,17 +49,18 @@ export class CompleteProfileComponent implements OnInit {
 
   // Datos de Google
   googleData: any = null;
-
   // Campos básicos
   phone: string = '';
   selectedOption: string = '';
+  previousSelectedOption: string = '';
+  profileCompletionSuccessful: boolean = false;
 
   // Campos de rematador
   name: string = '';
   lastname: string = '';
   registrationNumber: string = '';
   fiscalAddress: string = '';
-  image: string = '';
+  images: any[] = [];
 
   // Campos de casa de remates
   taxIdentificationNumber: string = '';
@@ -92,23 +96,70 @@ export class CompleteProfileComponent implements OnInit {
   constructor(
     private messageService: MessageService,
     private securityService: SecurityService,
+    private imageService: ImageService,
     private router: Router
-  ) {}
-
+  ) {}  
+  
   ngOnInit() {
-    // Obtener datos de Google del localStorage
     const googleDataString = localStorage.getItem('google_registration_data');
     if (googleDataString) {
       this.googleData = JSON.parse(googleDataString);
+      return;
+    }
+
+    const currentUser = this.securityService.actualUser;
+    if (currentUser) {
+      this.checkUserProfileStatus(currentUser);
     } else {
-      // Si no hay datos de Google, redirigir al registro
-      this.messageService.add({ 
-        severity: 'warn', 
-        summary: 'Advertencia', 
-        detail: 'No se encontraron datos de registro de Google', 
-        life: 4000 
+
+      this.securityService.getActualUser().subscribe({
+        next: (user) => {
+          if (user) {
+            this.checkUserProfileStatus(user);
+          } else {
+            this.redirectToRegister('No se encontró información del usuario');
+          }
+        },
+        error: () => {
+          this.redirectToRegister('Error al obtener información del usuario');
+        }
       });
-      this.router.navigate(['/register']);
+    }
+  }  
+  
+  private checkUserProfileStatus(user: any) {
+
+    if (user.perfil_completo === 1 || user.perfil_completo === '1' || user.perfil_completo === true) {
+      this.messageService.add({ 
+        severity: 'info', 
+        summary: 'Perfil completo', 
+        detail: 'Tu perfil ya está completo', 
+        life: 3000 
+      });
+      this.router.navigate(['/']);
+      return;
+    }
+    
+    this.googleData = {
+      email: user.email,
+      name: user.nombre || '',
+      picture: user.imagen || ''
+    };
+  }
+
+  private redirectToRegister(message: string) {
+    this.messageService.add({ 
+      severity: 'warn', 
+      summary: 'Advertencia', 
+      detail: message, 
+      life: 4000 
+    });
+    this.router.navigate(['/register']);
+  }
+  ngOnDestroy() {
+    if (!this.profileCompletionSuccessful && this.images.length > 0) {
+      console.log('🧹 Complete-profile: Limpiando imágenes al abandonar vista sin completar perfil');
+      this.cleanupPreviousImages();
     }
   }
 
@@ -121,14 +172,13 @@ export class CompleteProfileComponent implements OnInit {
         tipo: this.selectedOption
       };
 
-      // Agregar campos específicos según el tipo de usuario
-      if (this.selectedOption === 'rematador') {
+      if (this.selectedOption === 'rematador') {        
         Object.assign(profileData, {
           nombre: this.name,
           apellido: this.lastname,
           numeroMatricula: this.registrationNumber,
           direccionFiscal: this.fiscalAddress,
-          imagen: this.image
+          imagenes: this.images
         });
       } else if (this.selectedOption === 'casa') {
         Object.assign(profileData, {
@@ -136,10 +186,9 @@ export class CompleteProfileComponent implements OnInit {
           nombreLegal: this.legalName,
           domicilio: this.legalAddress
         });
-      }
-
-      this.securityService.completeProfile(profileData).subscribe({
+      }      this.securityService.completeProfile(profileData).subscribe({
         next: () => {
+          this.profileCompletionSuccessful = true;
           this.messageService.add({ 
             severity: 'success', 
             summary: 'Operación exitosa', 
@@ -147,11 +196,11 @@ export class CompleteProfileComponent implements OnInit {
             life: 4000 
           });
           
-          // Limpiar datos de Google del localStorage
           localStorage.removeItem('google_registration_data');
-          
-          // Redirigir a la página principal
-          this.router.navigate(['/']);
+
+          setTimeout(() => {
+            this.router.navigate(['/']);
+          }, 500);
         },
         error: (err: any) => {
           if (err.error.errors) {
@@ -221,22 +270,19 @@ export class CompleteProfileComponent implements OnInit {
     this.legalAddressInput?.reset();
 
     // Resetear variables locales
-    this.phone = '';
-
+    this.phone = '';    
     this.name = '';
     this.lastname = '';
     this.registrationNumber = '';
     this.fiscalAddress = '';
-    this.image = '';
+    this.images = [];
 
     this.taxIdentificationNumber = '';
     this.legalName = '';
     this.legalAddress = '';
 
-    // Resetear estado del formulario
     this.formSubmitted.set(false);
 
-    // Resetear estados de validación
     this.isPhoneInvalid = false;
 
     this.isNameInvalid = false;
@@ -246,7 +292,50 @@ export class CompleteProfileComponent implements OnInit {
     this.isImageInvalid = false;
 
     this.isTaxIdentificationNumberInvalid = false;
-    this.isLegalNameInvalid = false;
+    this.isLegalNameInvalid = false;    
     this.isLegalAddressInvalid = false;
+  }
+
+  onImagesSelected(images: any[]) {
+    this.images = images;
+  }
+
+  onImageValidationChange(isInvalid: boolean) {
+    this.isImageInvalid = isInvalid;
+  }
+
+  onUserTypeChange(newType: string) {
+    if (this.previousSelectedOption !== newType && this.images.length > 0) {
+      
+      this.cleanupPreviousImages();
+      
+      if (this.imageInput) {
+        this.imageInput.reset();
+      }
+      
+      this.images = [];
+      this.isImageInvalid = false;
+    }
+    
+    this.previousSelectedOption = this.selectedOption;
+    this.selectedOption = newType;
+  }
+
+  private cleanupPreviousImages() {
+
+    const imagesToDelete = [...this.images];
+    
+    imagesToDelete.forEach(image => {
+      if (image.filename && image.folder) {
+        this.imageService.deleteImage(image.folder, image.filename).subscribe({
+          next: (response) => {
+            console.log('Imagen eliminada del servidor:', image.filename, response.message);
+          },
+          error: (error) => {
+            console.warn('Error al eliminar imagen:', image.filename, error);
+          }
+        });
+      }
+    });
   }
 }

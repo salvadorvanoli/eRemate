@@ -49,6 +49,8 @@ class AuthService implements AuthServiceInterface
                 break;
         }
 
+        $usuario->update(['perfil_completo' => true]);
+
         // Generar token con Sanctum
         $token = $usuario->createToken('auth_token')->plainTextToken;
 
@@ -66,13 +68,30 @@ class AuthService implements AuthServiceInterface
             'direccionFiscal' => 'required|string',
         ])->validate();
 
+        // Procesar las imágenes del frontend
+        $imagenUrl = null;
+        if ($request->has('imagenes') && is_array($request->imagenes) && count($request->imagenes) > 0) {
+            // Tomar la primera imagen del array (para rematadores solo debe ser 1)
+            $primeraImagen = $request->imagenes[0];
+            
+            // Si la imagen tiene la estructura esperada del frontend
+            if (is_array($primeraImagen) && isset($primeraImagen['url'])) {
+                $imagenUrl = $primeraImagen['url'];
+            } elseif (is_string($primeraImagen)) {
+                $imagenUrl = $primeraImagen;
+            }
+        } elseif ($request->has('imagen')) {
+            // Fallback para el formato anterior
+            $imagenUrl = $request->imagen;
+        }
+
         Rematador::create([
             'id' => $usuarioId,
             'nombre' => $request->nombre,
             'apellido' => $request->apellido,
             'numeroMatricula' => $request->numeroMatricula,
             'direccionFiscal' => $request->direccionFiscal,
-            'imagen' => $request->imagen ?? null,
+            'imagen' => $imagenUrl,
         ]);
     }
 

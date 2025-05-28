@@ -16,19 +16,19 @@ export interface GoogleUser {
 export class GoogleAuthService {
   private clientId = '739005296713-bb4kp0nmphocbq8tig49l157p3s70hhn.apps.googleusercontent.com';
   private isGoogleLoaded = false;
+
   private credentialSubject = new Subject<string>();  constructor() {
-    console.log('GoogleAuthService initialized');
 
     (window as any).handleCredentialResponse = this.handleCredentialResponse.bind(this);
     
     if (typeof google !== 'undefined') {
-      console.log('Google already available, initializing...');
       this.initializeGoogleAuth();
       this.isGoogleLoaded = true;
     } else {
       this.waitForGoogleScript();
     }
   }
+
   private loadGoogleScript(): Promise<void> {
     return new Promise((resolve) => {
       if (this.isGoogleLoaded || typeof google !== 'undefined') {
@@ -69,6 +69,7 @@ export class GoogleAuthService {
     };
     checkForGoogle();
   }
+
   private initializeGoogleAuth(): void {
     if (typeof google !== 'undefined') {
       console.log('Initializing Google Auth with client ID:', this.clientId);
@@ -78,39 +79,46 @@ export class GoogleAuthService {
         auto_select: false,
         cancel_on_tap_outside: true
       });
-      console.log('Google Auth initialized successfully');
     } else {
       console.error('Google object not available');
     }
   }
+
   private handleCredentialResponse(response: any): void {
-    console.log('Token recibido:', response.credential);
     this.credentialSubject.next(response.credential);
   }
 
   getCredentialObservable(): Observable<string> {
     return this.credentialSubject.asObservable();
-  }
-  renderButton(element: HTMLElement): void {
-    console.log('Attempting to render Google button...');
+  }  
+  
+  renderButton(element: HTMLElement, buttonText?: string): void {
     
     if (!this.isGoogleLoaded) {
       console.warn('Google not loaded yet, retrying in 500ms...');
-      setTimeout(() => this.renderButton(element), 500);
+      setTimeout(() => this.renderButton(element, buttonText), 500);
       return;
     }
 
     if (typeof google !== 'undefined' && google.accounts?.id) {
       try {
-        console.log('Rendering Google button...');
+        
+        let googleTextType = 'signin_with'; // Default
+        if (buttonText) {
+          if (buttonText.toLowerCase().includes('registr')) {
+            googleTextType = 'signup_with';
+          } else if (buttonText.toLowerCase().includes('continu')) {
+            googleTextType = 'continue_with';
+          }
+        }
+        
         google.accounts.id.renderButton(element, {
           theme: 'outline',
           size: 'large',
-          text: 'signin_with',
+          text: googleTextType,
           width: '100%',
           shape: 'rectangular'
         });
-        console.log('Google button rendered successfully');
       } catch (error) {
         console.error('Error rendering Google button:', error);
       }
@@ -119,7 +127,6 @@ export class GoogleAuthService {
     }
   }
   prompt(): void {
-    console.log('Attempting to show Google prompt...');
     
     if (!this.isGoogleLoaded) {
       console.warn('Google not loaded yet for prompt');

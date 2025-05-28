@@ -21,6 +21,7 @@ use App\Http\Controllers\UsuarioRegistradoController;
 use App\Http\Controllers\ContactoController;
 use App\Http\Controllers\PayPalController;
 use App\Http\Controllers\PaymentRequestController;
+use App\Http\Controllers\ImageController;
 
 // Rutas de Chat
 Route::get('chats', [ChatController::class, 'index']);
@@ -76,17 +77,12 @@ Route::prefix('auctioneer')->group(function () {
     Route::put('/{id}', [RematadorController::class, 'update']);
     Route::get('/{id}/auctions', [RematadorController::class, 'subastas']);
 
-    // Nuevas rutas
-    // 1. Obtener agenda del rematador (subastas programadas)
     Route::get('/{id}/schedule', [RematadorController::class, 'obtenerAgenda']);
     
-    // 2. Obtener subastas solicitadas (pendientes de aceptar)
     Route::get('/{id}/requested-auctions', [RematadorController::class, 'obtenerSubastasSolicitadas']);
     
-    // 3. Aceptar una subasta
     Route::post('/{id}/auctions/{subastaId}/accept', [RematadorController::class, 'aceptarSubasta']);
     
-    // 4. Rechazar/cancelar una subasta
     Route::post('/{id}/auctions/{subastaId}/reject', [RematadorController::class, 'rechazarSubasta']);
 });
 
@@ -229,5 +225,20 @@ Route::post('/register/google', [GoogleAuthController::class, 'googleRegister'])
 // Complete profile route (protected)
 Route::middleware('auth:sanctum')->group(function () {
     Route::post('/complete-profile', [GoogleAuthController::class, 'completeProfile']);
+});
+
+// Rutas de Imágenes
+Route::prefix('images')->group(function () {
+    // Subir imagen
+    Route::post('/upload', [ImageController::class, 'upload']);
+    
+    // Servir imagen (público)
+    Route::get('/serve/{folder}/{filename}', [ImageController::class, 'serve']);
+    
+    // Listar imágenes de una carpeta
+    Route::get('/list/{folder?}', [ImageController::class, 'list']);
+    
+    // Eliminar imagen
+    Route::delete('/{folder}/{filename}', [ImageController::class, 'delete']);
 });
 

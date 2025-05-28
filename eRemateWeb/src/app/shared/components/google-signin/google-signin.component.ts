@@ -47,11 +47,10 @@ export class GoogleSigninComponent implements OnInit, OnDestroy {
       this.credentialSubscription.unsubscribe();
     }
   }
-
   private initializeGoogleButton() {
     try {
       if (this.googleButton?.nativeElement) {
-        this.googleAuthService.renderButton(this.googleButton.nativeElement);
+        this.googleAuthService.renderButton(this.googleButton.nativeElement, this.buttonText);
         this.showFallback = false;
         console.log('Google button initialized successfully');
       } else {

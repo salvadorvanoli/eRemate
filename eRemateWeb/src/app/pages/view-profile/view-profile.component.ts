@@ -1,5 +1,6 @@
 import { Component, OnInit } from '@angular/core';
 import { CommonModule } from '@angular/common';
+import { Router } from '@angular/router';
 import { ViewAuctionHouseProfileComponent } from '../view-auction-house-profile/view-auction-house-profile.component';
 import { ViewRegisteredUserProfileComponent } from '../view-registered-user-profile/view-registered-user-profile.component';
 import { ViewAuctioneerProfileComponent } from '../view-auctioneer-profile/view-auctioneer-profile.component'; // Nuevo import
@@ -29,54 +30,55 @@ export class ViewProfileComponent implements OnInit {
   isAuctioneer = false;
   loading = true;
 
-  constructor(private securityService: SecurityService, private messageService: MessageService) {}
+  constructor(private securityService: SecurityService, private messageService: MessageService, private router: Router) {}
 
   ngOnInit(): void {
     this.checkUserType();
-  }
-
-  checkUserType(): void {
-
-    const currentUser = this.securityService.actualUser;
-    
-    if (currentUser) {
-      console.log('Current user from BehaviorSubject:', currentUser);
-      this.setUserType(currentUser.tipo);
-      this.loading = false;
-    } else {
- 
-      this.securityService.getActualUser().subscribe({
-        next: (user) => {
-          console.log('User from API:', user);
-          if (user) {
-            this.setUserType(user.tipo);
-          } else {
+  }  checkUserType(): void {
+    this.securityService.getActualUser().subscribe({
+      next: (user: any) => {
+        if (user) {
+          console.log('🔍 VIEW PROFILE - Usuario obtenido del servidor:', {
+            email: user.email,
+            perfil_completo: user.perfil_completo,
+            google_id: user.google_id
+          });
+          
+          if (this.isGoogleUserWithIncompleteProfile(user)) {
             this.messageService.add({
-              severity: 'error',
-              summary: 'Error',
-              detail: 'No se pudo obtener información del usuario',
+              severity: 'info',
+              summary: 'Perfil incompleto',
+              detail: 'Necesitas completar tu perfil para continuar',
               life: 3000
             });
+            this.router.navigate(['/completar-perfil']);
+            return;
           }
-          this.loading = false;
-        },
-        error: (error) => {
-          console.error('Error fetching user:', error);
+          
+          this.setUserType(user.tipo);
+        } else {
           this.messageService.add({
             severity: 'error',
             summary: 'Error',
-            detail: 'Error al cargar el perfil',
+            detail: 'No se pudo obtener información del usuario',
             life: 3000
           });
-          this.loading = false;
         }
-      });
-    }
+        this.loading = false;
+      },
+      error: (error) => {
+        this.messageService.add({
+          severity: 'error',
+          summary: 'Error',
+          detail: 'Error al cargar el perfil',
+          life: 3000
+        });
+        this.loading = false;
+      }
+    });
   }
 
   private setUserType(tipo: string): void {
-    console.log('Setting user type with value:', tipo);
-    
 
     this.isAuctionHouse = false;
     this.isRegisteredUser = false;
@@ -97,5 +99,12 @@ export class ViewProfileComponent implements OnInit {
         life: 3000
       });
     }
+  }
+
+  private isGoogleUserWithIncompleteProfile(user: any): boolean {
+    const isGoogleUser = user.google_id !== null && user.google_id !== undefined && user.google_id !== '';
+    const hasIncompleteProfile = user.perfil_completo === 0 || user.perfil_completo === '0' || user.perfil_completo === false;
+    
+    return isGoogleUser && hasIncompleteProfile;
   }
 }
