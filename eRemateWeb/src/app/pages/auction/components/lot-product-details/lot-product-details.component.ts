@@ -28,28 +28,45 @@ export class LotProductDetailsComponent implements OnInit, OnChanges {
   ngOnInit() {
     this.loadArticulos();
   }
-
   ngOnChanges(changes: SimpleChanges) {
-    if (changes['lote'] && changes['lote'].currentValue) {
-      this.loadArticulos();
+    if (changes['lote']) {
+      
+      this.articulos = [];
+      this.articuloSeleccionado = undefined;
+      this.error = false;
+      
+      if (changes['lote'].currentValue) {
+        setTimeout(() => {
+          this.loadArticulos();
+        }, 10);
+      }
     }
-  }
-  loadArticulos() {
-    if (!this.lote) return;
+  }  loadArticulos() {
+    if (!this.lote || !this.lote.id) {
+      this.articulos = [];
+      this.articuloSeleccionado = undefined;
+      this.error = false;
+      this.loading = false;
+      return;
+    }
 
     this.loading = true;
     this.error = false;
+    this.articulos = [];
+    this.articuloSeleccionado = undefined;
 
-    this.loteService.getArticulosByLote(this.lote.id!).subscribe({
+    console.log('Cargando artículos para lote ID:', this.lote.id);
+
+    this.loteService.getArticulosByLote(this.lote.id).subscribe({
       next: (articulos: Articulo[]) => {
+        console.log('Artículos cargados:', articulos);
         this.articulos = articulos;
         this.articuloSeleccionado = articulos.length > 0 ? articulos[0] : undefined;
         this.loading = false;
       },
       error: (error) => {
-        console.error('Error al cargar artículos:', error);
+        console.error('Error al cargar artículos para lote', this.lote?.id, ':', error);
         
-        // Si el error es específicamente que no hay artículos, no lo tratamos como error
         if (error.status === 404 && error.error?.message === 'No hay artículos para este lote') {
           this.articulos = [];
           this.articuloSeleccionado = undefined;
@@ -101,41 +118,27 @@ export class LotProductDetailsComponent implements OnInit, OnChanges {
     
     return [];
   }
-
-  parseSpecifications(especificaciones: any): { label: string, value: string }[] {
-    if (!especificaciones) return [];
+  parseSpecifications(especificaciones: any): string {
+    if (!especificaciones) return '';
     
-    let specs: string[] = [];
-    
-    if (Array.isArray(especificaciones)) {
-      specs = especificaciones.filter(spec => spec && typeof spec === 'string');
-    }
-    else if (typeof especificaciones === 'string') {
+    if (typeof especificaciones === 'string') {
       try {
         const parsed = JSON.parse(especificaciones);
         if (Array.isArray(parsed)) {
-          specs = parsed.filter(spec => spec && typeof spec === 'string');
+          return parsed.join(', ');
         } else {
-          specs = [especificaciones];
+          return especificaciones;
         }
       } catch (e) {
-        specs = [especificaciones];
+        return especificaciones;
       }
     }
     
-    return specs.map(spec => {
-      const colonIndex = spec.indexOf(':');
-      if (colonIndex > 0) {
-        return {
-          label: spec.substring(0, colonIndex).trim(),
-          value: spec.substring(colonIndex + 1).trim()
-        };
-      }
-      return {
-        label: 'Especificación',
-        value: spec.trim()
-      };
-    });
+    if (Array.isArray(especificaciones)) {
+      return especificaciones.filter(spec => spec && typeof spec === 'string').join(', ');
+    }
+    
+    return String(especificaciones);
   }
 
   getArticleImages(): string[] {
@@ -143,9 +146,8 @@ export class LotProductDetailsComponent implements OnInit, OnChanges {
     const images = this.parseImages(this.articuloSeleccionado.imagenes);
     return images.length > 0 ? images : [this.getDefaultImage()];
   }
-
-  getArticleSpecifications(): { label: string, value: string }[] {
-    if (!this.articuloSeleccionado) return [];
+  getArticleSpecifications(): string {
+    if (!this.articuloSeleccionado) return '';
     return this.parseSpecifications(this.articuloSeleccionado.especificacionesTecnicas);
   }
 

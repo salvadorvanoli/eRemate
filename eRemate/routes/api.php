@@ -71,6 +71,7 @@ Route::get('registered-users/{usuarioId}/favorite-lots', [UsuarioRegistradoContr
 Route::post('registered-users/{usuarioId}/favorite-lots', [UsuarioRegistradoController::class, 'addLoteFavorito']);
 Route::delete('registered-users/{usuarioId}/favorite-lots/{loteId}', [UsuarioRegistradoController::class, 'removeLoteFavorito']);
 
+// Rutas de Rematador
 Route::prefix('auctioneer')->group(function () {
     Route::post('/', [RematadorController::class, 'store']);
     Route::get('/{id}', [RematadorController::class, 'show']);
@@ -87,33 +88,87 @@ Route::prefix('auctioneer')->group(function () {
 });
 
 // Rutas de autenticación
-
 Route::post('/register', [AuthController::class, 'register']);
 Route::post('/login', [AuthController::class, 'login']);
 Route::middleware('auth:sanctum')->post('/logout', [AuthController::class, 'logout']);
 Route::middleware('auth:sanctum')->get('/me', [AuthController::class, 'getAuthenticatedUser']);
 
-//testing nitificaciones
+// Rutas de notificaciones (Testing)
 Route::post('/notify/user-register', [NotificationController::class, 'testBienvenida']);
 Route::post('/notify/auction-start', [NotificationController::class, 'notificarInicioSubasta']);
 Route::post('/notify/auction-end', [NotificationController::class, 'notificarFinSubasta']);
 Route::post('/notify/auction-bid', [NotificationController::class, 'notificarNuevaPuja']);
 
+// Ruta de Home (Carrusel)
 Route::get('/auction/page', [SubastaController::class, 'obtenerSubastasOrdenadasPorCierre']);
 
 // Rutas para usuarios
 Route::get('/usuarios/{id}', [UsuarioController::class, 'obtenerUsuario']);
 Route::get('/usuarios/{id}/perfil', [UsuarioController::class, 'obtenerPerfil']);
 
-/*// Notificaciones de subastas
-// Route::post('/auction-start', [NotificationController::class, 'notificarInicioSubasta'])
-//     ->name('notifications.auction.start');
-    
-// Route::post('/auction-end', [NotificationController::class, 'notificarFinSubasta'])
-//     ->name('notifications.auction.end');
-    
-// Route::post('/auction-bid', [NotificationController::class, 'notificarNuevaPuja'])
-//     ->name('notifications.auction.bid');*/
+// Rutas de Casa de Remates
+Route::prefix('auction-house')->group(function () {
+    Route::get('/{id}/auctioneers', [CasaDeRematesController::class, 'obtenerRematadores']);
+    Route::get('/{id}/auctions', [CasaDeRematesController::class, 'obtenerSubastas']);
+
+    Route::middleware('auth:sanctum')->group(function () {
+        Route::post('/{id}/auctioneers/assign', [CasaDeRematesController::class, 'asignarRematador']);
+        Route::post('/{id}/auctioneers/{rematadorId}/remove', [CasaDeRematesController::class, 'desasignarRematador']);
+
+        Route::put('/{id}', [CasaDeRematesController::class, 'actualizarCasaDeRemates']);
+    });
+});
+
+// Rutas de Subasta
+Route::prefix('auction')->group(function () {
+    Route::get('/', [SubastaController::class, 'obtenerSubastas']);
+    Route::get('/{id}', [SubastaController::class, 'obtenerSubasta']);
+    Route::get('/ordered', [SubastaController::class, 'obtenerSubastasOrdenadas']);
+    Route::get('/filtered', [SubastaController::class, 'obtenerSubastasFiltradas']);
+    Route::get('/{id}/lots', [SubastaController::class, 'obtenerLotes']);
+    Route::get('/{id}/live-stream', [SubastaController::class, 'obtenerTransmisionEnVivo']);
+
+    //Route::get('/{id}/bids', [SubastaController::class, 'obtenerPujas']);
+
+    Route::middleware('auth:sanctum')->group(function () {
+        Route::post('/', [SubastaController::class, 'crearSubasta']);
+        Route::post('/{id}/start', [SubastaController::class, 'iniciarSubasta']);
+        Route::post('/{id}/end', [SubastaController::class, 'cerrarSubasta']);
+        Route::post('/{id}/bid', [SubastaController::class, 'realizarPuja']);
+        Route::post('/{id}/auto-bid', [SubastaController::class, 'realizarPujaAutomatica']);
+
+        Route::put('/{id}', [SubastaController::class, 'actualizarSubasta']);
+
+        Route::delete('/{id}', [SubastaController::class, 'eliminarSubasta']);
+    });
+});
+
+// Rutas de Lote
+Route::prefix('lot')->group(function () {
+    Route::get('/{id}', [LoteController::class, 'obtenerLote']);
+    Route::get('/{id}/items', [LoteController::class, 'obtenerArticulos']);
+    Route::get('/auction/{id}', [LoteController::class, 'obtenerLotesPorSubasta']);
+
+    Route::post('/', [LoteController::class, 'crearLote']);
+    Route::post('/{id}/items/{articuloId}/add', [LoteController::class, 'agregarArticulo']);
+    Route::post('/{id}/items/{articuloId}/remove', [LoteController::class, 'removerArticulo']);
+
+    Route::put('/{id}', [LoteController::class, 'actualizarLote']);
+
+    Route::delete('lot/{id}', [LoteController::class, 'eliminarLote']);
+});
+
+// Rutas de Artículo
+Route::prefix('item')->group(function () {
+    Route::get('/{id}', [ArticuloController::class, 'obtenerArticulo']);
+    Route::get('/', [ArticuloController::class, 'obtenerArticulos']);
+
+    Route::middleware('auth:sanctum')->group(function () {
+        Route::post('/', [ArticuloController::class, 'crearArticulo']);
+
+        Route::put('/{id}', [ArticuloController::class, 'actualizarArticulo']);
+    });
+});
 
 // Rutas de PayPal
 Route::prefix('paypal')->group(function () {
@@ -131,48 +186,19 @@ Route::prefix('paypal')->group(function () {
     });
 });
 
-Route::prefix('auction-house')->group(function () {
-    Route::get('/{id}/auctioneers', [CasaDeRematesController::class, 'obtenerRematadores']);
-    Route::get('/{id}/auctions', [CasaDeRematesController::class, 'obtenerSubastas']);
-});
-
-Route::prefix('auction')->group(function () {
-    Route::get('/', [SubastaController::class, 'obtenerSubastas']);
-    Route::get('/ordered', [SubastaController::class, 'obtenerSubastasOrdenadas']);
-    Route::get('/filtered', [SubastaController::class, 'obtenerSubastasFiltradas']);
-    Route::get('/{id}', [SubastaController::class, 'obtenerSubasta']);
-    Route::get('/{id}/lots', [SubastaController::class, 'obtenerLotes']);
-    Route::get('/{id}/bids', [SubastaController::class, 'obtenerPujas']);
-    Route::get('/{id}/live-stream', [SubastaController::class, 'obtenerTransmisionEnVivo']);
-});
-
-Route::prefix('lot')->group(function () {
-    Route::get('/{id}', [LoteController::class, 'obtenerLote']);
-    Route::get('/{id}/items', [LoteController::class, 'obtenerArticulos']);
-    Route::get('/auction/{id}', [LoteController::class, 'obtenerLotesPorSubasta']);
-});
-
-Route::prefix('item')->group(function () {
-    Route::get('/{id}', [ArticuloController::class, 'obtenerArticulo']);
-    Route::get('/', [ArticuloController::class, 'obtenerArticulos']);
-});
-
-Route::post('/contacto', [ContactoController::class, 'enviarFormulario']);
-
-
-// Rutas nuevas
-
-Route::delete('lot/{id}', [LoteController::class, 'eliminarLote']);
-Route::delete('auction/{id}', [SubastaController::class, 'eliminarSubasta']);
-
 // Rutas de Solicitudes de Pago
 Route::prefix('payment-requests')->middleware('auth:sanctum')->group(function () {
     Route::get('/', [PaymentRequestController::class, 'index']);
-    Route::post('/', [PaymentRequestController::class, 'store']);
     Route::get('/{id}', [PaymentRequestController::class, 'show']);
-    Route::put('/{id}/status', [PaymentRequestController::class, 'updateStatus']);
     Route::get('/user/{userId}', [PaymentRequestController::class, 'getByUser']);
+
+    Route::post('/', [PaymentRequestController::class, 'store']);
+    
+    Route::put('/{id}/status', [PaymentRequestController::class, 'updateStatus']);
 });
+
+// Ruta del contáctanos
+Route::post('/contacto', action: [ContactoController::class, 'enviarFormulario']);
 
 // Google OAuth routes
 Route::post('/auth/google', [GoogleAuthController::class, 'googleAuth']);
@@ -185,49 +211,27 @@ Route::middleware('auth:sanctum')->group(function () {
 
 // Rutas de Imágenes
 Route::prefix('images')->group(function () {
-    // Subir imagen
+    Route::get('/serve/{folder}/{filename}', [ImageController::class, 'serve']);
+    Route::get('/list/{folder?}', [ImageController::class, 'list']);
+
     Route::post('/upload', [ImageController::class, 'upload']);
     
-    // Servir imagen (público)
-    Route::get('/serve/{folder}/{filename}', [ImageController::class, 'serve']);
-    
-    // Listar imágenes de una carpeta
-    Route::get('/list/{folder?}', [ImageController::class, 'list']);
-    
-    // Eliminar imagen
     Route::delete('/{folder}/{filename}', [ImageController::class, 'delete']);
 });
 
-// Agregamos las rutas que necesitan autenticación
-Route::middleware('auth:sanctum')->group(function () {
-    
-    Route::prefix('auction-house')->group(function () {
-        Route::put('/{id}', [CasaDeRematesController::class, 'actualizarCasaDeRemates']);
-        Route::post('/{id}/auctioneers/{rematadorId}/remove', [CasaDeRematesController::class, 'desasignarRematador']);
-        Route::post('/{id}/auctioneers/assign', [CasaDeRematesController::class, 'asignarRematador']);
-    });
 
-    Route::prefix('auction')->group(function () {
-        Route::post('/', [SubastaController::class, 'crearSubasta']);
-        Route::put('/{id}', [SubastaController::class, 'actualizarSubasta']);
-        Route::post('/{id}/start', [SubastaController::class, 'iniciarSubasta']);
-        Route::post('/{id}/end', [SubastaController::class, 'cerrarSubasta']);
-        Route::post('/{id}/bid', [SubastaController::class, 'realizarPuja']);
-        Route::post('/{id}/auto-bid', [SubastaController::class, 'realizarPujaAutomatica']);
-        Route::delete('/{id}', [SubastaController::class, 'eliminarSubasta']);
-    });
 
-    Route::prefix('lot')->group(function () {
-        Route::post('/', [LoteController::class, 'crearLote']);
-        Route::put('/{id}', [LoteController::class, 'actualizarLote']);
-        Route::post('/{id}/items/{articuloId}/add', [LoteController::class, 'agregarArticulo']);
-        Route::post('/{id}/items/{articuloId}/remove', [LoteController::class, 'removerArticulo']);
-    });
 
-    Route::prefix('item')->group(function () {
-        Route::post('/', [ArticuloController::class, 'crearArticulo']);
-        Route::put('/{id}', [ArticuloController::class, 'actualizarArticulo']);
-    });
 
-});
+
+
+
+
+
+
+
+
+
+
+
 

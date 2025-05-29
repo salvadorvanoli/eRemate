@@ -489,7 +489,6 @@ class SubastaService implements SubastaServiceInterface
             ], 422);
         }
 
-        // Create the bid with the bid amount (not total)
         $pujaCreada = $loteActual->pujas()->create([
             'monto' => $puja['monto'],
             'usuarioRegistrado_id' => $usuario->id
@@ -518,7 +517,11 @@ class SubastaService implements SubastaServiceInterface
             'usuario_id' => $pujaCreada->usuarioRegistrado_id
         ];
 
-        event(new NuevaPujaEvent($nuevaPujaData));
+        try {
+            event(new NuevaPujaEvent($nuevaPujaData));
+        } catch (\Exception $e) {
+            
+        }
 
         return response()->json([
             'success' => true,
@@ -707,14 +710,18 @@ class SubastaService implements SubastaServiceInterface
             'usuarioRegistrado_id' => $usuario->id
         ]);
 
+        // Calculate the new total offer amount
+        $nuevoTotal = $loteActual->oferta + $puja['monto'];
+
         $loteActual->update([
-            'oferta' => $puja['monto'],
+            'oferta' => $nuevoTotal,
             'fechaUltimaPuja' => now()
         ]);
 
         $nuevaPujaData = [
             'id' => $pujaCreada->id,
             'monto' => $pujaCreada->monto,
+            'nuevo_total' => $nuevoTotal,
             'lote_id' => $loteActual->id,
             'lote_nombre' => $loteActual->nombre,
             'subasta_id' => $subasta->id,

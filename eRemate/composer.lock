@@ -4,11 +4,9 @@
         "Read more about it at https://getcomposer.org/doc/01-basic-usage.md#installing-dependencies",
         "This file is @generated automatically"
     ],
-<<<<<<< HEAD
+
     "content-hash": "c67582168d023fc9e54aa3e01067a1d8",
-=======
-    "content-hash": "47436a3822d186ec7a0ceb57981cbe0f",
->>>>>>> origin/NadiaValentinSalvadorWebSockets
+
     "packages": [
         {
             "name": "apimatic/core",

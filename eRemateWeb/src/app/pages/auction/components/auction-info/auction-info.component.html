@@ -31,44 +31,79 @@
                 </div>
             </div>
 
+            
+
             <!-- lado derecho -->
-            <div class="w-full md:w-1/2 flex flex-col">
+            <div class="w-full md:w-1/2 flex flex-col">                <!-- Title and countdown with location -->
+                <div class="flex flex-col space-y-4 mb-6">
 
-                <!-- countdown -->
-                <div class="flex justify-between items-center mb-4">
-                    <span class="text-sm text-gray-600 mb-2">
-                        @if (countdown) {
-                        Cierra en: {{ countdown }}
-                        } @else {
-                        Calculando tiempo restante...
+                    <div class="flex items-center justify-between">
+                        <!-- Countdown -->
+                        <div class="countdown-container">
+                            <span class="countdown-label">Cierra en:</span>
+                            <span class="countdown-time">
+                                @if (countdown) {
+                                    {{ countdown }}
+                                } @else {
+                                    Calculando...
+                                }
+                            </span>
+                        </div>
+                        
+                        <!-- Icono de ubicacion -->
+                        @if (hasLocation()) {
+                            <button 
+                                (click)="openLocationDialog()"
+                                class="location-button"
+                                title="Ver ubicación de la subasta">
+                                <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M17.657 16.657L13.414 20.9a1.998 1.998 0 01-2.827 0l-4.244-4.243a8 8 0 1111.314 0z"></path>
+                                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 11a3 3 0 11-6 0 3 3 0 016 0z"></path>
+                                </svg>
+                            </button>
                         }
-                    </span>
-
+                    </div>
+                    <!-- titulo -->
+                    <app-title-and-description 
+                        title="Subasta #{{ item?.id || 'Sin número' }}"
+                        description="{{ item?.tipoSubasta || 'Tipo de Subasta' }}" />
+ 
                 </div>
-
-
-                <app-title-and-description title="Subasta #{{ item?.id || 'Sin número' }}"
-                    description="{{ item?.tipoSubasta || 'Tipo de Subasta' }}" />
+                                <!-- lote actual -->
 
                 @if (item2) {
-                <div class="mt-auto flex items-center justify-between pt-4">
-                    <div class="flex items-center">
-                        <img [src]="getImageUrl ? getImageUrl(item2) : 'https://developers.elementor.com/docs/assets/img/elementor-placeholder-image.png'"
-                            alt="Lote" class="w-25 h-30 rounded-lg object-cover" />
-                        <span class="ml-2 text-sm font-medium">Lote #{{ item2?.id || 'Sin número' }}</span>
+                    <div class="current-lot-section">
+                        <div class="lot-info">
+                            <div class="lot-image">
+                                <img 
+                                    [src]="getLoteImageUrl(item2)" 
+                                    [alt]="getLoteName(item2)"
+                                    class="lot-thumbnail" 
+                                />
+                            </div>
+                            <div class="lot-details">
+                                <h3 class="lot-name">{{ getLoteName(item2) }}</h3>
+                                <p class="lot-value">Valor base: ${{ item2?.valorBase || '0' }}</p>
+                            </div>
+                        </div>
+                        <app-primary-button 
+                            label="Pujar por el lote en vivo"
+                            (onClick)="pujar()" 
+                            class="bid-button"> 
+                        </app-primary-button>
                     </div>
-                    <app-primary-button 
-                        label="Pujar por el lote en vivo"
-                        (onClick)="pujar()"> 
-                    </app-primary-button>
-                </div>
-                }
-                @else {
-                <div class="mt-auto pt-4 text-center">
-                    <p class="text-gray-600">Actualmente no hay un lote siendo subastado</p>
-                </div>
-                }
-            </div>
+                } @else {
+                    <div class="no-lot-section">
+                        <p class="no-lot-message">Actualmente no hay un lote siendo subastado</p>
+                    </div>
+                }</div>
         </div>
     </div>
 </div>
+
+<!-- ubicacion -->
+<app-location-dialog 
+    [visible]="showLocationDialog"
+    [location]="item?.ubicacion || ''"
+    (closed)="closeLocationDialog()">
+</app-location-dialog>

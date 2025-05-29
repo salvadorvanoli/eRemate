@@ -26,6 +26,7 @@ export class SubastaService extends BaseHttpService<any, Subasta> {
   getUltimasSubastas(pagina: number, cantidad: number): Observable<Subasta[]> {
     return this.http.get<any>(`${this.baseUrl}/auction/page?pagina=${pagina}&cantidad=${cantidad}`);
   }
+  
   getSubastaById(id: number): Observable<Subasta> {
     return this.http.get<any>(`${this.baseUrl}/auction/${id}`, {
       headers: this.getAuthHeaders()
@@ -41,7 +42,9 @@ export class SubastaService extends BaseHttpService<any, Subasta> {
         throw new Error(response.message || 'Error al obtener la subasta');
       })
     );
-  }  getLoteActual(subastaId: number): Observable<Lote> {
+  }  
+  
+  getLoteActual(subastaId: number): Observable<Lote> {
     return this.http.get<any>(`${this.baseUrl}/auction/${subastaId}`, {
       headers: this.getAuthHeaders()
     }).pipe(

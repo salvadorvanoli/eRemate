@@ -19,7 +19,7 @@ class LoteService implements LoteServiceInterface
             return response()->json(['error' => 'Token no proporcionado o inválido'], 401);
         }
 
-        $usuario = Usuario::find($usuarioAutenticado)->first();
+        $usuario = Usuario::find($usuarioAutenticado);
         if (!$usuario) {
             return response()->json(['error' => 'Usuario no encontrado'], 404);
         }
@@ -86,8 +86,8 @@ class LoteService implements LoteServiceInterface
             'subasta_id' => $data['subasta_id'],
             'compra_id' => null,
             'ganador_id' => null,
-            // 'nombre' => $data['nombre'], // Elimina esta línea
-            // 'descripcion' => $data['descripcion'], // Elimina esta línea
+            'nombre' => $data['nombre'],
+            'descripcion' => $data['descripcion'],
             'valorBase' => $data['valorBase'],
             'pujaMinima' => $data['pujaMinima'],
             'disponibilidad' => $data['disponibilidad'],
@@ -139,12 +139,19 @@ class LoteService implements LoteServiceInterface
 
         $lote->update($data);
 
-        return Lote::find($id)->first();
+        return Lote::find($id);
     }
 
     public function obtenerArticulos(int $id): mixed
     {
-        $lote = Lote::find($id)->first();
+        $lote = Lote::find($id);
+
+        if (!$lote) {
+            return response()->json([
+                'success' => false,
+                'message' => 'Lote no encontrado'
+            ], 404);
+        }
 
         if ($lote->articulos()->count() === 0) {
             return response()->json([
@@ -188,7 +195,7 @@ class LoteService implements LoteServiceInterface
             return $usuario;
         }
 
-        $lote = Lote::find($id)->first();
+        $lote = Lote::find($id);
 
         if (!$lote) {
             return response()->json([
