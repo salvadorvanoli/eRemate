@@ -475,13 +475,7 @@ class SubastaService implements SubastaServiceInterface
             ], 429);
         }
 
-        $montoMinimo = null;
-
-        if ($loteActual->oferta === 0) {
-            $montoMinimo = $loteActual->valorBase + $loteActual->pujaMinima;
-        } else {
-            $montoMinimo = $loteActual->oferta + $loteActual->pujaMinima;
-        }
+        $montoMinimo = $loteActual->pujaMinima;
 
         if ($puja['monto'] < $montoMinimo) {
             return response()->json([
@@ -491,14 +485,6 @@ class SubastaService implements SubastaServiceInterface
         }
 
         $nuevoTotal = $loteActual->oferta + $puja['monto'];
-        $minimoRequerido = $loteActual->oferta + $loteActual->pujaMinima;
-
-        if ($nuevoTotal < $minimoRequerido) {
-            return response()->json([
-                'success' => false,
-                'message' => 'La puja debe ser mayor o igual a la puja mínima (' . $loteActual->pujaMinima . ')'
-            ], 422);
-        }
 
         if ($puja['lote_id'] !== $loteActual->id) {
             return response()->json([
@@ -507,20 +493,22 @@ class SubastaService implements SubastaServiceInterface
             ], 422);
         }
 
-        // Create the bid with the bid amount (not total)
         $pujaCreada = $loteActual->pujas()->create([
             'monto' => $puja['monto'],
             'usuarioRegistrado_id' => $usuario->id
         ]);
 
-        $loteActual->update([
-            'oferta' => $puja['monto'],
-            'fechaUltimaPuja' => now()
-        ]);
-
-        $loteActual->oferta = $nuevoTotal;
-        $loteActual->fechaUltimaPuja = now();
-        $loteActual->save();
+        try {
+            $loteActual->update([
+                'oferta' => $nuevoTotal,
+                'fechaUltimaPuja' => now()
+            ]);
+        } catch (\Exception $e) {
+            return response()->json([
+                'success' => false,
+                'message' => 'Error al actualizar el lote: ' . $e->getMessage()
+            ], 500);
+        }
 
         $nuevaPujaData = [
             'id' => $pujaCreada->id,
@@ -532,7 +520,11 @@ class SubastaService implements SubastaServiceInterface
             'usuario_id' => $pujaCreada->usuarioRegistrado_id
         ];
 
-        event(new NuevaPujaEvent($nuevaPujaData));
+        try {
+            event(new NuevaPujaEvent($nuevaPujaData));
+        } catch (\Exception $e) {
+            
+        }
 
         return response()->json([
             'success' => true,
@@ -721,14 +713,18 @@ class SubastaService implements SubastaServiceInterface
             'usuarioRegistrado_id' => $usuario->id
         ]);
 
+        // Calculate the new total offer amount
+        $nuevoTotal = $loteActual->oferta + $puja['monto'];
+
         $loteActual->update([
-            'oferta' => $puja['monto'],
+            'oferta' => $nuevoTotal,
             'fechaUltimaPuja' => now()
         ]);
 
         $nuevaPujaData = [
             'id' => $pujaCreada->id,
             'monto' => $pujaCreada->monto,
+            'nuevo_total' => $nuevoTotal,
             'lote_id' => $loteActual->id,
             'lote_nombre' => $loteActual->nombre,
             'subasta_id' => $subasta->id,

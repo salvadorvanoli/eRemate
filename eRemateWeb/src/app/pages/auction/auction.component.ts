@@ -14,7 +14,8 @@ import { PrimaryButtonComponent } from '../../shared/components/buttons/primary-
 
 @Component({
   selector: 'app-auction',
-  standalone: true,  imports: [
+  standalone: true,
+  imports: [
     AuctionInfoComponent,
     TitleAndDescriptionComponent,
     DynamicCarouselComponent,
@@ -26,7 +27,7 @@ import { PrimaryButtonComponent } from '../../shared/components/buttons/primary-
   templateUrl: './auction.component.html',
   styleUrl: './auction.component.scss'
 })
-export class AuctionComponent {
+export class AuctionComponent implements OnInit {
   subasta?: Subasta;
   lotes: Lote[] = [];
   loteSeleccionado?: Lote;
@@ -42,7 +43,6 @@ export class AuctionComponent {
     private loteService: LoteService,
     private subastaService: SubastaService,
     private route: ActivatedRoute) {
-
   }
 
   verDetalles(lote: Lote): void {
@@ -50,21 +50,22 @@ export class AuctionComponent {
     this.loteSeleccionadoModal = { ...lote }; // Crear una copia para forzar la detección de cambios
     this.showDetallesModal = true;
   }
+
   verPuja(): void {
     this.showPujaModal = true;
   }
+
   onModalClose(): void {
     this.showDetallesModal = false;
     this.showPujaModal = false;
     this.loteSeleccionadoModal = undefined; // Limpiar la selección del modal
   }
 
-
   ngOnInit() {
+    // Primero obtener la subasta, luego los lotes
     this.getSubasta();
-    this.getLotes();
-
   }
+
   getSubasta(): void {
     const id = Number(this.route.snapshot.paramMap.get('id'));
     
@@ -79,6 +80,9 @@ export class AuctionComponent {
           
           // Asignar el enlace de YouTube si existe en la subasta
           this.youtubeUrl = data.urlTransmision || undefined;
+          
+          // Después de obtener la subasta, cargar los lotes
+          this.getLotes();
         },
         (error) => {
           console.error('Error al obtener la subasta:', error);
@@ -86,15 +90,37 @@ export class AuctionComponent {
       );
     }
   }
-
+  
   getLotes(): void {
     const id = Number(this.route.snapshot.paramMap.get('id'));
     if (id) {
       this.loteService.getLotesBySubasta(id).subscribe({
         next: (data: Lote[]) => {
           this.lotes = data;
+          console.log('Lotes cargados:', this.lotes);
+          console.log('Subasta loteActual_id:', this.subasta?.loteActual_id);
+          
+          // Seleccionar el lote actual basado en loteActual_id de la subasta
           if (this.lotes.length > 0) {
-            this.loteSeleccionado = this.lotes[0];
+            if (this.subasta?.loteActual_id) {
+              // Buscar el lote que coincida con loteActual_id
+              const loteActual = this.lotes.find(lote => lote.id === this.subasta?.loteActual_id);
+              if (loteActual) {
+                this.loteSeleccionado = loteActual;
+                this.loadLoteArticulos(loteActual);
+                console.log('Lote actual seleccionado:', loteActual);
+              } else {
+                // Si no se encuentra el lote actual, usar el primero como fallback
+                this.loteSeleccionado = this.lotes[0];
+                this.loadLoteArticulos(this.loteSeleccionado);
+                console.warn('Lote actual no encontrado, usando el primero como fallback');
+              }
+            } else {
+              // Si no hay loteActual_id, usar el primero
+              this.loteSeleccionado = this.lotes[0];
+              this.loadLoteArticulos(this.loteSeleccionado);
+              console.log('No hay loteActual_id, usando el primer lote');
+            }
           }
         },
         error: (error: any) => {
@@ -103,6 +129,22 @@ export class AuctionComponent {
       });
     }
   }
+
+  loadLoteArticulos(lote: Lote): void {
+    if (lote.id) {
+      this.loteService.getArticulosByLote(lote.id).subscribe({
+        next: (articulos) => {
+          lote.articulos = articulos;
+          // Actualizar la referencia para forzar la detección de cambios
+          this.loteSeleccionado = { ...lote };
+        },
+        error: (error) => {
+          console.error('Error al cargar artículos del lote:', error);
+        }
+      });
+    }
+  }
+
   getTitle(lote: Lote): string {
     return lote.nombre || `Lote #${lote.id}`;
   }
@@ -124,6 +166,7 @@ export class AuctionComponent {
 
   seleccionarLote(lote: Lote): void {
     this.loteSeleccionado = lote;
+    this.loadLoteArticulos(lote);
   }
-
 }
+  

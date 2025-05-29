@@ -122,7 +122,7 @@ Route::prefix('auction-house')->group(function () {
 });
 
 Route::prefix('auction')->group(function () {
-    Route::post('/', [SubastaController::class, 'crearSubasta']);
+    Route::post('/', [SubastaController::class, 'crearSubasta'])->middleware('auth:sanctum');
     Route::put('/{id}', [SubastaController::class, 'actualizarSubasta']);
     Route::post('/{id}/start', [SubastaController::class, 'iniciarSubasta']);
     Route::post('/{id}/end', [SubastaController::class, 'cerrarSubasta']);
@@ -226,4 +226,5 @@ Route::prefix('images')->group(function () {
     // Eliminar imagen
     Route::delete('/{folder}/{filename}', [ImageController::class, 'delete']);
 });
+
 

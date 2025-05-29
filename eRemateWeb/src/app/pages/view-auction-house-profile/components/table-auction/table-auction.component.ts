@@ -1,4 +1,4 @@
-import { Component, OnInit, ViewChild, Output, EventEmitter } from '@angular/core';
+import { Component, OnInit, ViewChild, Output, EventEmitter, AfterViewInit, OnDestroy } from '@angular/core';
 import { CommonModule, DatePipe } from '@angular/common';  
 import { FormsModule } from '@angular/forms';
 import { TableModule, Table } from 'primeng/table';
@@ -12,10 +12,12 @@ import { InputTextModule } from 'primeng/inputtext';
 import { IconFieldModule } from 'primeng/iconfield';
 import { InputIconModule } from 'primeng/inputicon';
 import { finalize } from 'rxjs/operators';
+import * as L from 'leaflet';
 import { AuctionHouseService } from '../../../../core/services/auction-house.service';
 import { Subasta } from '../../../../core/models/subasta';
 import { UsuarioRematador, RematadorResponse } from '../../../../core/models/usuario';
-import { SecurityService } from '../../../../core/services/security.service'; 
+import { SecurityService } from '../../../../core/services/security.service';
+
 
 @Component({
   selector: 'app-table-auction',
@@ -38,8 +40,7 @@ import { SecurityService } from '../../../../core/services/security.service';
   templateUrl: './table-auction.component.html',
   styleUrl: './table-auction.component.scss'
 })
-export class TableAuctionComponent implements OnInit {
-    auctions: Subasta[] = [];
+export class TableAuctionComponent implements OnInit, AfterViewInit, OnDestroy {    auctions: Subasta[] = [];
     cols: any[] = [];
     loading = false;
     auctionDialog: boolean = false;
@@ -55,9 +56,14 @@ export class TableAuctionComponent implements OnInit {
     minDate: string = '';
     minEndDate: string = '';
     dateErrors: { startDate: string, endDate: string } = { startDate: '', endDate: '' };
+      // Leaflet Map properties
+    private map: L.Map | null = null;
+    private marker: L.Marker | null = null;
+    mapVisible: boolean = false;
+    private searchTimeout: any;
+    private defaultLatLng: [number, number] = [-34.6037, -58.3816]; // Buenos Aires por defecto
 
     @ViewChild('dt') dt!: Table;
-
     @Output() auctionSelected = new EventEmitter<number>();
 
     constructor(
@@ -65,8 +71,179 @@ export class TableAuctionComponent implements OnInit {
         private confirmationService: ConfirmationService,
         private auctionHouseService: AuctionHouseService,
         private securityService: SecurityService
-    ) {
-        console.log('[CONSTRUCTOR] SecurityService actualUser:', this.securityService.actualUser);
+    ) {        console.log('[CONSTRUCTOR] SecurityService actualUser:', this.securityService.actualUser);
+    }
+
+    ngAfterViewInit() {
+        // Se ejecuta después de que la vista se inicializa
+    }
+
+    ngOnDestroy() {
+        // Limpiar el mapa y timeouts al destruir el componente
+        if (this.map) {
+            this.map.remove();
+        }
+        if (this.searchTimeout) {
+            clearTimeout(this.searchTimeout);
+        }
+    }    onLocationChange() {
+        console.log('onLocationChange llamado con:', this.auction.ubicacion);
+        
+        if (this.auction.ubicacion && this.auction.ubicacion.trim().length > 2) {
+            // Mostrar el mapa inmediatamente con ubicación por defecto
+            this.mapVisible = true;
+            
+            // Inicializar el mapa si no existe
+            setTimeout(() => {
+                if (!this.map) {
+                    this.initializeMap();
+                }
+            }, 100);
+            
+            // Debounce la búsqueda para evitar demasiadas llamadas a la API
+            clearTimeout(this.searchTimeout);
+            this.searchTimeout = setTimeout(() => {
+                this.searchLocation(this.auction.ubicacion);
+            }, 800);
+        } else {
+            this.mapVisible = false;
+        }
+    }
+
+    initializeMap() {
+        console.log('Inicializando mapa Leaflet...');
+        
+        // Configurar iconos de Leaflet para corregir iconos faltantes
+        delete (L.Icon.Default.prototype as any)._getIconUrl;
+        L.Icon.Default.mergeOptions({
+            iconRetinaUrl: 'https://cdnjs.cloudflare.com/ajax/libs/leaflet/1.9.4/images/marker-icon-2x.png',
+            iconUrl: 'https://cdnjs.cloudflare.com/ajax/libs/leaflet/1.9.4/images/marker-icon.png',
+            shadowUrl: 'https://cdnjs.cloudflare.com/ajax/libs/leaflet/1.9.4/images/marker-shadow.png',
+        });
+
+        // Crear el mapa
+        this.map = L.map('auction-map').setView(this.defaultLatLng, 13);
+
+        // Agregar la capa de OpenStreetMap
+        L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png', {
+            attribution: '© OpenStreetMap contributors'
+        }).addTo(this.map);
+
+        console.log('Mapa Leaflet inicializado correctamente');
+
+        // Si ya hay una ubicación, buscarla
+        if (this.auction.ubicacion && this.auction.ubicacion.trim()) {
+            setTimeout(() => {
+                this.searchLocation(this.auction.ubicacion);
+            }, 100);
+        }
+    }    private async searchLocation(address: string) {
+        console.log('Buscando ubicación:', address);
+        
+        try {
+            // Detectar si se especifica un país en la dirección
+            const addressLower = address.toLowerCase();
+            let searchUrl = '';
+            
+            // Lista de países de América del Sur para detectar
+            const southAmericanCountries = [
+                'uruguay', 'brasil', 'brazil', 'chile', 'bolivia', 'paraguay', 
+                'colombia', 'venezuela', 'ecuador', 'peru', 'perú', 'guyana', 'suriname'
+            ];
+            
+            const detectedCountry = southAmericanCountries.find(country => 
+                addressLower.includes(country)
+            );
+            
+            if (detectedCountry) {
+                // Si se detecta un país específico, buscar sin restricción de país
+                searchUrl = `https://nominatim.openstreetmap.org/search?format=json&q=${encodeURIComponent(address)}&limit=3&addressdetails=1`;
+                console.log(`País detectado: ${detectedCountry}, buscando sin restricción geográfica`);
+            } else {
+                // Si no se especifica país, priorizar Argentina
+                searchUrl = `https://nominatim.openstreetmap.org/search?format=json&q=${encodeURIComponent(address)}&countrycodes=ar&limit=3&addressdetails=1`;
+                console.log('No se detectó país específico, priorizando Argentina');
+            }
+            
+            const response = await fetch(searchUrl);
+            
+            if (!response.ok) {
+                throw new Error('Error en la respuesta de Nominatim');
+            }
+            
+            const results: any[] = await response.json();
+            console.log('Resultado de geocoding:', results);
+            
+            if (results && results.length > 0) {
+                // Si se detectó un país, filtrar resultados por ese país
+                let bestResult = results[0];
+                
+                if (detectedCountry && results.length > 1) {
+                    const countryFilteredResult = results.find((result: any) => {
+                        const country = result.address?.country?.toLowerCase() || '';
+                        return country.includes(detectedCountry) || 
+                               (detectedCountry === 'uruguay' && country.includes('uruguay')) ||
+                               (detectedCountry === 'brasil' && (country.includes('brasil') || country.includes('brazil'))) ||
+                               (detectedCountry === 'brazil' && (country.includes('brasil') || country.includes('brazil')));
+                    });
+                    
+                    if (countryFilteredResult) {
+                        bestResult = countryFilteredResult;
+                        console.log('Resultado filtrado por país:', bestResult);
+                    }
+                }
+                
+                const lat = parseFloat(bestResult.lat);
+                const lng = parseFloat(bestResult.lon);
+                
+                console.log('Nueva ubicación encontrada:', { 
+                    lat, 
+                    lng, 
+                    display_name: bestResult.display_name,
+                    country: bestResult.address?.country 
+                });
+                
+                // Actualizar la vista del mapa
+                if (this.map) {
+                    this.map.setView([lat, lng], 15);
+                    this.updateMarker(lat, lng, bestResult.display_name);
+                }
+            } else {
+                console.log('No se encontraron resultados para la dirección');
+                // Mantener el mapa en Buenos Aires por defecto
+                if (this.map) {
+                    this.map.setView(this.defaultLatLng, 13);
+                    // Agregar un marcador temporal indicando que no se encontró la ubicación
+                    this.updateMarker(this.defaultLatLng[0], this.defaultLatLng[1], 'Ubicación no encontrada - Buenos Aires (por defecto)');
+                }
+            }
+        } catch (error) {
+            console.error('Error en geocoding:', error);
+            // En caso de error, mantener el mapa en la ubicación por defecto
+            if (this.map) {
+                this.map.setView(this.defaultLatLng, 13);
+                this.updateMarker(this.defaultLatLng[0], this.defaultLatLng[1], 'Error al buscar ubicación - Buenos Aires (por defecto)');
+            }
+        }
+    }    private updateMarker(lat: number, lng: number, customTitle?: string) {
+        if (!this.map) {
+            console.log('Mapa no está disponible para agregar marcador');
+            return;
+        }
+
+        // Limpiar marcador anterior
+        if (this.marker) {
+            this.map.removeLayer(this.marker);
+        }
+
+        // Crear nuevo marcador
+        this.marker = L.marker([lat, lng]).addTo(this.map);
+        
+        // Agregar popup con la dirección
+        const popupText = customTitle || this.auction.ubicacion || 'Ubicación seleccionada';
+        this.marker.bindPopup(popupText).openPopup();
+        
+        console.log('Marcador agregado en:', { lat, lng });
     }
 
     ngOnInit() {
@@ -206,8 +383,7 @@ export class TableAuctionComponent implements OnInit {
                 }
             });
     }
-    
-    openNew() {
+      openNew() {
         console.log('[OPEN_NEW_START] Abriendo nuevo diálogo de subasta.');
         const currentUser = this.securityService.actualUser;
         console.log('[OPEN_NEW] securityService.actualUser al abrir diálogo:', currentUser);
@@ -242,12 +418,23 @@ export class TableAuctionComponent implements OnInit {
             fechaInicio: new Date(),
             fechaCierre: new Date(today.getTime() + 86400000), 
             ubicacion: ''
-        };
-        this.rematadorEmail = '';
+        };        this.rematadorEmail = '';
         this.emailError = '';
         this.dateErrors = { startDate: '', endDate: '' };
         this.submitted = false;
+        this.mapVisible = false; // Reset map visibility
         this.auctionDialog = true;
+        
+        // Inicializar el mapa después de que el diálogo se abra
+        setTimeout(() => {
+            this.initializeMapIfVisible();
+        }, 100);
+    }
+    
+    private initializeMapIfVisible() {
+        if (this.mapVisible && !this.map) {
+            this.initializeMap();
+        }
     }
     
     deleteSelectedAuctions() {
@@ -474,6 +661,15 @@ export class TableAuctionComponent implements OnInit {
         if (this.selectedAuction && this.selectedAuction.id) {
             console.log('Emitiendo ID de subasta seleccionada:', this.selectedAuction.id);
             this.auctionSelected.emit(this.selectedAuction.id);
+        }
+    }
+
+    onMapResize() {
+        // Invalidar el tamaño del mapa cuando la ventana cambia de tamaño
+        if (this.map) {
+            setTimeout(() => {
+                this.map?.invalidateSize();
+            }, 100);
         }
     }
 }

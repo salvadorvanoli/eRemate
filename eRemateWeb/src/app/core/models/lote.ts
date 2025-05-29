@@ -1,5 +1,4 @@
 export interface Lote {
-
     id?: number; 
     subasta_id: number;
     compra_id: number;
@@ -12,4 +11,6 @@ export interface Lote {
     condicionesDeEntrega: string;
     es_ganador?: boolean;
     oferta?: number;
+    imagenUrl?: string;
+    articulos?: any[]; // Array de artículos con sus imágenes
 }
