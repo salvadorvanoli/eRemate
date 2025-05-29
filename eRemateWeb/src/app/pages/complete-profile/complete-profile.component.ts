@@ -186,7 +186,9 @@ export class CompleteProfileComponent implements OnInit, OnDestroy {
           nombreLegal: this.legalName,
           domicilio: this.legalAddress
         });
-      }      this.securityService.completeProfile(profileData).subscribe({
+      }      
+      
+      this.securityService.completeProfile(profileData).subscribe({
         next: () => {
           this.profileCompletionSuccessful = true;
           this.messageService.add({ 
@@ -199,7 +201,9 @@ export class CompleteProfileComponent implements OnInit, OnDestroy {
           localStorage.removeItem('google_registration_data');
 
           setTimeout(() => {
-            this.router.navigate(['/']);
+            this.router.navigate(['/']).then(() => {
+              window.location.reload(); // Fuerza recarga completa
+            });
           }, 500);
         },
         error: (err: any) => {

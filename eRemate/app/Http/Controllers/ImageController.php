@@ -10,12 +10,7 @@ use Illuminate\Support\Str;
 
 class ImageController extends Controller
 {
-    /**
-     * Subir una imagen
-     *
-     * @param Request $request
-     * @return \Illuminate\Http\JsonResponse
-     */
+
     public function upload(Request $request)
     {
         $validator = Validator::make($request->all(), [
@@ -35,13 +30,10 @@ class ImageController extends Controller
             $image = $request->file('image');
             $folder = $request->input('folder', 'general'); // Carpeta por defecto: general
             
-            // Generar nombre único para la imagen
             $filename = time() . '_' . Str::random(10) . '.' . $image->getClientOriginalExtension();
             
-            // Guardar la imagen en storage/app/public/images/{folder}
             $path = $image->storeAs("images/{$folder}", $filename, 'public');
             
-            // URL completa de la imagen
             $imageUrl = url("api/images/serve/{$folder}/{$filename}");
             
             return response()->json([
@@ -66,19 +58,11 @@ class ImageController extends Controller
         }
     }
 
-    /**
-     * Servir una imagen
-     *
-     * @param string $folder
-     * @param string $filename
-     * @return Response
-     */
     public function serve($folder, $filename)
     {
         try {
             $path = "images/{$folder}/{$filename}";
             
-            // Verificar si el archivo existe
             if (!Storage::disk('public')->exists($path)) {
                 return response()->json([
                     'success' => false,
@@ -86,10 +70,9 @@ class ImageController extends Controller
                 ], 404);
             }
             
-            // Obtener el archivo
             $file = Storage::disk('public')->get($path);
             $mimeType = Storage::disk('public')->mimeType($path);
-              // Configurar headers para el cache
+
             $headers = [
                 'Content-Type' => $mimeType,
                 'Cache-Control' => 'public, max-age=31536000', // Cache por 1 año
@@ -107,19 +90,11 @@ class ImageController extends Controller
         }
     }
 
-    /**
-     * Listar imágenes de una carpeta
-     *
-     * @param Request $request
-     * @param string $folder
-     * @return \Illuminate\Http\JsonResponse
-     */
     public function list(Request $request, $folder = 'general')
     {
         try {
             $folderPath = "images/{$folder}";
             
-            // Verificar si la carpeta existe
             if (!Storage::disk('public')->exists($folderPath)) {
                 return response()->json([
                     'success' => false,
@@ -127,7 +102,6 @@ class ImageController extends Controller
                 ], 404);
             }
             
-            // Obtener todos los archivos de la carpeta
             $files = Storage::disk('public')->files($folderPath);
             
             $images = [];
@@ -158,20 +132,11 @@ class ImageController extends Controller
             ], 500);
         }
     }
-
-    /**
-     * Eliminar una imagen
-     *
-     * @param string $folder
-     * @param string $filename
-     * @return \Illuminate\Http\JsonResponse
-     */
     public function delete($folder, $filename)
     {
         try {
             $path = "images/{$folder}/{$filename}";
             
-            // Verificar si el archivo existe
             if (!Storage::disk('public')->exists($path)) {
                 return response()->json([
                     'success' => false,
@@ -179,7 +144,6 @@ class ImageController extends Controller
                 ], 404);
             }
             
-            // Eliminar el archivo
             Storage::disk('public')->delete($path);
             
             return response()->json([

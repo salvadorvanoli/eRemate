@@ -41,7 +41,9 @@ export class LiveBiddingComponent implements OnInit, OnDestroy {  @Input() subas
   }
 
   ngOnDestroy() {
-  }  loadLoteActual() {
+  }  
+  
+  loadLoteActual() {
     if (!this.subasta?.id) {
       this.error = true;
       this.errorMessage = 'No se ha proporcionado un ID de subasta válido';
@@ -62,11 +64,13 @@ export class LiveBiddingComponent implements OnInit, OnDestroy {  @Input() subas
         this.errorMessage = error.message || 'Error al cargar el lote actual';
         this.loading = false;
       }
-    });  }
+    });  
+  }
+
   get valorActual(): number {
     if (!this.loteActual) return 0;
     
-    return this.loteActual.valorBase + (this.loteActual.oferta || 0);
+    return this.loteActual.oferta != 0 ? this.loteActual.oferta! : this.loteActual.valorBase;
   }
 
   get pujaMinima(): number {
@@ -81,6 +85,7 @@ export class LiveBiddingComponent implements OnInit, OnDestroy {  @Input() subas
            this.totalAPagar >= valorMinimo && 
            !this.pujando;
   }
+
   realizarPuja() {
     if (!this.puedeRealizar || !this.loteActual || !this.subasta) return;    this.pujando = true;
     this.errorMessage = '';
@@ -105,6 +110,7 @@ export class LiveBiddingComponent implements OnInit, OnDestroy {  @Input() subas
       }
     });
   }
+  
   incrementarPuja(amount: number) {
     this.pujaAmount = Math.max(0, this.pujaAmount + amount);
   }

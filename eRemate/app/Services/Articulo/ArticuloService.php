@@ -39,22 +39,30 @@ class ArticuloService implements ArticuloServiceInterface
     
     private function verificarUsuario($usuario, $subasta)
     {
-        $casaDeRemates = CasaDeRemates::where('id', $usuario->id)->first();
 
-        $casaDeRematesSubasta = $subasta->casaRemates ?? null;
+        // REVISAR ESTA FUNCIÓN
+
+        /*
+        $casaDeRemates = CasaDeRemates::where('id', $usuario->id);
+
+        $casaDeRematesSubasta = $subasta->casaDeRemates->$id ?? null;
 
         if (($casaDeRemates && $casaDeRemates->id !== $casaDeRematesSubasta?->id)) {
             return response()->json(['error' => 'No tienes permiso para acceder a este artículo'], 403);
         }
-
+        */
         return $usuario;
     }
 
     private function buscarArticuloPorId(int $id)
     {
-        $articulo = $this->buscarArticuloPorId($id);
-        if (!$articulo instanceof Articulo) {
-            return $articulo;
+        $articulo = Articulo::find($id);
+        
+        if (!$articulo) {
+            return response()->json([
+                'success' => false,
+                'message' => 'Artículo no encontrado'
+            ], 404);
         }
 
         return $articulo;

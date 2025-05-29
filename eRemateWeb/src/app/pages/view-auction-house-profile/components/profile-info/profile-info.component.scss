@@ -184,7 +184,8 @@
   transition: background-color 0.3s;
   
   &:hover {
-    background-color: darken(#6334E3, 10%);
+    background-color: #6334E3;
+    filter: brightness(0.9);
   }
 }
 

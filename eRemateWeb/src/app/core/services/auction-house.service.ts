@@ -89,6 +89,7 @@ export class AuctionHouseService extends BaseHttpService<Casa, Casa> {
       headers: this.getAuthHeaders()
     });
   }
+  
   createLot(lotData: any): Observable<any> {
     const url = `${this.baseUrl}/lot`;
     console.log('Creando lote:', url, lotData);

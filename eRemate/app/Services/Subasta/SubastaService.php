@@ -464,7 +464,7 @@ class SubastaService implements SubastaServiceInterface
                 'message' => 'No puedes realizar una puja inmediatamente después de tu última puja'
             ], 422);
         }
-
+        
         $fechaUltimaPuja = $loteActual->fechaUltimaPuja ?? null;
         $tiempoMinimoPujas = 3;
         

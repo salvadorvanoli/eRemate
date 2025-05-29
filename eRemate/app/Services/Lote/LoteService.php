@@ -19,7 +19,8 @@ class LoteService implements LoteServiceInterface
             return response()->json(['error' => 'Token no proporcionado o inválido'], 401);
         }
 
-        $usuario = Usuario::find($usuarioAutenticado);
+        $usuario = Usuario::find($usuarioAutenticado->id);
+        
         if (!$usuario) {
             return response()->json(['error' => 'Usuario no encontrado'], 404);
         }

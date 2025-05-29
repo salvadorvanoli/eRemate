@@ -149,13 +149,15 @@ Route::prefix('lot')->group(function () {
     Route::get('/{id}/items', [LoteController::class, 'obtenerArticulos']);
     Route::get('/auction/{id}', [LoteController::class, 'obtenerLotesPorSubasta']);
 
-    Route::post('/', [LoteController::class, 'crearLote']);
-    Route::post('/{id}/items/{articuloId}/add', [LoteController::class, 'agregarArticulo']);
-    Route::post('/{id}/items/{articuloId}/remove', [LoteController::class, 'removerArticulo']);
+    Route::middleware('auth:sanctum')->group(function () {
+        Route::post('/', [LoteController::class, 'crearLote']);
+        Route::post('/{id}/items/{articuloId}/add', [LoteController::class, 'agregarArticulo']);
+        Route::post('/{id}/items/{articuloId}/remove', [LoteController::class, 'removerArticulo']);
 
-    Route::put('/{id}', [LoteController::class, 'actualizarLote']);
+        Route::put('/{id}', [LoteController::class, 'actualizarLote']);
 
-    Route::delete('lot/{id}', [LoteController::class, 'eliminarLote']);
+        Route::delete('/{id}', [LoteController::class, 'eliminarLote']);
+    });
 });
 
 // Rutas de Artículo
