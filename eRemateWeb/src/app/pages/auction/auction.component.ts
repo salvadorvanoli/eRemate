@@ -45,18 +45,18 @@ export class AuctionComponent {
 
   }
 
-
   verDetalles(lote: Lote): void {
-    this.loteSeleccionadoModal = lote; // guardo el lote q estoy mostrando
+    console.log('Mostrando detalles del lote:', lote.id, lote);
+    this.loteSeleccionadoModal = { ...lote }; // Crear una copia para forzar la detección de cambios
     this.showDetallesModal = true;
   }
   verPuja(): void {
     this.showPujaModal = true;
   }
-
   onModalClose(): void {
     this.showDetallesModal = false;
     this.showPujaModal = false;
+    this.loteSeleccionadoModal = undefined; // Limpiar la selección del modal
   }
 
 
@@ -103,9 +103,8 @@ export class AuctionComponent {
       });
     }
   }
-
   getTitle(lote: Lote): string {
-    return `Lote #${lote.id}`;
+    return lote.nombre || `Lote #${lote.id}`;
   }
 
   getLink(lote: Lote): string {

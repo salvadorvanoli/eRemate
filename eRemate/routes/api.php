@@ -126,9 +126,9 @@ Route::prefix('auction')->group(function () {
     Route::put('/{id}', [SubastaController::class, 'actualizarSubasta']);
     Route::post('/{id}/start', [SubastaController::class, 'iniciarSubasta']);
     Route::post('/{id}/end', [SubastaController::class, 'cerrarSubasta']);
-    Route::post('/{id}/bid', [SubastaController::class, 'realizarPuja']);
+    Route::post('/{id}/bid', [SubastaController::class, 'realizarPuja'])->middleware('auth:sanctum');
     Route::get('/{id}/bids', [SubastaController::class, 'obtenerPujas']);
-    Route::post('/{id}/auto-bid', [SubastaController::class, 'realizarPujaAutomatica']);
+    Route::post('/{id}/auto-bid', [SubastaController::class, 'realizarPujaAutomatica'])->middleware('auth:sanctum');
     Route::post('/{id}/live-stream', [SubastaController::class, 'obtenerTransmisionEnVivo']);
 });
 
