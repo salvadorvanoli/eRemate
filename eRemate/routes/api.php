@@ -115,36 +115,6 @@ Route::get('/usuarios/{id}/perfil', [UsuarioController::class, 'obtenerPerfil'])
 // Route::post('/auction-bid', [NotificationController::class, 'notificarNuevaPuja'])
 //     ->name('notifications.auction.bid');*/
 
-Route::prefix('auction-house')->group(function () {
-    Route::put('/{id}', [CasaDeRematesController::class, 'actualizarCasaDeRemates']);
-    Route::post('/{id}/auctioneers/{rematadorId}/remove', [CasaDeRematesController::class, 'desasignarRematador']);
-    Route::post('/{id}/auctioneers/assign', [CasaDeRematesController::class, 'asignarRematador']);
-});
-
-Route::prefix('auction')->group(function () {
-    Route::post('/', [SubastaController::class, 'crearSubasta']);
-    Route::put('/{id}', [SubastaController::class, 'actualizarSubasta']);
-    Route::post('/{id}/start', [SubastaController::class, 'iniciarSubasta']);
-    Route::post('/{id}/end', [SubastaController::class, 'cerrarSubasta']);
-    Route::post('/{id}/bid', [SubastaController::class, 'realizarPuja']);
-    Route::get('/{id}/bids', [SubastaController::class, 'obtenerPujas']);
-    Route::post('/{id}/auto-bid', [SubastaController::class, 'realizarPujaAutomatica']);
-    Route::post('/{id}/live-stream', [SubastaController::class, 'obtenerTransmisionEnVivo']);
-});
-
-
-Route::prefix('lot')->group(function () {
-    Route::post('/', [LoteController::class, 'crearLote']);
-    Route::put('/{id}', [LoteController::class, 'actualizarLote']);
-    Route::post('/{id}/items/{articuloId}/add', [LoteController::class, 'agregarArticulo']);
-    Route::post('/{id}/items/{articuloId}/remove', [LoteController::class, 'removerArticulo']);
-});
-
-Route::prefix('item')->group(function () {
-    Route::post('/', [ArticuloController::class, 'crearArticulo']);
-    Route::put('/{id}', [ArticuloController::class, 'actualizarArticulo']);
-});
-
 // Rutas de PayPal
 Route::prefix('paypal')->group(function () {
     // Rutas públicas
@@ -172,7 +142,8 @@ Route::prefix('auction')->group(function () {
     Route::get('/filtered', [SubastaController::class, 'obtenerSubastasFiltradas']);
     Route::get('/{id}', [SubastaController::class, 'obtenerSubasta']);
     Route::get('/{id}/lots', [SubastaController::class, 'obtenerLotes']);
-
+    Route::get('/{id}/bids', [SubastaController::class, 'obtenerPujas']);
+    Route::get('/{id}/live-stream', [SubastaController::class, 'obtenerTransmisionEnVivo']);
 });
 
 Route::prefix('lot')->group(function () {
@@ -225,5 +196,38 @@ Route::prefix('images')->group(function () {
     
     // Eliminar imagen
     Route::delete('/{folder}/{filename}', [ImageController::class, 'delete']);
+});
+
+// Agregamos las rutas que necesitan autenticación
+Route::middleware('auth:sanctum')->group(function () {
+    
+    Route::prefix('auction-house')->group(function () {
+        Route::put('/{id}', [CasaDeRematesController::class, 'actualizarCasaDeRemates']);
+        Route::post('/{id}/auctioneers/{rematadorId}/remove', [CasaDeRematesController::class, 'desasignarRematador']);
+        Route::post('/{id}/auctioneers/assign', [CasaDeRematesController::class, 'asignarRematador']);
+    });
+
+    Route::prefix('auction')->group(function () {
+        Route::post('/', [SubastaController::class, 'crearSubasta']);
+        Route::put('/{id}', [SubastaController::class, 'actualizarSubasta']);
+        Route::post('/{id}/start', [SubastaController::class, 'iniciarSubasta']);
+        Route::post('/{id}/end', [SubastaController::class, 'cerrarSubasta']);
+        Route::post('/{id}/bid', [SubastaController::class, 'realizarPuja']);
+        Route::post('/{id}/auto-bid', [SubastaController::class, 'realizarPujaAutomatica']);
+        Route::delete('/{id}', [SubastaController::class, 'eliminarSubasta']);
+    });
+
+    Route::prefix('lot')->group(function () {
+        Route::post('/', [LoteController::class, 'crearLote']);
+        Route::put('/{id}', [LoteController::class, 'actualizarLote']);
+        Route::post('/{id}/items/{articuloId}/add', [LoteController::class, 'agregarArticulo']);
+        Route::post('/{id}/items/{articuloId}/remove', [LoteController::class, 'removerArticulo']);
+    });
+
+    Route::prefix('item')->group(function () {
+        Route::post('/', [ArticuloController::class, 'crearArticulo']);
+        Route::put('/{id}', [ArticuloController::class, 'actualizarArticulo']);
+    });
+
 });
 

@@ -11,7 +11,7 @@ class Cors
     {
         // Obtener configuraciones del .env
         $allowedOrigins = explode(',', env('CORS_ALLOWED_ORIGINS', 'http://localhost:4200'));
-        $allowedMethods = env('CORS_ALLOWED_METHODS', 'GET,POST,PUT,DELETE,OPTIONS');
+        $allowedMethods = env('CORS_ALLOWED_METHODS', 'GET,POST,PUT,PATCH,DELETE,OPTIONS');
         $allowedHeaders = env('CORS_ALLOWED_HEADERS', 'Accept,Authorization,Content-Type,X-Requested-With,Origin');
         $allowCredentials = env('CORS_ALLOW_CREDENTIALS', 'true');
 
