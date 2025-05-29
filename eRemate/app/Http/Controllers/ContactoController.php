@@ -21,6 +21,7 @@ class ContactoController extends Controller
             'from' => 'required|email',
             'subject' => 'required|string',
             'body' => 'required|string',
+            'isHtml' => 'sometimes|boolean'
         ]);
 
         $datos = [
@@ -28,6 +29,7 @@ class ContactoController extends Controller
             'from' => $request->from,
             'subject' => $request->subject,
             'body' => $request->body,
+            'isHtml' => $request->isHtml ?? false
         ];
 
         $this->contactoService->enviarCorreo($datos);

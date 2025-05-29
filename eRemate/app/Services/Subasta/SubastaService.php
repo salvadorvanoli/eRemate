@@ -95,29 +95,44 @@ class SubastaService implements SubastaServiceInterface
         if (!$casaDeRemates) {
             return response()->json([
                 'success' => false,
-                'error' => 'No se encontró una casa de remates asociada a este usuario'
+                'error' => 'El ID de la casa de remates es requerido.'
             ], 422);
+        }
+
+        $casaDeRematesId = $data['casaDeRemates_id'];
+
+        // Opcional: Verificar si la casa de remates existe.
+        $casaDeRematesExistente = CasaDeRemates::find($casaDeRematesId);
+        if (!$casaDeRematesExistente) {
+            return response()->json([
+                'success' => false,
+                'error' => 'La casa de remates especificada no existe.'
+            ], 404);
         }
 
         // Validar que el rematador pertenezca a esta casa de remates
         if (isset($data['rematador_id']) && $data['rematador_id'] !== null) {
-            $rematadorPertenece = $casaDeRemates->rematadores()->where('rematador_id', $data['rematador_id'])->exists();
-            
-            if (!$rematadorPertenece) {
-                return response()->json([
-                    'success' => false,
-                    'error' => 'El rematador especificado no pertenece a esta casa de remates'
-                ], 422);
-            }
+            // Se usa $casaDeRematesExistente que ya se buscó.
+            if ($casaDeRematesExistente) {
+                $rematadorPertenece = $casaDeRematesExistente->rematadores()->where('rematador_id', $data['rematador_id'])->exists();
+                
+                if (!$rematadorPertenece) {
+                    return response()->json([
+                        'success' => false,
+                        'error' => 'El rematador especificado no pertenece a esta casa de remates'
+                    ], 422);
+                }
+            } 
+            // No se necesita el 'else' aquí porque ya se validó la existencia de la casa de remates.
         }
 
         return Subasta::create([
-            'casaDeRemates_id' => $casaDeRemates->id,
+            'casaDeRemates_id' => $casaDeRematesId, // Se usa el ID de la casa de remates proporcionado en $data.
             'rematador_id' => $data['rematador_id'] ?? null,
             'mensajes' => $data['mensajes'] ?? [],
             'urlTransmision' => $data['urlTransmision'],
             'tipoSubasta' => $data['tipoSubasta'],
-            'estado' => EstadoSubasta::PENDIENTE,
+            'estado' => EstadoSubasta::PENDIENTE_APROBACION,
             'fechaInicio' => $data['fechaInicio'],
             'fechaCierre' => $data['fechaCierre'],
             'ubicacion' => $data['ubicacion']
@@ -146,10 +161,10 @@ class SubastaService implements SubastaServiceInterface
             return $chequeo;
         }
 
-        if ($subasta->estado !== EstadoSubasta::PENDIENTE) {
+        if (!in_array($subasta->estado, [EstadoSubasta::PENDIENTE, EstadoSubasta::PENDIENTE_APROBACION, EstadoSubasta::ACEPTADA])) {
             return response()->json([
-                'success' => false,
-                'error' => 'No se puede modificar una subasta que no está en estado pendiente'
+            'success' => false,
+            'error' => 'No se puede modificar una subasta que no está en estado pendiente, pendiente de aprobación o aceptada'
             ], 422);
         }
         
@@ -205,7 +220,7 @@ class SubastaService implements SubastaServiceInterface
 
     public function obtenerSubastasOrdenadas() 
     {
-        $subastas = Subasta::whereIn('estado', [EstadoSubasta::PENDIENTE, EstadoSubasta::INICIADA])
+        $subastas = Subasta::whereNotIn('estado', [EstadoSubasta::CANCELADA, EstadoSubasta::CERRADA])
             ->orderBy('fechaInicio', 'asc')
             ->get();
 
@@ -231,7 +246,7 @@ class SubastaService implements SubastaServiceInterface
         if ($cerrada) {
             $query->where('estado', EstadoSubasta::CERRADA);
         } else {
-            $query->whereIn('estado', [EstadoSubasta::PENDIENTE, EstadoSubasta::INICIADA]);
+            $query->whereNotIn('estado', [EstadoSubasta::CANCELADA, EstadoSubasta::CERRADA]);
         }
 
         if ($categoria) {
@@ -475,6 +490,16 @@ class SubastaService implements SubastaServiceInterface
             ], 422);
         }
 
+        $nuevoTotal = $loteActual->oferta + $puja['monto'];
+        $minimoRequerido = $loteActual->oferta + $loteActual->pujaMinima;
+
+        if ($nuevoTotal < $minimoRequerido) {
+            return response()->json([
+                'success' => false,
+                'message' => 'La puja debe ser mayor o igual a la puja mínima (' . $loteActual->pujaMinima . ')'
+            ], 422);
+        }
+
         if ($puja['lote_id'] !== $loteActual->id) {
             return response()->json([
                 'success' => false,
@@ -482,6 +507,7 @@ class SubastaService implements SubastaServiceInterface
             ], 422);
         }
 
+        // Create the bid with the bid amount (not total)
         $pujaCreada = $loteActual->pujas()->create([
             'monto' => $puja['monto'],
             'usuarioRegistrado_id' => $usuario->id
@@ -492,9 +518,14 @@ class SubastaService implements SubastaServiceInterface
             'fechaUltimaPuja' => now()
         ]);
 
+        $loteActual->oferta = $nuevoTotal;
+        $loteActual->fechaUltimaPuja = now();
+        $loteActual->save();
+
         $nuevaPujaData = [
             'id' => $pujaCreada->id,
             'monto' => $pujaCreada->monto,
+            'nuevo_total' => $nuevoTotal,
             'lote_id' => $loteActual->id,
             'lote_nombre' => $loteActual->nombre,
             'subasta_id' => $subasta->id,
@@ -506,7 +537,10 @@ class SubastaService implements SubastaServiceInterface
         return response()->json([
             'success' => true,
             'message' => 'Puja realizada correctamente',
-            'data' => $pujaCreada
+            'data' => [
+                'puja' => $pujaCreada,
+                'nuevo_total_lote' => $nuevoTotal
+            ]
         ], 200);
     }
 
@@ -704,5 +738,21 @@ class SubastaService implements SubastaServiceInterface
         event(new NuevaPujaEvent($nuevaPujaData));
 
         return $pujaCreada;
+    }
+
+    public function eliminarSubasta(int $id)
+    {
+        $subasta = Subasta::find($id);
+        if (!$subasta) {
+            return response()->json([
+                'success' => false,
+                'message' => 'Subasta no encontrada'
+            ], 404);
+        }
+        $subasta->delete();
+        return response()->json([
+            'success' => true,
+            'message' => 'Subasta eliminada correctamente'
+        ]);
     }
 }

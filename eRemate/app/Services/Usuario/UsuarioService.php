@@ -16,16 +16,46 @@ class UsuarioService implements UsuarioServiceInterface
 
     public function obtenerPerfilRematador($usuarioId)
     {
-        return Rematador::where('id', $usuarioId)->first();
+        $rematador = Rematador::where('id', $usuarioId)->first();
+        $usuario = Usuario::find($usuarioId);
+        
+        if (!$rematador || !$usuario) {
+            return null;
+        }
+        
+        return [
+            'rematador' => $rematador,
+            'usuario' => $usuario
+        ];
     }
 
     public function obtenerPerfilCasaDeRemates($usuarioId)
     {
-        return CasaDeRemates::where('id', $usuarioId)->first();
+        $casa = CasaDeRemates::where('id', $usuarioId)->first();
+        $usuario = Usuario::find($usuarioId);
+        
+        if (!$casa || !$usuario) {
+            return null;
+        }
+        
+        return [
+            'casa' => $casa,
+            'usuario' => $usuario
+        ];
     }
 
     public function obtenerPerfilUsuarioRegistrado($usuarioId)
     {
-        return UsuarioRegistrado::where('id', $usuarioId)->first();
+        $usuarioRegistrado = UsuarioRegistrado::where('id', $usuarioId)->first();
+        $usuario = Usuario::find($usuarioId);
+        
+        if (!$usuarioRegistrado || !$usuario) {
+            return null;
+        }
+        
+        return [
+            'usuarioRegistrado' => $usuarioRegistrado,
+            'usuario' => $usuario
+        ];
     }
 }

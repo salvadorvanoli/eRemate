@@ -1,7 +1,8 @@
 export interface Articulo {
-    id: number;
-    loteId: string;
-    precio: number;
-    imagenes: string[];
-    descripcion: string;
+    id?: number; 
+    lote_id: number;
+    nombre: string;
+    imagenes: string[]; 
+    estado?: string;
+    especificacionesTecnicas: string; 
 }

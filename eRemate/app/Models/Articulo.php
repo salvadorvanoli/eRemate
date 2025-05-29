@@ -18,8 +18,7 @@ class Articulo extends Model
     ];
 
     protected $casts = [
-        'imagenes' => 'array',
-        'especificacionesTecnicas' => 'array',
+        'imagenes' => 'array'
     ];
 
     public function lote()

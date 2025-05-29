@@ -13,10 +13,13 @@ import { ButtonModule } from 'primeng/button';
 export class PrimaryButtonComponent {
   @Input() label: string = '';
   @Input() classes: string = '';
+  @Input() disabled: boolean = false;
 
   @Output() onClick = new EventEmitter<Event>();
 
   handleClick(event: Event) {
-    this.onClick.emit(event);
+    if (!this.disabled) {
+      this.onClick.emit(event);
+    }
   }
 }

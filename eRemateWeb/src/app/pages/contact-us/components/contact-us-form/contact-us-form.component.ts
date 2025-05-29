@@ -8,6 +8,7 @@ import { FormSelectInputComponent } from '../../../../shared/components/inputs/f
 import { EmailService } from '../../../../core/services/email.service';
 import { EmailRequest } from '../../../../core/models/email';
 import { ViewChild } from '@angular/core';
+import { FormTextareaInputComponent } from '../../../../shared/components/inputs/form-textarea-input/form-textarea-input.component';
 
 @Component({
   selector: 'app-contact-us-form',
@@ -17,7 +18,8 @@ import { ViewChild } from '@angular/core';
     FormTextInputComponent,
     PrimaryButtonComponent,
     Toast,
-    FormSelectInputComponent
+    FormSelectInputComponent,
+    FormTextareaInputComponent
   ],
   providers: [MessageService],
   templateUrl: './contact-us-form.component.html',
@@ -44,6 +46,7 @@ export class ContactUsFormComponent {
 
     emailPattern = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
     textAreaPattern = /^[a-zA-Z0-9\s.,;:!?'"(){}[\]<>%&$#@!^*+=áéíóúÁÉÍÓÚñÑüÜ-]+$/;
+    messagePattern = /^.{1,}$/;
 
     constructor(
         private emailService: EmailService,
@@ -60,9 +63,10 @@ export class ContactUsFormComponent {
 
         const emailData: EmailRequest = {
             to: this.email,
-            from: "libreriaalfa@gmail.com",
-            subject: this.asunto,
-            body: `Consulta: ${this.message}\nCategoría: ${this.selectedOption}`
+            from: "ereamteutec@gmail.com",
+            subject: `[eRemate] ${this.asunto} - ${this.getSelectedOptionLabel()}`,
+            body: this.createHtmlEmailBody(),
+            isHtml: true
         };
 
         this.emailService.sendEmail(emailData).subscribe({
@@ -94,5 +98,122 @@ export class ContactUsFormComponent {
         this.isEmailInvalid = false;
         this.isHeaderInvalid = false;
         this.isMessageInvalid = false;
+    }
+
+    private createHtmlEmailBody(): string {
+        return `
+            <!DOCTYPE html>
+            <html lang="es">
+            <head>
+                <meta charset="UTF-8">
+                <meta name="viewport" content="width=device-width, initial-scale=1.0">
+                <title>Consulta - eLibreriaAlfa</title>
+                <style>
+                    body {
+                        font-family: Arial, sans-serif;
+                        line-height: 1.6;
+                        color: #333;
+                        background-color: #f4f4f4;
+                        margin: 0;
+                        padding: 20px;
+                    }
+                    .container {
+                        max-width: 600px;
+                        margin: 0 auto;
+                        background-color: #ffffff;
+                        padding: 30px;
+                        border-radius: 8px;
+                        box-shadow: 0 2px 10px rgba(0,0,0,0.1);
+                    }
+                    .header {
+                        background-color: #2c3e50;
+                        color: white;
+                        padding: 20px;
+                        text-align: center;
+                        margin: -30px -30px 30px -30px;
+                        border-radius: 8px 8px 0 0;
+                    }
+                    .content {
+                        margin: 20px 0;
+                    }
+                    .info-row {
+                        margin: 15px 0;
+                        padding: 10px;
+                        background-color: #f8f9fa;
+                        border-left: 4px solid #3498db;
+                    }
+                    .label {
+                        font-weight: bold;
+                        color: #2c3e50;
+                    }
+                    .message-content {
+                        background-color: #ecf0f1;
+                        padding: 20px;
+                        border-radius: 5px;
+                        margin: 20px 0;
+                        border: 1px solid #bdc3c7;
+                    }
+                    .footer {
+                        margin-top: 30px;
+                        padding-top: 20px;
+                        border-top: 1px solid #ecf0f1;
+                        text-align: center;
+                        color: #7f8c8d;
+                        font-size: 12px;
+                    }
+                </style>
+            </head>
+            <body>
+                <div class="container">
+                    <div class="header">
+                        <h1>Nueva Consulta - eLibreriaAlfa</h1>
+                    </div>
+                    
+                    <div class="content">
+                        <p>Se ha recibido una nueva consulta a través del formulario de contacto:</p>
+                        
+                        <div class="info-row">
+                            <span class="label">Email del remitente:</span> ${this.email}
+                        </div>
+                        
+                        <div class="info-row">
+                            <span class="label">Categoría:</span> ${this.getSelectedOptionLabel()}
+                        </div>
+                        
+                        <div class="info-row">
+                            <span class="label">Asunto:</span> ${this.asunto}
+                        </div>
+                        
+                        <div class="message-content">
+                            <div class="label">Mensaje:</div>
+                            <p>${this.message.replace(/\n/g, '<br>')}</p>
+                        </div>
+                    </div>
+                    
+                    <div class="footer">
+                        <p>Este correo fue enviado desde el formulario de contacto de eLibreriaAlfa</p>
+                        <p>Fecha: ${new Date().toLocaleDateString('es-ES')} - ${new Date().toLocaleTimeString('es-ES')}</p>
+                    </div>
+                </div>
+            </body>
+            </html>
+        `;
+    }
+
+    private getSelectedOptionLabel(): string {
+        const options = [
+            { label: 'Consulta general', value: 'general' },
+            { label: 'Soporte técnico', value: 'soporte' },
+            { label: 'Sugerencias', value: 'sugerencias' },
+            { label: 'Problema con la compra', value: 'compra' },
+            { label: 'Problema con el acceso', value: 'acceso' },
+            { label: 'Problema con el contenido', value: 'contenido' },
+            { label: 'Problema con la cuenta', value: 'cuenta' },
+            { label: 'Problema con el pago', value: 'pago' },
+            { label: 'Otro', value: 'otro' }
+        ];
+        
+        const option = options.find(opt => opt.value === this.selectedOption);
+        return option ? option.label : this.selectedOption;
     }
 }

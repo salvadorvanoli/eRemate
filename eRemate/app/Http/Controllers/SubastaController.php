@@ -312,7 +312,19 @@ class SubastaController extends Controller
         }
     }
 
-    public function realizarPuja(Request $request, $id)
+    public function eliminarSubasta($id)
+    {
+        try {
+            return $this->subastaService->eliminarSubasta($id);
+        } catch (\Exception $e) {
+            return response()->json([
+                'success' => false,
+                'message' => 'Error al eliminar subasta: ' . $e->getMessage()
+            ], 500);
+        }
+    }
+
+     public function realizarPuja(Request $request, $id)
     {
         try {
             $validator = Validator::make($request->all(), [

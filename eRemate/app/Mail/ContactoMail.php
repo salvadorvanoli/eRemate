@@ -19,8 +19,13 @@ class ContactoMail extends Mailable
 
     public function build()
     {
-        return $this->view('emails.contacto')
-                    ->subject($this->datos['subject'])
+        $mail = $this->subject($this->datos['subject']);
+
+        if (isset($this->datos['isHtml']) && $this->datos['isHtml']) {
+            return $mail->html($this->datos['body']);
+        }
+
+        return $mail->view('emails.contacto')
                     ->with([
                         'to' => $this->datos['to'],
                         'from' => $this->datos['from'],

@@ -123,4 +123,22 @@ class UsuarioRegistradoController extends Controller
             return response()->json(['error' => 'Error al obtener lotes favoritos: ' . $e->getMessage()], 500);
         }
     }
+
+    // Obtener lotes donde el usuario ha pujado
+    public function getLotesConPujas($usuarioId)
+    {
+        try {
+            $lotesConPujas = $this->usuarioRegistradoService->obtenerLotesConPujas($usuarioId);
+            
+            if (isset($lotesConPujas['error'])) {
+                return response()->json(['error' => $lotesConPujas['error']], 500);
+            }
+            
+            return response()->json($lotesConPujas);
+        } catch (ModelNotFoundException $e) {
+            return response()->json(['error' => 'Usuario no encontrado'], 404);
+        } catch (Exception $e) {
+            return response()->json(['error' => 'Error al obtener lotes con pujas: ' . $e->getMessage()], 500);
+        }
+    }
 }

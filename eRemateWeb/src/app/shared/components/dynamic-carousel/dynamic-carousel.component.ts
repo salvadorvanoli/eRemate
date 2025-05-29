@@ -5,6 +5,7 @@ import { RouterModule } from '@angular/router';
 
 @Component({
   selector: 'app-dynamic-carousel',
+  standalone: true,
   templateUrl: './dynamic-carousel.component.html',
   imports: [ 
     CarouselModule,
@@ -12,10 +13,11 @@ import { RouterModule } from '@angular/router';
     RouterModule
    ]
 })
-export class DynamicCarouselComponent implements OnInit {
-  @Input() items: any[] = [];
+export class DynamicCarouselComponent implements OnInit {  @Input() items: any[] = [];
   @Input() showPrice: boolean = false;
   @Input() showLink: boolean = false;
+  @Input() itemsPerPage: number = 3; // Número de elementos por página (configurable)
+  @Input() scrollsPerScroll: number = 3; // Número de scrolls por scroll (configurable)
 
   @Input() getLink!: (item: any) => string;
   @Input() getTitle!: (item: any) => string;
@@ -26,18 +28,27 @@ export class DynamicCarouselComponent implements OnInit {
   @Output() itemClick = new EventEmitter<any>();
 
   responsiveOptions: any;
-  itemsPerPage: number = 3; // Modificar esta variable para cambiar el número de elementos por página
-  scrollsPerScroll: number = 3; // Modificar esta variable para cambiar el número de scrolls por scroll
 
   onItemClick(item: any): void {
     this.itemClick.emit(item);
   }
-  
-  ngOnInit() {
+    ngOnInit() {
     this.responsiveOptions = [
-      { breakpoint: '1024px', numVisible: 3, numScroll: 3 },
-      { breakpoint: '768px', numVisible: 2, numScroll: 2 },
-      { breakpoint: '560px', numVisible: 1, numScroll: 1 }
+      { 
+        breakpoint: '1024px', 
+        numVisible: Math.min(this.itemsPerPage, 3), 
+        numScroll: Math.min(this.scrollsPerScroll, 3) 
+      },
+      { 
+        breakpoint: '768px', 
+        numVisible: Math.min(this.itemsPerPage, 2), 
+        numScroll: Math.min(this.scrollsPerScroll, 2) 
+      },
+      { 
+        breakpoint: '560px', 
+        numVisible: 1, 
+        numScroll: 1 
+      }
     ];
   }
 }

@@ -1,13 +1,33 @@
 <div class="relative h-screen bg-cover bg-center">
     <div class="container mx-auto px-4 py-8">
+        
+        
         <div class="flex flex-col md:flex-row gap-8">
-            <!-- imagen -->
+            <!-- iframe de YouTube Live o imagen -->
             <div class="w-full md:w-1/2">
-                <div class="relative aspect-video bg-gray-200">
-                    <img 
-                        [src]="getImageUrl ? getImageUrl(item) : 'https://developers.elementor.com/docs/assets/img/elementor-placeholder-image.png'" 
-                        alt="Imagen de la publicación" 
-                        class="mx-auto rounded" />
+                <div class="relative aspect-video bg-gray-200 rounded">
+                    @if (safeYoutubeUrl) {
+                        <iframe 
+                            [src]="safeYoutubeUrl"
+                            class="w-full h-full rounded"
+                            frameborder="0"
+                            allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture"
+                            allowfullscreen>
+                        </iframe>
+                    } @else {
+                        <img 
+                            [src]="getImageUrl ? getImageUrl(item) : 'https://developers.elementor.com/docs/assets/img/elementor-placeholder-image.png'" 
+                            alt="Imagen de la publicación" 
+                            class="w-full h-full object-cover rounded" />
+                    }
+                    
+                    <!-- Indicador de transmisión en vivo -->
+                    @if (safeYoutubeUrl) {
+                        <div class="absolute top-4 left-4 bg-red-600 text-white px-3 py-1 rounded-full text-sm font-medium flex items-center">
+                            <span class="w-2 h-2 bg-white rounded-full mr-2 animate-pulse"></span>
+                            EN VIVO
+                        </div>
+                    }
                 </div>
             </div>
 
@@ -51,3 +71,4 @@
             </div>
         </div>
     </div>
+</div>

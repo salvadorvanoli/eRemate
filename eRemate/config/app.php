@@ -65,7 +65,7 @@ return [
     |
     */
 
-    'timezone' => 'UTC',
+    'timezone' => 'America/Montevideo',
 
     /*
     |--------------------------------------------------------------------------
@@ -122,5 +122,18 @@ return [
         'driver' => env('APP_MAINTENANCE_DRIVER', 'file'),
         'store' => env('APP_MAINTENANCE_STORE', 'database'),
     ],
+
+    /*
+    |--------------------------------------------------------------------------
+    | PayPal Configuration
+    |--------------------------------------------------------------------------
+    |
+    | These values configure the PayPal integration return URLs
+    |
+    */
+
+    'paypal_success_url' => env('PAYPAL_SUCCESS_URL', 'http://localhost:4200/pago/exitoso'),
+    'paypal_cancel_url' => env('PAYPAL_CANCEL_URL', 'http://localhost:4200/pago/cancelado'),
+    'frontend_url' => env('APP_FRONTEND_URL', 'http://localhost:4200'),
 
 ];

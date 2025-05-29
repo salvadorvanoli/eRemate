@@ -8,7 +8,7 @@
     </div>
     
     <form novalidate action="" method="post" class="mx-auto flex flex-col items-center gap-4 w-full max-w-md">
-        <!-- Teléfono - siempre requerido -->
+
         <app-form-text-input
             #phoneInput
             class="w-full" 
@@ -20,7 +20,6 @@
             (isInputInvalid)="isPhoneInvalid = $event"
         />
 
-        <!-- Selector de tipo de usuario -->
         <app-form-select-input
             class="w-full"
             [options]="[
@@ -31,11 +30,10 @@
             placeholder="Selecciona qué tipo de usuario eres"
             errorMessage="No seleccionaste una opción"
             (isInputInvalid)="isOptionInvalid = $event"
-            (textValue)="selectedOption = $event"
+            (textValue)="onUserTypeChange($event)"
             [formSubmitted]="formSubmitted"
         />
 
-        <!-- Campos específicos para Rematador -->
         @if(selectedOption === 'rematador') {
             <app-form-text-input
                 #nameInput
@@ -68,9 +66,7 @@
                 errorMessage="Matrícula inválida"
                 (textValue)="registrationNumber = $event"
                 (isInputInvalid)="isRegistrationNumberInvalid = $event"
-            />
-
-            <app-form-text-input
+            />            <app-form-text-input
                 #fiscalAddressInput
                 class="w-full" 
                 placeholder="Dirección fiscal"
@@ -81,19 +77,20 @@
                 (isInputInvalid)="isFiscalAddressInvalid = $event"
             />
 
-            <app-form-text-input
+            <app-image-upload-input
                 #imageInput
-                class="w-full" 
-                placeholder="URL de tu imagen"
+                class="w-full"
+                placeholder="Subir foto de perfil"
+                folder="rematadores"
+                [maxFiles]="1"
+                [required]="true"
                 [formSubmitted]="formSubmitted"
-                [textPattern]="imagePattern"
-                errorMessage="Imagen inválida"
-                (textValue)="image = $event"
-                (isInputInvalid)="isImageInvalid = $event"
+                errorMessage="Debe subir una foto de perfil"
+                (imagesValue)="onImagesSelected($event)"
+                (isInputInvalid)="onImageValidationChange($event)"
             />
         }
 
-        <!-- Campos específicos para Casa de Remates -->
         @if(selectedOption === 'casa') {
 
             <app-form-text-input
@@ -130,7 +127,6 @@
             />
         }
 
-        <!-- Botón para completar perfil -->
         <app-primary-button
             class="w-full"
             styleClass="w-full"

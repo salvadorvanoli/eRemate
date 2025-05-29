@@ -48,7 +48,7 @@ class LoteService implements LoteServiceInterface
 
     private function buscarLotePorId(int $id)
     {
-        $lote = Lote::find($id)->first();
+        $lote = Lote::find($id);
 
         if (!$lote) {
             return response()->json([
@@ -68,31 +68,26 @@ class LoteService implements LoteServiceInterface
             return $usuario;
         }
 
-        $lote = null;
+        $lote = Lote::where('subasta_id', $data['subasta_id'])
+            ->where('nombre', $data['nombre'])
+            ->first();
 
-        try {
-            $lote = Lote::where('subasta_id', $data['subasta_id'])
-                ->where('nombre', $data['nombre'])
-                ->first();
-        } catch (\Exception $e) {
-        }
-
-        if ($lote) {
-            return response()->json(
-                [
-                    'success' => false,
-                    'error' => 'Ya existe un lote con ese nombre dentro de la subasta especificada'
-                ],
-                404
-            );
-        }
+        // if ($lote) {
+        //     return response()->json(
+        //         [
+        //             'success' => false,
+        //             'error' => 'Ya existe un lote con ese nombre dentro de la subasta especificada'
+        //         ],
+        //         404
+        //     );
+        // }
 
         return Lote::create([
             'subasta_id' => $data['subasta_id'],
             'compra_id' => null,
             'ganador_id' => null,
-            'nombre' => $data['nombre'],
-            'descripcion' => $data['descripcion'],
+            // 'nombre' => $data['nombre'], // Elimina esta línea
+            // 'descripcion' => $data['descripcion'], // Elimina esta línea
             'valorBase' => $data['valorBase'],
             'pujaMinima' => $data['pujaMinima'],
             'disponibilidad' => $data['disponibilidad'],
@@ -108,20 +103,20 @@ class LoteService implements LoteServiceInterface
     public function actualizarLote(int $id, array $data): mixed
     {
 
-        $usuario = $this->validarUsuario();
-        if (!$usuario instanceof Usuario) {
-            return $usuario;
-        }
+        // $usuario = $this->validarUsuario();
+        // if (!$usuario instanceof Usuario) {
+        //     return $usuario;
+        // }
 
         $lote = $this->buscarLotePorId($id);
         if (!$lote instanceof Lote) {
             return $lote;
         }
 
-        $chequeo = $this->verificarUsuario($usuario, $lote->subasta);
-        if ($chequeo instanceof JsonResponse) {
-            return $chequeo;
-        }
+        // $chequeo = $this->verificarUsuario($usuario, $lote->subasta);
+        // if ($chequeo instanceof JsonResponse) {
+        //     return $chequeo;
+        // }
 
         if ($lote->compra_id) {
             return response()->json([
@@ -149,10 +144,7 @@ class LoteService implements LoteServiceInterface
 
     public function obtenerArticulos(int $id): mixed
     {
-        $lote = $this->buscarLotePorId($id);
-        if (!$lote instanceof Lote) {
-            return $lote;
-        }
+        $lote = Lote::find($id)->first();
 
         if ($lote->articulos()->count() === 0) {
             return response()->json([
@@ -161,25 +153,25 @@ class LoteService implements LoteServiceInterface
             ], 404);
         }
 
-        return $lote->articulos()->get();
+        return $lote->articulos()->with('categoria')->get();
     }
 
     public function agregarArticulo(int $id, int $articuloId): mixed
     {
-        $usuario = $this->validarUsuario();
-        if (!$usuario instanceof Usuario) {
-            return $usuario;
-        }
+        // $usuario = $this->validarUsuario();
+        // if (!$usuario instanceof Usuario) {
+        //     return $usuario;
+        // }
         
         $lote = $this->buscarLotePorId($id);
         if (!$lote instanceof Lote) {
             return $lote;
         }
 
-        $chequeo = $this->verificarUsuario($usuario, $lote->subasta);
-        if ($chequeo instanceof JsonResponse) {
-            return $chequeo;
-        }
+        // $chequeo = $this->verificarUsuario($usuario, $lote->subasta);
+        // if ($chequeo instanceof JsonResponse) {
+        //     return $chequeo;
+        // }
 
         $lote->articulos()->attach($articuloId);
 
@@ -196,21 +188,33 @@ class LoteService implements LoteServiceInterface
             return $usuario;
         }
 
-        $lote = $this->buscarLotePorId($id);
-        if (!$lote instanceof Lote) {
-            return $lote;
+        $lote = Lote::find($id)->first();
+
+        if (!$lote) {
+            return response()->json([
+                'success' => false,
+                'error' => 'Lote no encontrado'
+            ], 404);
         }
 
-        $chequeo = $this->verificarUsuario($usuario, $lote->subasta);
-        if ($chequeo instanceof JsonResponse) {
-            return $chequeo;
+        // Buscamos el artículo que pertenece a este lote específico
+        $articulo = \App\Models\Articulo::where('id', $articuloId)
+                                       ->where('lote_id', $id)
+                                       ->first();
+        
+        if (!$articulo) {
+            return response()->json([
+                'success' => false,
+                'error' => 'Artículo no encontrado en este lote'
+            ], 404);
         }
-
-        $lote->articulos()->detach($articuloId);
+        
+        // Eliminamos el artículo directamente
+        $articulo->delete();
 
         return response()->json([
             'success' => true,
-            'message' => 'Artículo removido correctamente'
+            'message' => 'Artículo eliminado correctamente'
         ], 200);
     }
 
@@ -226,6 +230,22 @@ class LoteService implements LoteServiceInterface
         }
 
         return $lotes;
+    }
+
+    public function eliminarLote(int $id)
+    {
+        $lote = Lote::find($id);
+        if (!$lote) {
+            return response()->json([
+                'success' => false,
+                'message' => 'Lote no encontrado'
+            ], 404);
+        }
+        $lote->delete();
+        return response()->json([
+            'success' => true,
+            'message' => 'Lote eliminado correctamente'
+        ]);
     }
 
 }

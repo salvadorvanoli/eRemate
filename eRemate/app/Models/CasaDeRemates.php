@@ -40,6 +40,6 @@ class CasaDeRemates extends Model
 
     public function subastas()   
     {
-        return $this->hasMany(Subasta::class);
+        return $this->hasMany(Subasta::class, 'casaDeRemates_id');
     }
 }

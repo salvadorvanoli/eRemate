@@ -1,0 +1,218 @@
+.articles-button {
+  margin-left: 8px;
+}
+
+.article-table {
+  width: 100%;
+  border-collapse: collapse;
+  
+  th, td {
+    padding: 0.75rem;
+    border: 1px solid #e2e8f0;
+  }
+  
+  thead {
+    background-color: #f8fafc;
+  }
+  
+  tbody tr:hover {
+    background-color: #f1f5f9;
+  }
+}
+
+.action-buttons {
+  display: flex;
+  gap: 0.5rem;
+  justify-content: center;
+}
+
+/* Estilos responsivos para tablas principales y de artículos */
+@media screen and (max-width: 768px) {
+  /* Estilos para la tabla de artículos */
+  .article-table {
+    display: block;
+    
+    thead {
+      display: none;
+    }
+    
+    tbody, tr, td {
+      display: block;
+      width: 100%;
+    }
+    
+    tr {
+      margin-bottom: 1rem;
+      border: 1px solid #e2e8f0;
+      border-radius: 0.375rem;
+      box-shadow: 0 1px 2px 0 rgba(0, 0, 0, 0.05);
+    }
+    
+    td {
+      display: flex;
+      padding: 0.5rem 0.75rem;
+      text-align: right;
+      border: none;
+      border-bottom: 1px solid #f0f0f0;
+      
+      &:last-child {
+        border-bottom: none;
+      }
+      
+      &:before {
+        content: attr(data-label);
+        font-weight: 600;
+        margin-right: auto;
+        color: #6334E3;
+      }
+      
+      &:last-child {
+        text-align: center;
+        padding: 0.75rem;
+        
+        &:before {
+          content: none;
+        }
+      }
+    }
+  }
+  
+  /* Estilos para diálogos */
+  ::ng-deep .p-dialog {
+    .p-dialog-content {
+      padding: 1rem !important;
+      max-height: 80vh !important;
+      overflow-y: auto !important;
+    }
+    
+    .p-dialog-footer {
+      padding: 1rem !important;
+    }
+  }
+  
+  /* Mejoras visuales para componentes anidados */
+  ::ng-deep app-add-item {
+    .flex-col {
+      gap: 1rem !important;
+    }
+  }
+  
+  /* Manejar desbordamiento de texto */
+  ::ng-deep td span {
+    white-space: normal;
+    word-break: break-word;
+  }
+  
+  /* Estilos para tabla principal con p-datatable */
+  ::ng-deep .p-datatable.p-datatable-responsive .p-datatable-tbody > tr > td {
+    border: none !important;
+    border-bottom: 1px solid #f0f0f0 !important;
+    text-align: left !important;
+    display: flex !important;
+    align-items: center !important;
+    justify-content: space-between !important;
+    padding: 0.75rem 1rem !important;
+    
+    &:last-child {
+      border-bottom: none !important;
+    }
+    
+    .p-column-title {
+      font-weight: 600 !important;
+      color: #6334E3 !important;
+      min-width: 30% !important;
+      text-align: left !important;
+    }
+  }
+  
+  ::ng-deep .p-datatable.p-datatable-responsive .p-datatable-tbody > tr {
+    margin-bottom: 1rem !important;
+    border: 1px solid #e2e8f0 !important;
+    border-radius: 0.375rem !important;
+    background-color: #ffffff !important;
+    box-shadow: 0 1px 3px rgba(0, 0, 0, 0.1) !important;
+  }
+  
+  /* Ocultar cabeceras de tabla */
+  ::ng-deep .p-datatable.p-datatable-responsive .p-datatable-thead {
+    display: none !important;
+  }
+  
+  /* Manejo de botones en dispositivos pequeños */
+  .flex.gap-2.justify-center {
+    justify-content: flex-end !important;
+  }
+}
+
+/* Estilos específicos para móviles muy pequeños */
+@media screen and (max-width: 480px) {
+  ::ng-deep .p-button {
+    font-size: 0.875rem !important;
+    
+    &.p-button-icon-only {
+      width: 2.25rem !important;
+      height: 2.25rem !important;
+    }
+  }
+  
+  /* Espaciado adicional para controles de formulario */
+  ::ng-deep .p-inputtext,
+  ::ng-deep .p-inputnumber,
+  ::ng-deep .p-inputtextarea {
+    font-size: 0.875rem !important;
+    padding: 0.5rem !important;
+  }
+  
+  /* Mejor visualización de inputs numéricos */
+  ::ng-deep .p-inputnumber .p-inputtext {
+    width: 100% !important;
+  }
+}
+
+/* Vista de tarjeta para artículos en móvil */
+.article-cards {
+  display: flex;
+  flex-direction: column;
+  gap: 1rem;
+}
+
+.article-card {
+  border: 1px solid #e2e8f0;
+  border-radius: 0.5rem;
+  padding: 1rem;
+  box-shadow: 0 1px 3px rgba(0,0,0,0.1);
+  background-color: #ffffff;
+  
+  .article-header {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    margin-bottom: 0.75rem;
+    
+    h3 {
+      margin: 0;
+      font-size: 1rem;
+      font-weight: 600;
+      color: #6334E3;
+    }
+  }
+  
+  .article-content {
+    .article-info {
+      margin-bottom: 0.5rem;
+      
+      .label {
+        font-weight: 600;
+        margin-right: 0.25rem;
+        color: #64748b;
+      }
+    }
+  }
+  
+  .article-actions {
+    display: flex;
+    justify-content: flex-end;
+    gap: 0.5rem;
+    margin-top: 1rem;
+  }
+}

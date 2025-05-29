@@ -1,0 +1,27 @@
+<p-toast></p-toast>
+
+<div class="view-container">
+  <div class="info-selector-wrapper">
+    <app-select-info-type 
+      [defaultOption]="selectedInfoType" 
+      (optionChanged)="onInfoTypeChange($event)">
+    </app-select-info-type>
+  </div>
+
+  <!-- Información del perfil -->
+  <div *ngIf="selectedInfoType === 'profile'">
+    <app-profile-info></app-profile-info>
+  </div>
+
+  <!-- Agenda de Subastas -->
+  <div *ngIf="selectedInfoType === 'auctions-schedule'">
+    <app-bold-subtitle text="Agenda de Subastas"></app-bold-subtitle>
+    <app-table-auction-auctioneer viewType="schedule"></app-table-auction-auctioneer>
+  </div>
+
+  <!-- Solicitudes de Subastas -->
+  <div *ngIf="selectedInfoType === 'auction-requests'">
+    <app-bold-subtitle text="Solicitudes de Subastas"></app-bold-subtitle>
+    <app-table-auction-auctioneer viewType="requests"></app-table-auction-auctioneer>
+  </div>
+</div>

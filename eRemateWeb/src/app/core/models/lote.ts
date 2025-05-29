@@ -1,10 +1,15 @@
 export interface Lote {
-    id: number;
+
+    id?: number; 
     subasta_id: number;
+    compra_id: number;
+    ganador_id: number;
+    nombre: string;
+    descripcion: string;
     valorBase: number;
-    //imagenUrl?: string;
     pujaMinima: number;
-    disponibilidad: string;
-    condicionesDeEntrga: string;
-    oferta: number;
+    disponibilidad: string; 
+    condicionesDeEntrega: string;
+    es_ganador?: boolean;
+    oferta?: number;
 }

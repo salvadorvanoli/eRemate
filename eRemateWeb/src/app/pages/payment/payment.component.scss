@@ -1,0 +1,25 @@
+.payment-container {
+  min-height: 60vh;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+
+.form-group {
+  margin-bottom: 1rem;
+}
+
+.error-message {
+  color: #dc3545;
+  font-size: 0.875rem;
+  margin-top: 0.25rem;
+}
+
+.paypal-logo {
+  opacity: 0.8;
+  transition: opacity 0.3s ease;
+}
+
+.paypal-logo:hover {
+  opacity: 1;
+}

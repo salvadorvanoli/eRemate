@@ -1,0 +1,67 @@
+<div class="max-w-md mx-auto bg-white p-6 rounded-lg shadow-md mt-8">
+  
+  @if (loading) {
+    <div class="text-center">
+      <div class="animate-spin rounded-full h-12 w-12 border-b-2 border-blue-500 mx-auto mb-4"></div>
+      <h2 class="text-xl font-semibold mb-2">Procesando pago...</h2>
+      <p class="text-gray-600">Por favor espere mientras confirmamos su pago.</p>
+    </div>
+  }
+
+  @if (!loading && success) {
+    <div class="text-center">
+      <div class="w-12 h-12 bg-green-100 rounded-full flex items-center justify-center mx-auto mb-4">
+        <svg class="w-6 h-6 text-green-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+          <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M5 13l4 4L19 7"></path>
+        </svg>
+      </div>
+      
+      <h2 class="text-2xl font-bold text-green-600 mb-2">¡Pago Exitoso!</h2>
+      <p class="text-gray-600 mb-4">Su pago ha sido procesado correctamente.</p>
+      
+      @if (paymentData) {
+        <div class="bg-gray-50 p-4 rounded-lg mb-4 text-left">
+          <h3 class="font-semibold mb-2">Detalles del Pago:</h3>
+          <p><span class="font-medium">ID de Pago:</span> {{ paymentData.payment_id }}</p>
+          <p><span class="font-medium">Monto:</span> ${{ paymentData.factura?.monto }}</p>
+          <p><span class="font-medium">Método de Entrega:</span> {{ paymentData.factura?.metodoEntrega }}</p>
+          <p><span class="font-medium">Factura #:</span> {{ paymentData.factura?.id }}</p>
+        </div>
+      }
+      
+      <div class="flex gap-3">
+        <app-primary-button
+          [label]="'Ver Factura'"
+          (onClick)="verFactura()"
+          [disabled]="!paymentData?.factura?.id"
+          class="flex-1">
+        </app-primary-button>
+        
+        <button
+          (click)="volverAlInicio()"
+          class="flex-1 px-4 py-2 border border-gray-300 text-gray-700 rounded-md hover:bg-gray-50">
+          Volver al Inicio
+        </button>
+      </div>
+    </div>
+  }
+
+  @if (!loading && error) {
+    <div class="text-center">
+      <div class="w-12 h-12 bg-red-100 rounded-full flex items-center justify-center mx-auto mb-4">
+        <svg class="w-6 h-6 text-red-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+          <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12"></path>
+        </svg>
+      </div>
+      
+      <h2 class="text-2xl font-bold text-red-600 mb-2">Error en el Pago</h2>
+      <p class="text-gray-600 mb-4">{{ error }}</p>
+      
+      <app-primary-button
+        [label]="'Volver al Inicio'"
+        (onClick)="volverAlInicio()">
+      </app-primary-button>
+    </div>
+  }
+
+</div>

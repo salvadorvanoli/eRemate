@@ -1,9 +1,15 @@
 export interface Subasta {
-    id: number;
+
+    id: number; 
+    casaDeRemates_id: number;
+    rematador_id: number;
+    mensajes: string;
     urlTransmision: string;
     tipoSubasta: string;
+    estado: string;
+    pujaHabilitada: boolean;
     fechaInicio: Date;
     fechaCierre: Date;
     ubicacion: string;
-    //imagenUrl?: string;
+    loteActual_id?: number;
 }

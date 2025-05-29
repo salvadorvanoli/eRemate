@@ -8,21 +8,54 @@ import { AuctionsCatalogComponent } from './pages/auctions-catalog/auctions-cata
 import { ViewProductComponent } from './pages/view-product/view-product.component';
 import { ContactUsComponent } from './pages/contact-us/contact-us.component';
 import { AuctionComponent } from './pages/auction/auction.component';
+import { PaymentComponent } from './pages/payment/payment.component';
+import { PaymentSuccessComponent } from './pages/payment-success/payment-success.component';
 import { NotFoundComponent } from './pages/not-found/not-found.component';
 import { CompleteProfileComponent } from './pages/complete-profile/complete-profile.component';
 
+import { ViewAuctionHouseProfileComponent } from './pages/view-auction-house-profile/view-auction-house-profile.component';
+import { ViewRegisteredUserProfileComponent } from './pages/view-registered-user-profile/view-registered-user-profile.component';
+import { ViewProfileComponent } from './pages/view-profile/view-profile.component';
+
+
+import { ChatDetailComponent } from './pages/chat-detail/chat-detail.component';
+
+// Guards
+import { AuthGuard } from './core/guards/auth.guard';
+import { ChatAccessGuard } from './core/guards/chat-access.guard';
+import { PaymentAuthorizationGuard } from './core/guards/payment-authorization.guard';
+
 export const routes: Routes = [
-    { path: 'inicio', component: HomeComponent },    { path: 'registro', component: RegisterComponent },
+    { path: 'inicio', component: HomeComponent },
+    { path: 'registro', component: RegisterComponent },
     { path: 'completar-perfil', component: CompleteProfileComponent },
     { path: 'inicio-sesion', component: LoginComponent },
-    { path: 'panel', component: ControlPanelComponent},
+    { path: 'panel', component: ControlPanelComponent },
     { path: 'articulo', component: ItemsCatalogComponent },
     { path: 'subasta', component: AuctionsCatalogComponent },
     { path: 'producto/:id', component: ViewProductComponent },
     { path: 'contacto', component: ContactUsComponent },
     { path: 'subasta/:id', component: AuctionComponent },
-    { path: '404', component: NotFoundComponent },
+    {
+        path: 'chat-detail/:id',
+        component: ChatDetailComponent,
+        canActivate: [AuthGuard, ChatAccessGuard]
+    },
+    {
+        path: 'pago',
+        component: PaymentComponent,
+        canActivate: [AuthGuard, PaymentAuthorizationGuard]
+    },
+    {
+        path: 'pago/exitoso',
+        component: PaymentSuccessComponent,
+        canActivate: [AuthGuard]
+    },
+    { path: 'pago/cancelado', redirectTo: '/pago', pathMatch: 'full' },
+    { path: 'perfil', component: ViewProfileComponent },
+    { path: 'perfil-casa', component: ViewAuctionHouseProfileComponent },
+    { path: 'perfil-usuario', component: ViewRegisteredUserProfileComponent },
     { path: '', redirectTo: '/inicio', pathMatch: 'full' },
+    { path: '404', component: NotFoundComponent },
     { path: '**', redirectTo: '/404' }
-
 ];

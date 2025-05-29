@@ -229,4 +229,16 @@ class LoteController extends Controller
             ], 500);
         }
     }
+
+    public function eliminarLote($id)
+    {
+        try {
+            return $this->loteService->eliminarLote($id);
+        } catch (\Exception $e) {
+            return response()->json([
+                'success' => false,
+                'message' => 'Error al eliminar lote: ' . $e->getMessage()
+            ], 500);
+        }
+    }
 }

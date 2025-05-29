@@ -2,6 +2,8 @@ import { Component, OnInit } from '@angular/core';
 import { AuctionInfoComponent } from './components/auction-info/auction-info.component';
 import { TitleAndDescriptionComponent } from '../../shared/components/title-and-description/title-and-description.component';
 import { DynamicCarouselComponent } from '../../shared/components/dynamic-carousel/dynamic-carousel.component';
+import { LotProductDetailsComponent } from './components/lot-product-details/lot-product-details.component';
+import { LiveBiddingComponent } from './components/live-bidding/live-bidding.component';
 import { Lote } from '../../core/models/lote';
 import { LoteService } from '../../core/services/lote.service';
 import { SubastaService } from '../../core/services/subasta.service';
@@ -12,11 +14,12 @@ import { PrimaryButtonComponent } from '../../shared/components/buttons/primary-
 
 @Component({
   selector: 'app-auction',
-  standalone: true,
-  imports: [
+  standalone: true,  imports: [
     AuctionInfoComponent,
     TitleAndDescriptionComponent,
     DynamicCarouselComponent,
+    LotProductDetailsComponent,
+    LiveBiddingComponent,
     ModalComponent,
     PrimaryButtonComponent
   ],
@@ -32,6 +35,9 @@ export class AuctionComponent {
   showPujaModal = false;
   loteSeleccionadoModal?: Lote;
 
+  // Nueva propiedad para el enlace de YouTube Live
+  youtubeUrl?: string;
+
   constructor(
     private loteService: LoteService,
     private subastaService: SubastaService,
@@ -44,7 +50,6 @@ export class AuctionComponent {
     this.loteSeleccionadoModal = lote; // guardo el lote q estoy mostrando
     this.showDetallesModal = true;
   }
-
   verPuja(): void {
     this.showPujaModal = true;
   }
@@ -60,9 +65,9 @@ export class AuctionComponent {
     this.getLotes();
 
   }
-
   getSubasta(): void {
     const id = Number(this.route.snapshot.paramMap.get('id'));
+    
     if (id) {
       this.subastaService.getSubastaById(id).subscribe(
         (data) => {
@@ -71,6 +76,9 @@ export class AuctionComponent {
             fechaInicio: new Date(data.fechaInicio),
             fechaCierre: new Date(data.fechaCierre)
           };
+          
+          // Asignar el enlace de YouTube si existe en la subasta
+          this.youtubeUrl = data.urlTransmision || undefined;
         },
         (error) => {
           console.error('Error al obtener la subasta:', error);

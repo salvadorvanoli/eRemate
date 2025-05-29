@@ -1,4 +1,4 @@
-<div class="card md:w-150 sm:w-100 w-70 p-10 my-10 mx-auto rounded-md border-solid border-gray-200 border-2">
+<div class="card md:w-150 sm:w-100 w-70 p-10 mb-10 mx-auto rounded-md border-solid border-gray-200 border-2">
     <p-toast />
     <form novalidate action="" method="post" class="mx-auto flex flex-col items-center gap-4 w-full max-w-md">
         <app-form-text-input
@@ -38,8 +38,7 @@
             errorMessage="Las contraseñas deben coincidir"
             (passwordValue)="confirmPassword.set($event);"
             [isPasswordWrong]="arePasswordsDifferent()"
-        />
-        <app-form-select-input
+        />        <app-form-select-input
             class="w-full"
             [options]="[
             { label: 'Usuario normal', value: 'registrado' },
@@ -49,7 +48,7 @@
             placeholder="Selecciona qué tipo de usuario eres"
             errorMessage="No seleccionaste una opción"
             (isInputInvalid)="isOptionInvalid = $event"
-            (textValue)="selectedOption = $event"
+            (textValue)="onUserTypeChange($event)"
             [formSubmitted]="formSubmitted"
         />
 
@@ -85,9 +84,7 @@
                 errorMessage="Matrícula inválida"
                 (textValue)="registrationNumber = $event"
                 (isInputInvalid)="isRegistrationNumberInvalid = $event"
-            />
-
-            <app-form-text-input
+            />            <app-form-text-input
                 #fiscalAddressInput
                 class="w-full" 
                 placeholder="Dirección fiscal"
@@ -96,17 +93,18 @@
                 errorMessage="Dirección fiscal inválida"
                 (textValue)="fiscalAddress = $event"
                 (isInputInvalid)="isFiscalAddressInvalid = $event"
-            />
-
-            <app-form-text-input
+            />             
+            <app-image-upload-input
                 #imageInput
-                class="w-full" 
-                placeholder="URL de tu imagen"
+                class="w-full"
+                placeholder="Subir foto de perfil"
+                folder="rematadores"
+                [maxFiles]="1"
+                [required]="true"
                 [formSubmitted]="formSubmitted"
-                [textPattern]="imagePattern"
-                errorMessage="Imagen inválida"
-                (textValue)="image = $event"
-                (isInputInvalid)="isImageInvalid = $event"
+                errorMessage="Debe subir una foto de perfil"
+                (imagesValue)="onImagesSelected($event)"
+                (isInputInvalid)="onImageValidationChange($event)"
             />
         }
 

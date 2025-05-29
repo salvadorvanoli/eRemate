@@ -43,13 +43,13 @@
             (isInputInvalid)="isHeaderInvalid = $event"
         />
 
-        <app-form-text-input
+        <app-form-textarea-input
             #messageInput
             class="w-full"
-            placeholder="Consulta"
+            placeholder="Escribe tu mensaje aquí"
             [formSubmitted]="formSubmitted"
-            [textPattern]="textAreaPattern"
-            errorMessage="Consulta inválida"
+            [textPattern]="messagePattern"
+            errorMessage="Mensaje inválido"
             (textValue)="message = $event"
             (isInputInvalid)="isMessageInvalid = $event"
         />
