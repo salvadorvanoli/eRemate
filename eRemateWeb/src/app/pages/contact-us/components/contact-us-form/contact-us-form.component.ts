@@ -166,7 +166,7 @@ export class ContactUsFormComponent {
             <body>
                 <div class="container">
                     <div class="header">
-                        <h1>Nueva Consulta - eLibreriaAlfa</h1>
+                        <h1>Nueva Consulta - eRemate</h1>
                     </div>
                     
                     <div class="content">
