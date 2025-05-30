@@ -101,7 +101,6 @@ class SubastaService implements SubastaServiceInterface
 
         $casaDeRematesId = $data['casaDeRemates_id'];
 
-        // Opcional: Verificar si la casa de remates existe.
         $casaDeRematesExistente = CasaDeRemates::find($casaDeRematesId);
         if (!$casaDeRematesExistente) {
             return response()->json([
@@ -110,9 +109,7 @@ class SubastaService implements SubastaServiceInterface
             ], 404);
         }
 
-        // Validar que el rematador pertenezca a esta casa de remates
         if (isset($data['rematador_id']) && $data['rematador_id'] !== null) {
-            // Se usa $casaDeRematesExistente que ya se buscó.
             if ($casaDeRematesExistente) {
                 $rematadorPertenece = $casaDeRematesExistente->rematadores()->where('rematador_id', $data['rematador_id'])->exists();
                 
@@ -123,11 +120,10 @@ class SubastaService implements SubastaServiceInterface
                     ], 422);
                 }
             } 
-            // No se necesita el 'else' aquí porque ya se validó la existencia de la casa de remates.
         }
 
         return Subasta::create([
-            'casaDeRemates_id' => $casaDeRematesId, // Se usa el ID de la casa de remates proporcionado en $data.
+            'casaDeRemates_id' => $casaDeRematesId,
             'rematador_id' => $data['rematador_id'] ?? null,
             'mensajes' => $data['mensajes'] ?? [],
             'urlTransmision' => $data['urlTransmision'],
@@ -341,9 +337,10 @@ class SubastaService implements SubastaServiceInterface
             ], 404);
         }
 
-        $subasta->estado = EstadoSubasta::INICIADA;
-        $subasta->loteActual_id = $primerLote->id;
-        $subasta->save();
+        $subasta->update([
+            'estado' => EstadoSubasta::INICIADA,
+            'loteActual_id' => $primerLote->id
+        ]);
 
         $this->iniciarProcesoDeAutomatizacion($subasta, $primerLote);
 
@@ -393,7 +390,7 @@ class SubastaService implements SubastaServiceInterface
 
         $lotesSinGanador = $subasta->lotes()->where('ganador_id', null)->count();
 
-        if ($lotesSinGanador === 0) {
+        if ($lotesSinGanador == 0) {
             $subasta->update([
                 'estado' => EstadoSubasta::CERRADA,
                 'loteActual_id' => null
@@ -704,14 +701,18 @@ class SubastaService implements SubastaServiceInterface
             ], 422);
         }
 
-        // Crear la puja
         $pujaCreada = $loteActual->pujas()->create([
             'monto' => $puja['monto'],
             'usuarioRegistrado_id' => $usuario->id
         ]);
 
-        // Calculate the new total offer amount
-        $nuevoTotal = $loteActual->oferta + $puja['monto'];
+        $nuevoTotal = $puja['monto'];
+
+        if ($loteActual->oferta == 0) {
+            $nuevoTotal += $loteActual->valorBase;
+        } else {
+            $nuevoTotal += $loteActual->oferta;
+        }
 
         $loteActual->update([
             'oferta' => $nuevoTotal,

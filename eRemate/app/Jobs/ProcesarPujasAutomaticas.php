@@ -10,6 +10,7 @@ use App\Enums\EstadoSubasta;
 use Illuminate\Bus\Queueable;
 use Illuminate\Contracts\Queue\ShouldQueue;
 use Illuminate\Foundation\Bus\Dispatchable;
+use Illuminate\Http\JsonResponse;
 use Illuminate\Queue\InteractsWithQueue;
 use Illuminate\Queue\SerializesModels;
 use Illuminate\Support\Facades\Log;
@@ -72,11 +73,18 @@ class ProcesarPujasAutomaticas implements ShouldQueue
         
         $pujaAutomaticaActual = $this->pujasAutomaticas[$this->indiceActual];
         
-        $montoNecesario = $loteActualizado->oferta + $loteActualizado->pujaMinima;
+        $pujaMinima = $loteActualizado->pujaMinima;
+        $montoNecesario = null;
+
+        if ($loteActualizado->oferta == 0) {
+            $montoNecesario = $loteActualizado->precioBase + $pujaMinima;
+        } else {
+            $montoNecesario = $loteActualizado->oferta + $pujaMinima;
+        }
         
         if ($pujaAutomaticaActual['presupuesto'] >= $montoNecesario) {
             $respuesta = $subastaService->realizarPujaInterna([
-                'monto' => $montoNecesario,
+                'monto' => $pujaMinima,
                 'lote_id' => $loteActualizado->id
             ], $this->subasta->id, $pujaAutomaticaActual['usuarioRegistrado_id']);
             

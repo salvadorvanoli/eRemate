@@ -11,6 +11,7 @@ use App\Models\UsuarioRegistrado;
 use App\Models\Subasta;
 use App\Models\Lote;
 use App\Models\Articulo;
+use App\Models\PujaAutomatica;
 
 class TestDataSeeder extends Seeder
 {
@@ -63,6 +64,19 @@ class TestDataSeeder extends Seeder
             'id' => $usuarioRegistradoUsuario->id,
             'metodos_pago' => ['Tarjeta de Crédito', 'PayPal'],
         ]);
+        
+        // Crear un segundo usuario registrado para las pujas automáticas
+        $usuarioRegistrado2Usuario = Usuario::create([
+            'id' => 4,
+            'tipo' => 'registrado',
+            'email' => 'usuario2@remates.com',
+            'contrasenia' => bcrypt('contrasenia'),
+        ]);
+
+        $usuarioRegistrado2 = UsuarioRegistrado::create([
+            'id' => $usuarioRegistrado2Usuario->id,
+            'metodos_pago' => ['Tarjeta de Crédito', 'Transferencia Bancaria'],
+        ]);
 
         // Crear una subasta asociada a la Casa De Remates y al Rematador
         $subasta = Subasta::create([
@@ -71,7 +85,7 @@ class TestDataSeeder extends Seeder
             'mensajes' => [],
             'urlTransmision' => 'http://transmision.com/subasta',
             'tipoSubasta' => 'Online',
-            'estado' => EstadoSubasta::INICIADA,
+            'estado' => EstadoSubasta::PENDIENTE, // Cambio de INICIADA a PENDIENTE
             'fechaInicio' => now(),
             'fechaCierre' => now()->addDays(1),
             'ubicacion' => 'Plataforma Online',
@@ -105,7 +119,14 @@ class TestDataSeeder extends Seeder
         ]);
         
         $modificarSubasta->save();
-
-        $this->command->info('Datos de prueba cargados correctamente.');
+        
+        // Crear una puja automática para el usuario2 asociada al lote
+        PujaAutomatica::create([
+            'presupuesto' => 5000.00, // Presupuesto máximo para pujas automáticas
+            'lote_id' => $lote->id,
+            'usuarioRegistrado_id' => $usuarioRegistrado->id
+        ]);
+        
+        $this->command->info('Datos de prueba cargados correctamente con puja automática.');
     }
 }
