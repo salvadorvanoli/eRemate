@@ -33,8 +33,6 @@ export class NavbarComponent {
       this.items = [
         { label: 'Inicio', icon: 'pi pi-home', routerLink: '/' },
         { label: 'Catálogo', icon: 'pi pi-shop', routerLink: '/catalogo' },
-        { label: 'Foro', icon: 'pi pi-book', routerLink: '/foro' },
-        { label: 'Impresiones', icon: 'pi pi-print', routerLink: '/impresion' },
         { label: 'Contáctanos', icon: 'pi pi-envelope', routerLink: '/contacto' }
       ];
 
@@ -42,10 +40,6 @@ export class NavbarComponent {
         this.items.push(
           { label: 'Mi cuenta', icon: 'pi pi-user', routerLink: '/perfil' }
         );
-
-        if (userEntity.tipo === "ADMINISTRADOR") {
-          this.items.push({ label: 'Panel de control', icon: 'pi pi-cog', routerLink: '/panel' });
-        }
 
         this.items.push(
           { label: 'Cerrar sesión', icon: 'pi pi-sign-out', routerLink: '', command: () => this.logout() }
