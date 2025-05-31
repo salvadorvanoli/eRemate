@@ -95,7 +95,7 @@ class SubastaService implements SubastaServiceInterface
         if (!$casaDeRemates) {
             return response()->json([
                 'success' => false,
-                'error' => 'El ID de la casa de remates es requerido.'
+                'error' => 'La casa de remates especificada no existe.'
             ], 422);
         }
 
@@ -232,7 +232,7 @@ class SubastaService implements SubastaServiceInterface
 
     public function obtenerSubastasFiltradas(array $data)
     {
-        $query = Subasta::query();
+        $query = Subasta::query()->orderBy('fechaInicio', 'asc');
 
         $cerrada = $data['cerrada'] ?? false;
         $categoria = $data['categoria'] ?? null;

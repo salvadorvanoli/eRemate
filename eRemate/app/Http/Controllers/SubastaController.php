@@ -181,21 +181,17 @@ class SubastaController extends Controller
     public function obtenerSubastasFiltradas(Request $request)
     {
         try {
-            $validator = Validator::make($request->all(), [
-                'cerrada' => 'sometimes|nullable|boolean',
-                'categoria' => 'sometimes|nullable|numeric|exists:categorias,id',
-                'ubicacion' => 'sometimes|nullable|string',
-                'fechaCierreLimite' => 'sometimes|nullable|date'
-            ]);
-
-            if ($validator->fails()) {
-                return response()->json([
-                    'error' => 'Error de validación',
-                    'details' => $validator->errors()
-                ], 422);
-            }
+            $cerrada = filter_var($request->query('cerrada', false), FILTER_VALIDATE_BOOLEAN);
+            $categoria = $request->query('categoria', null);
+            $ubicacion = $request->query('ubicacion', null);
+            $fechaCierreLimite = $request->query('fechaCierreLimite', null);
             
-            $data = $validator->validated();
+            $data = [
+                'cerrada' => $cerrada,
+                'categoria' => $categoria,
+                'ubicacion' => $ubicacion,
+                'fechaCierreLimite' => $fechaCierreLimite,
+            ];
 
             $subastas = $this->subastaService->obtenerSubastasFiltradas($data);
 

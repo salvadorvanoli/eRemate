@@ -162,8 +162,10 @@ Route::prefix('lot')->group(function () {
 
 // Rutas de Artículo
 Route::prefix('item')->group(function () {
-    Route::get('/{id}', [ArticuloController::class, 'obtenerArticulo']);
     Route::get('/', [ArticuloController::class, 'obtenerArticulos']);
+    Route::get('/{id}', [ArticuloController::class, 'obtenerArticulo']);
+    Route::get('/ordered', [ArticuloController::class, 'obtenerArticulosOrdenados']);
+    Route::get('/filtered', [ArticuloController::class, 'obtenerArticulosFiltrados']);
 
     Route::middleware('auth:sanctum')->group(function () {
         Route::post('/', [ArticuloController::class, 'crearArticulo']);
