@@ -1,36 +1,30 @@
 import { Component, Input } from '@angular/core';
 import { RouterModule } from '@angular/router';
 import { CommonModule } from '@angular/common';
+import { ButtonModule } from 'primeng/button';
+import { Tag } from 'primeng/tag';
 
 @Component({
   selector: 'app-element-row',
   standalone: true,
   imports: [
     RouterModule,
-    CommonModule
+    CommonModule,
+    ButtonModule,
+    Tag
   ],
   templateUrl: './element-row.component.html',
   styleUrl: './element-row.component.scss'
 })
 export class ElementRowComponent {
 
+  buttonLabel!: string;
   @Input() element!: any;
-  @Input() dataType: 'item' | 'auction' = 'item';
+  @Input() dataType!: 'item' | 'auction';
   @Input() first!: boolean;
+  @Input() getCountdown!: (item: any) => string;
 
-  getItemProperty(item: any, property: string, fallback: any = ''): any {
-    switch (property) {
-      case 'nombre':
-        return this.dataType === 'item' ? item.nombre : item.titulo;
-      case 'precio':
-        return this.dataType === 'item' ? item.precio : null;
-      case 'imagen':
-        return this.dataType === 'item' 
-          ? (item.imagenes && item.imagenes[0]) 
-          : item.imagen;
-      default:
-        return item[property] || fallback;
-    }
+  ngOnInit() {
+    this.buttonLabel = this.dataType === 'item' ? 'Ver lote' : 'Ver lotes';
   }
-  
 }

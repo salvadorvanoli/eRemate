@@ -4,6 +4,7 @@
 namespace App\Services\Articulo;
 use App\Models\Articulo;
 use App\Models\CasaDeRemates;
+use App\Models\Categoria;
 use App\Models\Rematador;
 use App\Models\Usuario;
 use App\Models\UsuarioRegistrado;
@@ -11,6 +12,7 @@ use App\Models\Subasta;
 use App\Enums\EstadoSubasta;
 use Illuminate\Support\Facades\Auth;
 use Illuminate\Http\JsonResponse;
+use Carbon\Carbon;
 
 class ArticuloService implements ArticuloServiceInterface
 {
@@ -176,16 +178,21 @@ class ArticuloService implements ArticuloServiceInterface
     public function obtenerArticulosOrdenados() 
     {
         $query = Articulo::query()
-        ->join('lotes', 'articulos.lote_id', '=', 'lotes.id')
-        ->join('subastas', 'lotes.subasta_id', '=', 'subastas.id')
-        ->leftJoin('categorias', 'articulos.categoria_id', '=', 'categorias.id')
-        ->whereNotIn('subastas.estado', [EstadoSubasta::CANCELADA, EstadoSubasta::CERRADA])
-        ->select([
-            'articulos.*', 
-            'subastas.fechaInicio', 
-            'subastas.fechaCierre'
-        ])
-        ->orderBy('subastas.fechaInicio', 'asc');
+            ->join('lotes', 'articulos.lote_id', '=', 'lotes.id')
+            ->join('subastas', 'lotes.subasta_id', '=', 'subastas.id')
+            ->leftJoin('categorias', 'articulos.categoria_id', '=', 'categorias.id')
+            ->whereNotIn('subastas.estado', [EstadoSubasta::CANCELADA, EstadoSubasta::CERRADA])
+            ->select([
+                'articulos.*',
+                'subastas.id as subasta_id',
+                'subastas.fechaInicio',
+                'subastas.fechaCierre',
+                'lotes.oferta',
+                'lotes.id as lote_id',
+                'lotes.ganador_id',
+                'categorias.nombre as categoria_nombre'
+            ])
+            ->orderBy('subastas.fechaCierre', 'asc');
 
         $articulos = $query->get();
         
@@ -196,30 +203,73 @@ class ArticuloService implements ArticuloServiceInterface
             ], 404);
         }
 
-        return $articulos;
+        $catalogElements = $articulos->map(function ($articulo) {
+            $primerImagen = null;
+            if (!empty($articulo->imagenes)) {
+                $imagenes = is_string($articulo->imagenes) ? json_decode($articulo->imagenes, true) : $articulo->imagenes;
+                $primerImagen = is_array($imagenes) && !empty($imagenes) ? $imagenes[0] : null;
+            }
+
+            $texto3 = "No se está subastando";
+            if ($articulo->oferta > 0) {
+                if ($articulo->ganador_id) {
+                    $texto3 = "Subastado por $" . number_format($articulo->oferta, 2);
+                } else {
+                    $texto3 = "Oferta actual: $" . number_format($articulo->oferta, 2);
+                }
+            }
+
+            return [
+                'id' => $articulo->id,
+                'imagen' => $primerImagen,
+                'lotes' => null,
+                'lote_id' => $articulo->lote_id,
+                'subasta_id' => $articulo->subasta_id,
+                'etiqueta' => strtoupper($articulo->estado),
+                'texto1' => $articulo->categoria_nombre ?? 'Sin categoría',
+                'texto2' => $articulo->nombre,
+                'texto3' => $texto3,
+                'fechaInicio' => $articulo->fechaInicio,
+                'fechaCierre' => $articulo->fechaCierre
+            ];
+        });
+        
+        return $catalogElements;
     }
 
     public function obtenerArticulosFiltrados(array $data)
     {
         $query = Articulo::query()
-        ->join('lotes', 'articulos.lote_id', '=', 'lotes.id')
-        ->join('subastas', 'lotes.subasta_id', '=', 'subastas.id')
-        ->leftJoin('categorias', 'articulos.categoria_id', '=', 'categorias.id')
-        ->select([
-            'articulos.*', 
-            'subastas.fechaInicio', 
-            'subastas.fechaCierre',
-            'subastas.id as subasta_id',
-            'subastas.nombre as subasta_nombre',
-            'lotes.nombre as lote_nombre'
-        ])
-        ->orderBy('subastas.fechaInicio', 'asc');
+            ->join('lotes', 'articulos.lote_id', '=', 'lotes.id')
+            ->join('subastas', 'lotes.subasta_id', '=', 'subastas.id')
+            ->leftJoin('categorias', 'articulos.categoria_id', '=', 'categorias.id')
+            ->select([
+                'articulos.*',
+                'subastas.id as subasta_id',
+                'subastas.fechaInicio',
+                'subastas.fechaCierre',
+                'lotes.oferta',
+                'lotes.id as lote_id',
+                'lotes.ganador_id',
+                'categorias.nombre as categoria_nombre'
+            ]);
 
-        $cerrada = $data['cerrada'] ?? false;
-        $categoria = $data['categoria'] ?? null;
-        $ubicacion = $data['ubicacion'] ?? null;
-        $fechaCierreLimite = $data['fechaCierreLimite'] ?? null;
-        
+        $textoBusqueda = (isset($data['textoBusqueda']) && $data['textoBusqueda'] !== null && $data['textoBusqueda'] !== "null") ? $data['textoBusqueda'] : null;
+        $cerrada = (isset($data['cerrada']) && $data['cerrada'] !== null && is_bool($data['cerrada'])) ? $data['cerrada'] : false;
+        $categoria = (isset($data['categoria']) && $data['categoria'] !== null && $data['categoria'] !== "null") ? $data['categoria'] : null;
+        $ubicacion = (isset($data['ubicacion']) && $data['ubicacion'] !== null && $data['ubicacion'] !== "null") ? $data['ubicacion'] : null;
+        $fechaCierreLimite = (isset($data['fechaCierreLimite']) && $data['fechaCierreLimite'] !== null && $data['fechaCierreLimite'] !== "null") ? $data['fechaCierreLimite'] : null;
+
+        if ($textoBusqueda) {
+            $query->where(function($q) use ($textoBusqueda) {
+                $q->where('articulos.nombre', 'like', '%' . $textoBusqueda . '%')
+                  ->orWhere('articulos.especificacionesTecnicas', 'like', '%' . $textoBusqueda . '%')
+                  ->orWhereHas('categoria', function($q) use ($textoBusqueda) {
+                      $q->where('categorias.nombre', 'like', '%' . $textoBusqueda . '%');
+                  });
+            });
+        }
+
         if ($cerrada) {
             $query->where('subastas.estado', EstadoSubasta::CERRADA);
         } else {
@@ -238,6 +288,8 @@ class ArticuloService implements ArticuloServiceInterface
             $query->where('subastas.fechaCierre', '<=', $fechaCierreLimite);
         }
         
+        $query->orderBy('subastas.fechaCierre', 'asc');
+        
         $articulos = $query->get();
         
         if ($articulos->isEmpty()) {
@@ -247,6 +299,59 @@ class ArticuloService implements ArticuloServiceInterface
             ], 404);
         }
         
-        return $articulos;
+        $catalogElements = $articulos->map(function ($articulo) {
+            $primerImagen = null;
+            if (!empty($articulo->imagenes)) {
+                $imagenes = is_string($articulo->imagenes) ? json_decode($articulo->imagenes, true) : $articulo->imagenes;
+                $primerImagen = is_array($imagenes) && !empty($imagenes) ? $imagenes[0] : null;
+            }
+
+            $texto3 = "No se está subastando";
+            if ($articulo->oferta > 0) {
+                if ($articulo->ganador_id) {
+                    $texto3 = "Subastado por $" . number_format($articulo->oferta, 2);
+                } else {
+                    $texto3 = "Oferta actual: $" . number_format($articulo->oferta, 2);
+                }
+            }
+
+            return [
+                'id' => $articulo->id,
+                'imagen' => $primerImagen,
+                'lotes' => null,
+                'lote_id' => $articulo->lote_id,
+                'subasta_id' => $articulo->subasta_id,
+                'etiqueta' => strtoupper($articulo->estado),
+                'texto1' => $articulo->categoria_nombre ?? 'Sin categoría',
+                'texto2' => $articulo->nombre,
+                'texto3' => $texto3,
+                'fechaInicio' => $articulo->fechaInicio,
+                'fechaCierre' => $articulo->fechaCierre
+            ];
+        });
+        
+        return $catalogElements;
+    }
+
+    public function obtenerCategorias()
+    {
+        $categorias = Categoria::select('id', 'nombre')
+        ->whereIn('id', function($query) {
+            $query->select('categoria_id')
+                ->from('articulos')
+                ->whereNotNull('categoria_id')
+                ->distinct();
+        })
+        ->orderBy('nombre', 'asc')
+        ->get();
+        
+        if ($categorias->isEmpty()) {
+            return response()->json([
+                'success' => false,
+                'message' => 'No hay categorías disponibles'
+            ], 404);
+        }
+        
+        return $categorias;
     }
 }

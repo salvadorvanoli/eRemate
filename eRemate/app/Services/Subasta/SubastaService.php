@@ -14,6 +14,7 @@ use App\Events\NuevaPujaEvent;
 use App\Jobs\ProcesarPujasAutomaticas;
 use Illuminate\Support\Facades\Auth;
 use Illuminate\Http\JsonResponse;
+use Carbon\Carbon;
 
 class SubastaService implements SubastaServiceInterface
 {
@@ -217,6 +218,9 @@ class SubastaService implements SubastaServiceInterface
     public function obtenerSubastasOrdenadas() 
     {
         $subastas = Subasta::whereNotIn('estado', [EstadoSubasta::CANCELADA, EstadoSubasta::CERRADA])
+            ->with(['lotes.articulos', 'lotes' => function ($query) {
+                $query->select('id', 'subasta_id', 'nombre');
+            }])
             ->orderBy('fechaInicio', 'asc')
             ->get();
 
@@ -227,17 +231,66 @@ class SubastaService implements SubastaServiceInterface
             ], 404);
         }
 
-        return $subastas;
+        $catalogElements = $subastas->map(function ($subasta) {
+            $loteIds = $subasta->lotes->pluck('id')->toArray();
+            $totalLotes = count($loteIds);
+            
+            $imagen = null;
+            if ($subasta->loteActual_id) {
+                $loteActual = $subasta->lotes->firstWhere('id', $subasta->loteActual_id);
+                if ($loteActual && $loteActual->articulos->isNotEmpty() && !empty($loteActual->articulos[0]->imagenes)) {
+                    $imagenes = is_string($loteActual->articulos[0]->imagenes) ? 
+                        json_decode($loteActual->articulos[0]->imagenes, true) : 
+                        $loteActual->articulos[0]->imagenes;
+                    $imagen = is_array($imagenes) && !empty($imagenes) ? $imagenes[0] : null;
+                }
+            }
+            
+            if (!$imagen && $subasta->lotes->isNotEmpty() && $subasta->lotes[0]->articulos->isNotEmpty() && !empty($subasta->lotes[0]->articulos[0]->imagenes)) {
+                $primerLote = $subasta->lotes[0];
+                $imagenes = is_string($primerLote->articulos[0]->imagenes) ? 
+                    json_decode($primerLote->articulos[0]->imagenes, true) : 
+                    $primerLote->articulos[0]->imagenes;
+                $imagen = is_array($imagenes) && !empty($imagenes) ? $imagenes[0] : null;
+            }
+
+            return [
+                'id' => $subasta->id,
+                'imagen' => $imagen,
+                'lotes' => $loteIds,
+                'lote_id' => $subasta->loteActual_id,
+                'subasta_id' => $subasta->id,
+                'etiqueta' => strtoupper($subasta->estado->name),
+                'texto1' => strtoupper($subasta->tipoSubasta),
+                'texto2' => strtoupper($subasta->ubicacion),
+                'texto3' => "{$totalLotes} LOTES EN TOTAL",
+                'fechaInicio' => $subasta->fechaInicio,
+                'fechaCierre' => $subasta->fechaCierre
+            ];
+        });
+        
+        return $catalogElements;
     }
 
     public function obtenerSubastasFiltradas(array $data)
     {
-        $query = Subasta::query()->orderBy('fechaInicio', 'asc');
+        $query = Subasta::query()
+            ->with(['lotes.articulos', 'lotes' => function ($query) {
+                $query->select('id', 'subasta_id', 'nombre');
+            }]);
 
-        $cerrada = $data['cerrada'] ?? false;
-        $categoria = $data['categoria'] ?? null;
-        $ubicacion = $data['ubicacion'] ?? null;
-        $fechaCierreLimite = $data['fechaCierreLimite'] ?? null;
+        $textoBusqueda = (isset($data['textoBusqueda']) && $data['textoBusqueda'] !== null && $data['textoBusqueda'] !== "null") ? $data['textoBusqueda'] : null;
+        $cerrada = (isset($data['cerrada']) && $data['cerrada'] !== null && is_bool($data['cerrada'])) ? $data['cerrada'] : false;
+        $categoria = (isset($data['categoria']) && $data['categoria'] !== null && $data['categoria'] !== "null") ? $data['categoria'] : null;
+        $ubicacion = (isset($data['ubicacion']) && $data['ubicacion'] !== null && $data['ubicacion'] !== "null") ? $data['ubicacion'] : null;
+        $fechaCierreLimite = (isset($data['fechaCierreLimite']) && $data['fechaCierreLimite'] !== null && $data['fechaCierreLimite'] !== "null") ? $data['fechaCierreLimite'] : null;
+
+        if ($textoBusqueda) {
+            $query->where(function($q) use ($textoBusqueda) {
+                $q->where('tipoSubasta', 'like', "%{$textoBusqueda}%")
+                  ->orWhere('ubicacion', 'like', "%{$textoBusqueda}%");
+            });
+        }
 
         if ($cerrada) {
             $query->where('estado', EstadoSubasta::CERRADA);
@@ -259,6 +312,8 @@ class SubastaService implements SubastaServiceInterface
             $query->where('fechaCierre', '<=', $fechaCierreLimite);
         }
 
+        $query->orderBy('fechaCierre', 'asc');
+
         $subastas = $query->get();
 
         if ($subastas->isEmpty()) {
@@ -268,7 +323,64 @@ class SubastaService implements SubastaServiceInterface
             ], 404);
         }
 
-        return $subastas;
+        $catalogElements = $subastas->map(function ($subasta) {
+            $loteIds = $subasta->lotes->pluck('id')->toArray();
+            $totalLotes = count($loteIds);
+            
+            $imagen = null;
+            if ($subasta->loteActual_id) {
+                $loteActual = $subasta->lotes->firstWhere('id', $subasta->loteActual_id);
+                if ($loteActual && $loteActual->articulos->isNotEmpty() && !empty($loteActual->articulos[0]->imagenes)) {
+                    $imagenes = is_string($loteActual->articulos[0]->imagenes) ? 
+                        json_decode($loteActual->articulos[0]->imagenes, true) : 
+                        $loteActual->articulos[0]->imagenes;
+                    $imagen = is_array($imagenes) && !empty($imagenes) ? $imagenes[0] : null;
+                }
+            }
+            
+            if (!$imagen && $subasta->lotes->isNotEmpty() && $subasta->lotes[0]->articulos->isNotEmpty() && !empty($subasta->lotes[0]->articulos[0]->imagenes)) {
+                $primerLote = $subasta->lotes[0];
+                $imagenes = is_string($primerLote->articulos[0]->imagenes) ? 
+                    json_decode($primerLote->articulos[0]->imagenes, true) : 
+                    $primerLote->articulos[0]->imagenes;
+                $imagen = is_array($imagenes) && !empty($imagenes) ? $imagenes[0] : null;
+            }
+
+            return [
+                'id' => $subasta->id,
+                'imagen' => $imagen,
+                'lotes' => $loteIds,
+                'lote_id' => $subasta->loteActual_id,
+                'subasta_id' => $subasta->id,
+                'etiqueta' => strtoupper($subasta->estado->name),
+                'texto1' => strtoupper($subasta->tipoSubasta),
+                'texto2' => strtoupper($subasta->ubicacion),
+                'texto3' => "{$totalLotes} LOTES EN TOTAL",
+                'fechaInicio' => $subasta->fechaInicio,
+                'fechaCierre' => $subasta->fechaCierre
+            ];
+        });
+        
+        return $catalogElements;
+    }
+
+    public function obtenerUbicaciones()
+    {
+        $ubicaciones = Subasta::select('ubicacion')
+            ->whereNotNull('ubicacion')
+            ->distinct()
+            ->orderBy('ubicacion', 'asc')
+            ->pluck('ubicacion')
+            ->toArray();
+        
+        if (empty($ubicaciones)) {
+            return response()->json([
+                'success' => false,
+                'message' => 'No hay ubicaciones disponibles'
+            ], 404);
+        }
+        
+        return $ubicaciones;
     }
 
     public function obtenerSubastasOrdenadasPorCierre($pagina = 1, $cantidad = 10)

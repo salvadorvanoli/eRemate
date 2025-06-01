@@ -1,0 +1,15 @@
+<p-floatlabel variant="on">
+    <p-datepicker
+        [styleClass]="classes"
+        [inputStyleClass]="classes"
+        [(ngModel)]="dateTime"
+        dateFormat="yy-mm-dd"
+        [showTime]="true"
+        hourFormat="24"
+        inputId="on_label"
+        showIcon
+        iconDisplay="input"
+        (ngModelChange)="onDateChange($event)"
+    />
+    <label for="on_label" class="mr-8">{{ label }}</label>
+</p-floatlabel>

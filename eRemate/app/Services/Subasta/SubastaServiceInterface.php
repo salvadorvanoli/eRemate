@@ -13,6 +13,7 @@ interface SubastaServiceInterface
     public function obtenerSubastas();
     public function obtenerSubastasOrdenadas();
     public function obtenerSubastasFiltradas(array $data);
+    public function obtenerUbicaciones();
     public function obtenerSubastasOrdenadasPorCierre($pagina = 1, $cantidad = 10);
     public function obtenerLotes(int $id);
     public function iniciarSubasta(int $id);

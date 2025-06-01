@@ -30,8 +30,7 @@ class CatalogTestDataSeeder extends Seeder
         
         foreach ($nombresCategorias as $index => $nombre) {
             $categoria = Categoria::create([
-                'nombre' => $nombre,
-                'descripcion' => "Categoría para artículos de {$nombre}",
+                'nombre' => $nombre
             ]);
             $categorias[] = $categoria;
         }

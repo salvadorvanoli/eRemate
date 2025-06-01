@@ -10,4 +10,5 @@ interface ArticuloServiceInterface
     public function obtenerArticulos();
     public function obtenerArticulosOrdenados();
     public function obtenerArticulosFiltrados(array $data);
+    public function obtenerCategorias();
 }

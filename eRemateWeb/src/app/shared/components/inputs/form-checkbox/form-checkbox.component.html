@@ -1,8 +1,10 @@
 <div [class]="classes">
     <p-checkbox
-        [value]="label"
+        [styleClass]="classes"
+        [binary]="true"
+        [(ngModel)]="isChecked"
         inputId="ny"
-        (onChange)="checked.emit($event.checked);"
+        (onChange)="onCheckboxChange()"
     />
     <label for="ny" class="ml-2">{{ label }}</label>
 </div>

@@ -197,12 +197,14 @@ class ArticuloController extends Controller
     public function obtenerArticulosFiltrados(Request $request)
     {
         try {
+            $textoBusqueda = $request->query('textoBusqueda', null);
             $cerrada = filter_var($request->query('cerrada', false), FILTER_VALIDATE_BOOLEAN);
             $categoria = $request->query('categoria', null);
             $ubicacion = $request->query('ubicacion', null);
             $fechaCierreLimite = $request->query('fechaCierreLimite', null);
             
             $data = [
+                'textoBusqueda' => $textoBusqueda,
                 'cerrada' => $cerrada,
                 'categoria' => $categoria,
                 'ubicacion' => $ubicacion,
@@ -225,6 +227,29 @@ class ArticuloController extends Controller
             return response()->json([
                 'success' => false,
                 'message' => 'Error al obtener artículos filtrados: ' . $e->getMessage()
+            ], 500);
+        }
+    }
+
+    public function obtenerCategorias()
+    {
+        try {
+            $categorias = $this->articuloService->obtenerCategorias();
+
+            if ($categorias instanceof JsonResponse) {
+                return $categorias;
+            }
+
+            return response()->json([
+                'success' => true,
+                'data' => $categorias,
+                'message' => 'Categorías obtenidas correctamente'
+            ], 200);
+        
+        } catch (\Exception $e) {
+            return response()->json([
+                'success' => false,
+                'message' => 'Error al obtener categorías: ' . $e->getMessage()
             ], 500);
         }
     }

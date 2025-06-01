@@ -1,22 +1,50 @@
-<a routerLink="/{{ dataType }}/{{ element.id }}">
-    <div
-        class="flex flex-col sm:flex-row sm:items-center p-6 gap-4"
-        [ngClass]="{ 'border-t border-surface-200': !first }"
-    >
-        <div class="w-40 relative">
-            <img
-                class="block xl:block mx-auto rounded w-full"
-                [src]="element.imagenes ? element.imagenes[0] : 'https://developers.elementor.com/docs/assets/img/elementor-placeholder-image.png'"
-                [alt]="element.nombre"
-            />
-        </div>
-        <div class="flex flex-col flex-1 gap-6">
-            <div class="flex flex-row items-start gap-2">
-                <div class="text-xl font-semibold mt-2">{{ element.nombre }}</div>
+<div
+    class="flex flex-col sm:flex-row sm:items-center p-6 gap-4"
+    [ngClass]="{ 'border-t border-surface-200': !first }"
+>
+    <div class="sm:w-60 md:w-40 relative">
+        <img
+            class="block xl:block mx-auto rounded-border w-full"
+            [src]="element.imagen ? 'https://developers.elementor.com/docs/assets/img/elementor-placeholder-image.png' : 'https://developers.elementor.com/docs/assets/img/elementor-placeholder-image.png'"
+            [alt]="element.texto2"
+        />
+        <p-tag
+            [value]="element.etiqueta"
+            severity="info"
+            class="absolute"
+            [style.left.px]="4"
+            [style.right.px]="4"
+            [style.top.px]="4"
+        />
+    </div>
+    <div class="flex flex-col md:flex-row justify-between md:items-center flex-1 gap-6">
+        <div class="flex flex-row md:flex-col justify-between items-start gap-2">
+            <div>
+                <span class="font-medium text-secondary text-sm">{{ element.texto1 }}</span>
+                <div class="text-lg font-medium text-surface-900 mt-2">{{ element.texto2 }}</div>
             </div>
-            <div class="flex flex-col gap-8">
-                <span class="text-lg font-medium">${{ element.precio }}</span>
+            <div class="bg-surface-100 p-1" style="border-radius: 30px">
+            <span class="text-surface-900 font-medium text-sm">{{element.texto3}}</span>
+            </div>
+        </div>
+        <div class="flex flex-col md:items-end gap-8">
+            <span class="text-xl font-semibold text-surface-900">{{
+                getCountdown(element)
+            }}</span>
+            <div class="flex flex-row-reverse md:flex-row gap-2">
+                @if (dataType === 'item') {
+                    <p-button icon="pi pi-heart" [outlined]="true" />
+                }
+                <a
+                    class="flex-auto md:flex-initial whitespace-nowrap"
+                    [routerLink]="['/subasta/', element.subasta_id]"
+                >
+                    <p-button
+                        class="flex-auto md:flex-initial whitespace-nowrap"
+                        [label]="buttonLabel"
+                    />
+                </a>
             </div>
         </div>
     </div>
-</a>
+</div>

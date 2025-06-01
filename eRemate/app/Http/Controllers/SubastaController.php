@@ -181,12 +181,14 @@ class SubastaController extends Controller
     public function obtenerSubastasFiltradas(Request $request)
     {
         try {
+            $textoBusqueda = $request->query('textoBusqueda', null);
             $cerrada = filter_var($request->query('cerrada', false), FILTER_VALIDATE_BOOLEAN);
             $categoria = $request->query('categoria', null);
             $ubicacion = $request->query('ubicacion', null);
             $fechaCierreLimite = $request->query('fechaCierreLimite', null);
             
             $data = [
+                'textoBusqueda' => $textoBusqueda,
                 'cerrada' => $cerrada,
                 'categoria' => $categoria,
                 'ubicacion' => $ubicacion,
@@ -209,6 +211,29 @@ class SubastaController extends Controller
             return response()->json([
                 'success' => false,
                 'message' => 'Error al obtener subastas filtradas: ' . $e->getMessage()
+            ], 500);
+        }
+    }
+
+    public function obtenerUbicaciones()
+    {
+        try {
+            $ubicaciones = $this->subastaService->obtenerUbicaciones();
+
+            if ($ubicaciones instanceof JsonResponse) {
+                return $ubicaciones;
+            }
+
+            return response()->json([
+                'success' => true,
+                'data' => $ubicaciones,
+                'message' => 'Ubicaciones obtenidas correctamente'
+            ], 200);
+        
+        } catch (\Exception $e) {
+            return response()->json([
+                'success' => false,
+                'message' => 'Error al obtener ubicaciones: ' . $e->getMessage()
             ], 500);
         }
     }
