@@ -43,18 +43,23 @@
         </button>
       </div>
     </div>
-    
-    <div class="image-section">
+      <div class="image-section">
       <div class="profile-image-container">
         <img [src]="profileImage" alt="Perfil" class="profile-image" *ngIf="profileImage" />
         <div class="no-image" *ngIf="!profileImage">
           <i class="pi pi-user" style="font-size: 5rem; color: #ccc;"></i>
         </div>
       </div>
-      <div class="upload-button-container">
-        <p-button label="Subir imagen" icon="pi pi-upload" (click)="onImageUpload($event)" 
-                 [style]="{'background-color': '#6334E3', 'border-color': '#6334E3'}"
-                 styleClass="p-button-responsive"></p-button>
+      <div class="upload-button-container">        <app-image-upload-input
+          folder="rematadores"
+          [maxFiles]="1"
+          [required]="false"
+          placeholder="Cambiar foto de perfil"
+          [formSubmitted]="formSubmitted"
+          (imagesValue)="onImagesSelected($event)"
+          (isInputInvalid)="onImageValidationChange($event)"
+          #imageUploadComponent>
+        </app-image-upload-input>
       </div>
     </div>
   </div>

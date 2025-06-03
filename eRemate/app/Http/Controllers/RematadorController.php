@@ -88,14 +88,26 @@ class RematadorController extends Controller
             'apellido' => 'sometimes|string|max:255',
             'numeroMatricula' => 'sometimes|string|max:255', // Eliminado unique
             'direccionFiscal' => 'sometimes|string|max:255',
-            'imagen' => 'nullable|image|max:2048',
+            'imagen' => 'nullable|string|max:500',
+            'imagenes' => 'nullable|array', // Para soporte del nuevo componente
+            'imagenes.*' => 'nullable|array',
             // Validación sin restricción unique
             'email' => 'sometimes|email|max:255', // Eliminado unique
             'telefono' => 'sometimes|string|max:20'
         ]);
 
-        // Si hay imagen, procesarla
-        if ($request->hasFile('imagen')) {
+        // Procesar imagen desde el nuevo componente de imágenes
+        if ($request->has('imagenes') && is_array($request->imagenes) && count($request->imagenes) > 0) {
+            // Tomar la primera imagen del array (para rematadores solo debe ser 1)
+            $primeraImagen = $request->imagenes[0];
+            
+            // Si la imagen tiene la estructura esperada del frontend
+            if (is_array($primeraImagen) && isset($primeraImagen['url'])) {
+                $data['imagen'] = $primeraImagen['url'];
+            }
+        }
+        // Fallback para el formato anterior de imagen directa como string
+        elseif ($request->hasFile('imagen')) {
             $data['imagen'] = $request->file('imagen')->store('rematadores', 'public');
         }
 

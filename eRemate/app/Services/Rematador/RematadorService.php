@@ -4,7 +4,7 @@ namespace App\Services\Rematador;
 
 use App\Models\Rematador;
 use App\Models\Subasta;
-use App\Enums\EstadoSubasta; // ¡Importante importar el enum!
+use App\Enums\EstadoSubasta;
 use Illuminate\Database\Eloquent\Collection;
 
 class RematadorService implements RematadorServiceInterface
@@ -51,7 +51,10 @@ class RematadorService implements RematadorServiceInterface
         \DB::beginTransaction();
         
         try {
-            // Extraer los datos del usuario (email y teléfono)
+            if (isset($data['imagen']) && $data['imagen'] !== null && $data['imagen'] !== $rematador->imagen) {
+                $this->eliminarImagenAnterior($rematador->imagen);
+            }
+            
             $datosUsuario = [];
             if (isset($data['email'])) {
                 $datosUsuario['email'] = $data['email'];
@@ -63,10 +66,8 @@ class RematadorService implements RematadorServiceInterface
                 unset($data['telefono']); // Quitar del array de datos del rematador
             }
             
-            // Actualizar el rematador
             $rematador->update($data);
             
-            // Si hay datos de usuario para actualizar
             if (!empty($datosUsuario)) {
                 $usuario = \App\Models\Usuario::find($id);
                 if (!$usuario) {
@@ -163,5 +164,47 @@ class RematadorService implements RematadorServiceInterface
         $subasta->save();
         
         return $subasta;
+    }
+
+    private function eliminarImagenAnterior(?string $imagenUrl): bool
+    {
+        if (empty($imagenUrl)) {
+            return true;
+        }
+
+        try {
+            $partesUrl = parse_url($imagenUrl);
+            
+            if (!$partesUrl || !isset($partesUrl['path'])) {
+                \Log::warning('URL de imagen inválida para eliminar: ' . $imagenUrl);
+                return false;
+            }
+            
+            $path = $partesUrl['path'];
+            
+            if (preg_match('/\/api\/images\/serve\/([^\/]+)\/(.+)$/', $path, $matches)) {
+                $folder = $matches[1];
+                $filename = $matches[2];
+                
+                $imageController = new \App\Http\Controllers\ImageController();
+                $response = $imageController->delete($folder, $filename);
+                
+                $responseData = json_decode($response->getContent(), true);
+                if ($responseData && isset($responseData['success']) && $responseData['success']) {
+                    \Log::info('Imagen anterior eliminada correctamente: ' . $imagenUrl);
+                    return true;
+                } else {
+                    \Log::warning('No se pudo eliminar la imagen anterior: ' . $imagenUrl);
+                    return false;
+                }
+            } else {
+                \Log::warning('Formato de URL de imagen no reconocido: ' . $imagenUrl);
+                return false;
+            }
+            
+        } catch (\Exception $e) {
+            \Log::error('Error al eliminar imagen anterior: ' . $e->getMessage() . ' - URL: ' . $imagenUrl);
+            return false;
+        }
     }
 }
