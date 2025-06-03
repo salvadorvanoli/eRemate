@@ -18,7 +18,8 @@ import { GoogleAuthService } from '../../../../core/services/google-auth.service
 
 @Component({
   selector: 'app-register-form',
-  standalone: true,  imports: [
+  standalone: true,
+  imports: [
     Toast,
     FormTextInputComponent,
     InteractivePasswordInputComponent,
@@ -56,16 +57,19 @@ export class RegisterFormComponent implements OnInit, OnDestroy {
   @ViewChild('legalAddressInput') legalAddressInput: any;
 
   email: string = '';
-  phone: string = '';  selectedOption: string = '';
-  previousSelectedOption: string = ''; // Para rastrear cambios de tipo
-  registrationSuccessful: boolean = false; // Para rastrear si el registro fue exitoso
+  phone: string = '';
+  selectedOption: string = '';
   password = signal('');
   confirmPassword = signal('');
+
+  previousSelectedOption: string = '';
+  registrationSuccessful: boolean = false;
+  
   name: string = '';
   lastname: string = '';
   registrationNumber: string = '';
   fiscalAddress: string = '';
-  images: any[] = []; // Cambiado de image: string a images: any[]
+  images: File[] = [];
 
   taxIdentificationNumber: string = '';
   legalName: string = '';
@@ -93,11 +97,14 @@ export class RegisterFormComponent implements OnInit, OnDestroy {
   });
 
   emailPattern = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
-  phonePattern = /^[0-9]{9,15}$/;  namePattern = /^[a-zA-ZÀ-ÿ\s]+$/;
+  phonePattern = /^[0-9]{9,15}$/;
+  namePattern = /^[a-zA-ZÀ-ÿ\s]+$/;
   registrationNumberPattern = /^[a-zA-Z0-9-]{5,15}$/;
   fiscalAddressPattern = /^[a-zA-Z0-9\s.,-]{5,100}$/;
   taxIdentificationNumberPattern = /^[a-zA-Z0-9-]{5,20}$/;
-  addressPattern = /^[a-zA-Z0-9\s.,#-]{5,100}$/;  constructor(
+  addressPattern = /^[a-zA-Z0-9\s.,#-]{5,100}$/;
+
+  constructor(
     private messageService: MessageService,
     private SecurityService: SecurityService,
     private imageService: ImageService,
@@ -109,62 +116,97 @@ export class RegisterFormComponent implements OnInit, OnDestroy {
   }
 
   ngOnDestroy() {
-    if (!this.registrationSuccessful && this.images.length > 0) {
-      this.cleanupPreviousImages();
-    }
   }
 
   register() {
     this.formSubmitted.set(true);
     if (!this.validateForm()) {
-      const usuario: any = {
-        email: this.email,
-        telefono: this.phone,
-        contrasenia: this.password(),
-        tipo: this.selectedOption
-      };
-      
-      if (this.selectedOption === 'rematador') {        
-        Object.assign(usuario, {
-          nombre: this.name,
-          apellido: this.lastname,
-          numeroMatricula: this.registrationNumber,
-          direccionFiscal: this.fiscalAddress,
-          imagenes: this.images // Para el backend será un array, pero solo contendrá 1 imagen
-        });
-      } else if (this.selectedOption === 'casa') {
-        Object.assign(usuario, {
-          identificacionFiscal: this.taxIdentificationNumber,
-          nombreLegal: this.legalName,
-          domicilio: this.legalAddress
-        });
-      }      
-      
-      this.SecurityService.register(usuario).subscribe({
-        next: () => {
-          this.registrationSuccessful = true;
-          this.messageService.add({ 
-            severity: 'success', 
-            summary: 'Operación exitosa', 
-            detail: '¡Usuario creado exitosamente!', 
-            life: 4000 
-          });
-          
-          setTimeout(() => {
-            window.location.reload();
-          }, 2000);
-        },
-        error: (err: any) => {
-          if (err.error.errors) {
-            this.messageService.add({ severity: 'error', summary: 'Error', detail: JSON.stringify(err.error.errors), life: 4000 });
-          } else {
-            this.messageService.add({ severity: 'error', summary: 'Error', detail: 'No fue posible conectar con el servidor', life: 4000 });
-          }
-        }
-      });
+      if (this.images.length > 0) {
+        this.uploadImagesAndRegister();
+      } else {
+        this.performRegistration([]);
+      }
     } else {
-      this.messageService.add({ severity: 'error', summary: 'Error', detail: 'Datos ingresados inválidos', life: 4000 });
+      this.messageService.add({ 
+        severity: 'error', 
+        summary: 'Error', 
+        detail: 'Datos ingresados inválidos', 
+        life: 4000 
+      });
     }
+  }
+
+  private async uploadImagesAndRegister() {
+    try {
+      const folder = this.getSelectedFolder();
+      const uploadedImages: any[] = [];
+
+      // Subir todas las imágenes
+      for (const file of this.images) {
+        const response = await this.imageService.uploadImage(file, folder).toPromise();
+        if (response && response.success && response.data) {
+          uploadedImages.push(response.data);
+        }
+      }
+
+      this.performRegistration(uploadedImages);
+    } catch (error) {
+      console.error('Error al subir imágenes:', error);
+      this.messageService.add({ 
+        severity: 'error', 
+        summary: 'Error', 
+        detail: 'Error al subir las imágenes. Intente nuevamente.', 
+        life: 4000 
+      });
+    }
+  }
+
+  private performRegistration(uploadedImages: any[]) {
+    const usuario: any = {
+      email: this.email,
+      telefono: this.phone,
+      contrasenia: this.password(),
+      tipo: this.selectedOption
+    };
+    
+    if (this.selectedOption === 'rematador') {        
+      Object.assign(usuario, {
+        nombre: this.name,
+        apellido: this.lastname,
+        numeroMatricula: this.registrationNumber,
+        direccionFiscal: this.fiscalAddress,
+        imagenes: uploadedImages
+      });
+    } else if (this.selectedOption === 'casa') {
+      Object.assign(usuario, {
+        identificacionFiscal: this.taxIdentificationNumber,
+        nombreLegal: this.legalName,
+        domicilio: this.legalAddress
+      });
+    }      
+    
+    this.SecurityService.register(usuario).subscribe({
+      next: () => {
+        this.registrationSuccessful = true;
+        this.messageService.add({ 
+          severity: 'success', 
+          summary: 'Operación exitosa', 
+          detail: '¡Usuario creado exitosamente!', 
+          life: 4000 
+        });
+        
+        setTimeout(() => {
+          window.location.reload();
+        }, 2000);
+      },
+      error: (err: any) => {
+        if (err.error.errors) {
+          this.messageService.add({ severity: 'error', summary: 'Error', detail: JSON.stringify(err.error.errors), life: 4000 });
+        } else {
+          this.messageService.add({ severity: 'error', summary: 'Error', detail: 'No fue posible conectar con el servidor', life: 4000 });
+        }
+      }
+    });
   }
 
   validatePasswordsAreDifferent() {
@@ -199,7 +241,7 @@ export class RegisterFormComponent implements OnInit, OnDestroy {
       this.isLegalNameInvalid ||
       this.isLegalAddressInvalid;
     } else {
-      return true
+      return true;
     }
   }
 
@@ -226,7 +268,8 @@ export class RegisterFormComponent implements OnInit, OnDestroy {
     this.email = '';
     this.phone = '';
     this.password.set('');
-    this.confirmPassword.set('');    this.name = '';
+    this.confirmPassword.set('');
+    this.name = '';
     this.lastname = '';
     this.registrationNumber = '';
     this.fiscalAddress = '';
@@ -251,7 +294,8 @@ export class RegisterFormComponent implements OnInit, OnDestroy {
     this.isImageInvalid = false;
 
     this.isTaxIdentificationNumberInvalid = false;
-    this.isLegalNameInvalid = false;    this.isLegalAddressInvalid = false;
+    this.isLegalNameInvalid = false;
+    this.isLegalAddressInvalid = false;
   }
   
   resetFormWithoutImages() {
@@ -304,8 +348,8 @@ export class RegisterFormComponent implements OnInit, OnDestroy {
     this.isLegalNameInvalid = false;
     this.isLegalAddressInvalid = false;
   }
-  
-  onImagesSelected(images: any[]) {
+
+  onImagesSelected(images: File[]) {
     this.images = images;
   }
 
@@ -315,9 +359,6 @@ export class RegisterFormComponent implements OnInit, OnDestroy {
 
   onUserTypeChange(newType: string) {
     if (this.previousSelectedOption !== newType && this.images.length > 0) {
-      
-      this.cleanupPreviousImages();
-      
       if (this.imageInput) {
         this.imageInput.reset();
       }
@@ -330,30 +371,21 @@ export class RegisterFormComponent implements OnInit, OnDestroy {
     this.selectedOption = newType;
   }
 
-  private cleanupPreviousImages() {
-    // Crear una copia del array antes de limpiarlo
-    const imagesToDelete = [...this.images];
-    
-    imagesToDelete.forEach(image => {
-      if (image.filename && image.folder) {
-        this.imageService.deleteImage(image.folder, image.filename).subscribe({
-          next: (response) => {
-            console.log('Imagen eliminada del servidor (registro):', image.filename, response.message);
-          },
-          error: (error) => {
-            console.warn('Error al eliminar imagen (registro):', image.filename, error);
-          }
-        });
-      }
-    });
+  private getSelectedFolder(): string {
+    switch (this.selectedOption) {
+      case 'rematador':
+        return 'rematadores';
+      case 'casa':
+        return 'casas';
+      default:
+        return 'usuarios';
+    }
   }
 
   onGoogleAuth(event: any): void {
-    
     if (event && event.token) {
       this.SecurityService.googleRegister(event.token).subscribe({
         next: (response) => {
-          
           if (event.user) {
             localStorage.setItem('google_registration_data', JSON.stringify({
               name: event.user.name,

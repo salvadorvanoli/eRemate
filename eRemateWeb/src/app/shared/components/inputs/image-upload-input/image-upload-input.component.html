@@ -10,29 +10,15 @@
     [chooseLabel]="placeholder"
     chooseIcon="pi pi-upload"
     class="upload-button"
-    [disabled]="isUploading() || uploadedImages().length >= maxFiles"
+    [disabled]="isProcessing() || localImages().length >= maxFiles"
     (onSelect)="onFileSelect($event)"
-    [customUpload]="true">
-  </p-fileUpload>
-
-  <!-- Upload Progress -->
-  @if (isUploading()) {
-    <div class="upload-progress">
-      <p-progressBar 
-        [value]="uploadProgress()" 
-        [showValue]="true"
-        styleClass="mb-2">
-      </p-progressBar>
-      <small class="text-muted">Subiendo imágenes...</small>
-    </div>
-  }
+    [customUpload]="true">  </p-fileUpload>
 
   <!-- Uploaded Images Preview -->
-  @if (uploadedImages().length > 0) {
-    <div class="images-preview">
-      <h5 class="mb-3">Imágenes subidas ({{ uploadedImages().length }}/{{ maxFiles }})</h5>
+  @if (localImages().length > 0) {
+    <div class="images-preview">      <h5 class="mb-3">Imágenes seleccionadas ({{ localImages().length }}/{{ maxFiles }})</h5>
       <div class="images-grid">
-        @for (image of uploadedImages(); track image.filename; let i = $index) {
+        @for (image of localImages(); track image.filename; let i = $index) {
           <div class="image-item">
             <div class="image-preview">
               <img 
@@ -60,9 +46,8 @@
       </div>
     </div>
   }
-
   <!-- Upload Instructions -->
-  @if (uploadedImages().length === 0) {
+  @if (localImages().length === 0) {
     <div class="upload-instructions">
       <i class="pi pi-cloud-upload upload-icon"></i>
       <p class="mb-2">{{ placeholder }}</p>
@@ -79,11 +64,10 @@
       {{ errorMessage }}
     </p-message>
   }
-
   <!-- File Counter Badge -->
-  @if (maxFiles > 1 && uploadedImages().length > 0) {
+  @if (maxFiles > 1 && localImages().length > 0) {
     <p-badge 
-      [value]="uploadedImages().length + '/' + maxFiles"
+      [value]="localImages().length + '/' + maxFiles"
       severity="info"
       class="file-counter">
     </p-badge>

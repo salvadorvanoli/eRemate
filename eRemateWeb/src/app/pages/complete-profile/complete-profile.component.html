@@ -75,13 +75,10 @@
                 errorMessage="Dirección fiscal inválida"
                 (textValue)="fiscalAddress = $event"
                 (isInputInvalid)="isFiscalAddressInvalid = $event"
-            />
-
-            <app-image-upload-input
+            />            <app-image-upload-input
                 #imageInput
                 class="w-full"
                 placeholder="Subir foto de perfil"
-                folder="rematadores"
                 [maxFiles]="1"
                 [required]="true"
                 [formSubmitted]="formSubmitted"

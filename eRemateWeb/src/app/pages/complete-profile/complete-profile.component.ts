@@ -49,6 +49,7 @@ export class CompleteProfileComponent implements OnInit, OnDestroy {
 
   // Datos de Google
   googleData: any = null;
+
   // Campos básicos
   phone: string = '';
   selectedOption: string = '';
@@ -60,7 +61,7 @@ export class CompleteProfileComponent implements OnInit, OnDestroy {
   lastname: string = '';
   registrationNumber: string = '';
   fiscalAddress: string = '';
-  images: any[] = [];
+  images: File[] = [];
 
   // Campos de casa de remates
   taxIdentificationNumber: string = '';
@@ -125,7 +126,11 @@ export class CompleteProfileComponent implements OnInit, OnDestroy {
         }
       });
     }
-  }  
+  }
+
+  ngOnDestroy(): void {
+      
+  }
   
   private checkUserProfileStatus(user: any) {
 
@@ -156,74 +161,16 @@ export class CompleteProfileComponent implements OnInit, OnDestroy {
     });
     this.router.navigate(['/register']);
   }
-  
-  ngOnDestroy() {
-    if (!this.profileCompletionSuccessful && this.images.length > 0) {
-      this.cleanupPreviousImages();
-    }
-  }
 
   completeProfile() {
     this.formSubmitted.set(true);
     
     if (!this.validateForm()) {
-      const profileData: any = {
-        telefono: this.phone,
-        tipo: this.selectedOption
-      };
-
-      if (this.selectedOption === 'rematador') {        
-        Object.assign(profileData, {
-          nombre: this.name,
-          apellido: this.lastname,
-          numeroMatricula: this.registrationNumber,
-          direccionFiscal: this.fiscalAddress,
-          imagenes: this.images
-        });
-      } else if (this.selectedOption === 'casa') {
-        Object.assign(profileData, {
-          identificacionFiscal: this.taxIdentificationNumber,
-          nombreLegal: this.legalName,
-          domicilio: this.legalAddress
-        });
-      }      
-      
-      this.securityService.completeProfile(profileData).subscribe({
-        next: () => {
-          this.profileCompletionSuccessful = true;
-          this.messageService.add({ 
-            severity: 'success', 
-            summary: 'Operación exitosa', 
-            detail: '¡Perfil completado exitosamente!', 
-            life: 4000 
-          });
-          
-          localStorage.removeItem('google_registration_data');
-
-          setTimeout(() => {
-            this.router.navigate(['/']).then(() => {
-              window.location.reload(); // Fuerza recarga completa
-            });
-          }, 500);
-        },
-        error: (err: any) => {
-          if (err.error.errors) {
-            this.messageService.add({ 
-              severity: 'error', 
-              summary: 'Error', 
-              detail: JSON.stringify(err.error.errors), 
-              life: 4000 
-            });
-          } else {
-            this.messageService.add({ 
-              severity: 'error', 
-              summary: 'Error', 
-              detail: 'No fue posible completar el perfil', 
-              life: 4000 
-            });
-          }
-        }
-      });
+      if (this.images.length > 0) {
+        this.uploadImagesAndCompleteProfile();
+      } else {
+        this.performProfileCompletion([]);
+      }
     } else {
       this.messageService.add({ 
         severity: 'error', 
@@ -232,6 +179,91 @@ export class CompleteProfileComponent implements OnInit, OnDestroy {
         life: 4000 
       });
     }
+  }
+
+  private async uploadImagesAndCompleteProfile() {
+    try {
+      const folder = this.getSelectedFolder();
+      const uploadedImages: any[] = [];
+
+      // Subir todas las imágenes
+      for (const file of this.images) {
+        const response = await this.imageService.uploadImage(file, folder).toPromise();
+        if (response && response.success && response.data) {
+          uploadedImages.push(response.data);
+        }
+      }
+
+      this.performProfileCompletion(uploadedImages);
+    } catch (error) {
+      console.error('Error al subir imágenes:', error);
+      this.messageService.add({ 
+        severity: 'error', 
+        summary: 'Error', 
+        detail: 'Error al subir las imágenes. Intente nuevamente.', 
+        life: 4000 
+      });
+    }
+  }
+
+  private performProfileCompletion(uploadedImages: any[]) {
+    const profileData: any = {
+      telefono: this.phone,
+      tipo: this.selectedOption
+    };
+
+    if (this.selectedOption === 'rematador') {        
+      Object.assign(profileData, {
+        nombre: this.name,
+        apellido: this.lastname,
+        numeroMatricula: this.registrationNumber,
+        direccionFiscal: this.fiscalAddress,
+        imagenes: uploadedImages
+      });
+    } else if (this.selectedOption === 'casa') {
+      Object.assign(profileData, {
+        identificacionFiscal: this.taxIdentificationNumber,
+        nombreLegal: this.legalName,
+        domicilio: this.legalAddress
+      });
+    }      
+    
+    this.securityService.completeProfile(profileData).subscribe({
+      next: () => {
+        this.profileCompletionSuccessful = true;
+        this.messageService.add({ 
+          severity: 'success', 
+          summary: 'Operación exitosa', 
+          detail: '¡Perfil completado exitosamente!', 
+          life: 4000 
+        });
+        
+        localStorage.removeItem('google_registration_data');
+
+        setTimeout(() => {
+          this.router.navigate(['/']).then(() => {
+            window.location.reload(); // Fuerza recarga completa
+          });
+        }, 500);
+      },
+      error: (err: any) => {
+        if (err.error.errors) {
+          this.messageService.add({ 
+            severity: 'error', 
+            summary: 'Error', 
+            detail: JSON.stringify(err.error.errors), 
+            life: 4000 
+          });
+        } else {
+          this.messageService.add({ 
+            severity: 'error', 
+            summary: 'Error', 
+            detail: 'No fue posible completar el perfil', 
+            life: 4000 
+          });
+        }
+      }
+    });
   }
 
   validateForm() {
@@ -299,8 +331,7 @@ export class CompleteProfileComponent implements OnInit, OnDestroy {
     this.isLegalNameInvalid = false;    
     this.isLegalAddressInvalid = false;
   }
-
-  onImagesSelected(images: any[]) {
+  onImagesSelected(images: File[]) {
     this.images = images;
   }
 
@@ -310,9 +341,6 @@ export class CompleteProfileComponent implements OnInit, OnDestroy {
 
   onUserTypeChange(newType: string) {
     if (this.previousSelectedOption !== newType && this.images.length > 0) {
-      
-      this.cleanupPreviousImages();
-      
       if (this.imageInput) {
         this.imageInput.reset();
       }
@@ -325,21 +353,14 @@ export class CompleteProfileComponent implements OnInit, OnDestroy {
     this.selectedOption = newType;
   }
 
-  private cleanupPreviousImages() {
-
-    const imagesToDelete = [...this.images];
-    
-    imagesToDelete.forEach(image => {
-      if (image.filename && image.folder) {
-        this.imageService.deleteImage(image.folder, image.filename).subscribe({
-          next: (response) => {
-            console.log('Imagen eliminada del servidor:', image.filename, response.message);
-          },
-          error: (error) => {
-            console.warn('Error al eliminar imagen:', image.filename, error);
-          }
-        });
-      }
-    });
+  private getSelectedFolder(): string {
+    switch (this.selectedOption) {
+      case 'rematador':
+        return 'rematadores';
+      case 'casa':
+        return 'casas';
+      default:
+        return 'usuarios';
+    }
   }
 }

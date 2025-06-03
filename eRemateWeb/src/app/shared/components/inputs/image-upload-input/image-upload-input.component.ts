@@ -27,32 +27,29 @@ import { ImageService, ImageUploadResponse } from '../../../../core/services/ima
   styleUrl: './image-upload-input.component.scss'
 })
 export class ImageUploadInputComponent {
-
   selectedFiles = signal<File[]>([]);
-  uploadedImages = signal<any[]>([]);
-  isUploading = signal(false);
-  uploadProgress = signal(0);  @Input() placeholder: string = "Seleccionar imágenes";
+  localImages = signal<any[]>([]);
+  isProcessing = signal(false);
+
+  @Input() placeholder: string = "Seleccionar imágenes";
   @Input() folder: string = "general";
   @Input() maxFiles: number = 5;
-  @Input() maxFileSize: number = 5242880; // 5MB por defecto
+  @Input() maxFileSize: number = 5242880;
   @Input() acceptedTypes: string = "image/*";
   @Input() required: boolean = false;
   @Input() errorMessage: string = "Debe seleccionar al menos una imagen";
   @Input() formSubmitted = signal(false);
 
-  @Output() imagesValue = new EventEmitter<any[]>();
+  @Output() imagesValue = new EventEmitter<File[]>();
   @Output() isInputInvalid = new EventEmitter<boolean>();
 
-  constructor(private imageService: ImageService) {}
-  showErrorMessage = computed(() => {
-    return this.validateImages() && this.formSubmitted() && !this.isUploading();
+  constructor(private imageService: ImageService) {}  showErrorMessage = computed(() => {
+    return this.validateImages() && this.formSubmitted() && !this.isProcessing();
   });
   
   validateImages() {
-    const isInvalid = this.required && this.uploadedImages().length === 0 && !this.isUploading();
-    
-    console.log('🔍 validateImages - required:', this.required, 'uploadedImages:', this.uploadedImages().length, 'isUploading:', this.isUploading(), 'isInvalid:', isInvalid);
-    
+    const isInvalid = this.required && this.localImages().length === 0 && !this.isProcessing();
+        
     this.isInputInvalid.emit(isInvalid);
     return isInvalid;
   }
@@ -77,91 +74,74 @@ export class ImageUploadInputComponent {
       return;
     }
 
-    if (this.uploadedImages().length + validFiles.length > this.maxFiles) {
+    if (this.localImages().length + validFiles.length > this.maxFiles) {
       console.error(`No puede subir más de ${this.maxFiles} imágenes`);
       return;
     }
 
     this.selectedFiles.set(validFiles);
-    this.uploadFiles(validFiles);
+    this.processFiles(validFiles);
   }
 
-  async uploadFiles(files: File[]) {
+  async processFiles(files: File[]) {
     if (files.length === 0) return;
 
-    this.isUploading.set(true);
-    this.uploadProgress.set(0);
+    this.isProcessing.set(true);
 
-    const totalFiles = files.length;
-    let uploadedCount = 0;
-
+    const processedImages: any[] = [];
+    
     for (const file of files) {
       try {
-        const response = await this.imageService.uploadImage(file, this.folder).toPromise();
+        const preview = await this.imageService.generateImagePreview(file);
         
-        if (response && response.success && response.data) {
-          const currentImages = this.uploadedImages();
-          const newImage = {
-            ...response.data,
-            file: file,
-            preview: await this.imageService.generateImagePreview(file)
-          };
-          
-          this.uploadedImages.set([...currentImages, newImage]);
-        }
+        const imageData = {
+          file: file,
+          preview: preview,
+          original_name: file.name,
+          size: file.size,
+          filename: `temp_${Date.now()}_${file.name}`,
+          folder: this.folder
+        };
         
-        uploadedCount++;
-        this.uploadProgress.set((uploadedCount / totalFiles) * 100);
+        processedImages.push(imageData);
         
       } catch (error) {
-        console.error('Error al subir imagen:', error);
+        console.error('Error al procesar imagen:', error);
       }
-    }    this.isUploading.set(false);
-    this.uploadProgress.set(0);
+    }
+
+    const currentImages = this.localImages();
+    this.localImages.set([...currentImages, ...processedImages]);
+    
+    this.isProcessing.set(false);
     this.selectedFiles.set([]);
     
-    this.imagesValue.emit(this.uploadedImages());
+    // Emitir solo los archivos File al componente padre
+    const allFiles = this.localImages().map(img => img.file);
+    this.imagesValue.emit(allFiles);
     
     this.validateImages();
   }
 
   removeImage(index: number) {
-    const currentImages = this.uploadedImages();
-    const imageToRemove = currentImages[index];
-    
-    if (imageToRemove.filename && imageToRemove.folder) {
-      this.imageService.deleteImage(imageToRemove.folder, imageToRemove.filename).subscribe({
-        next: (response) => {
-          console.log('Imagen eliminada del servidor:', response.message);
-        },
-        error: (error) => {
-          console.error('Error al eliminar imagen del servidor:', error);
-        }
-      });
-    }
-
+    const currentImages = this.localImages();
     const updatedImages = currentImages.filter((_, i) => i !== index);
-    this.uploadedImages.set(updatedImages);
-    this.imagesValue.emit(updatedImages);
+    this.localImages.set(updatedImages);
+    
+    const allFiles = updatedImages.map(img => img.file);
+    this.imagesValue.emit(allFiles);
+    
     this.validateImages();
   }
 
   formatFileSize(bytes: number): string {
     return this.imageService.formatFileSize(bytes);
   }
-
+  
   reset() {
-    const currentImages = this.uploadedImages();
-    currentImages.forEach(image => {
-      if (image.filename && image.folder) {
-        this.imageService.deleteImage(image.folder, image.filename).subscribe();
-      }
-    });
-
     this.selectedFiles.set([]);
-    this.uploadedImages.set([]);
-    this.isUploading.set(false);
-    this.uploadProgress.set(0);
+    this.localImages.set([]);
+    this.isProcessing.set(false);
     
     this.imagesValue.emit([]);
     this.validateImages();
