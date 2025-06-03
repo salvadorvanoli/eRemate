@@ -61,7 +61,7 @@ export class TableAuctionComponent implements OnInit, AfterViewInit, OnDestroy {
     private marker: L.Marker | null = null;
     mapVisible: boolean = false;
     private searchTimeout: any;
-    private defaultLatLng: [number, number] = [-34.6037, -58.3816]; // Buenos Aires por defecto
+    private defaultLatLng: [number, number] = [-34.9011, -56.1645]; // Montevideo, Uruguay por defecto
 
     @ViewChild('dt') dt!: Table;
     @Output() auctionSelected = new EventEmitter<number>();
@@ -209,20 +209,18 @@ export class TableAuctionComponent implements OnInit, AfterViewInit, OnDestroy {
                     this.updateMarker(lat, lng, bestResult.display_name);
                 }
             } else {
-                console.log('No se encontraron resultados para la dirección');
-                // Mantener el mapa en Buenos Aires por defecto
+                console.log('No se encontraron resultados para la dirección');                // Mantener el mapa en Montevideo por defecto
                 if (this.map) {
                     this.map.setView(this.defaultLatLng, 13);
                     // Agregar un marcador temporal indicando que no se encontró la ubicación
-                    this.updateMarker(this.defaultLatLng[0], this.defaultLatLng[1], 'Ubicación no encontrada - Buenos Aires (por defecto)');
+                    this.updateMarker(this.defaultLatLng[0], this.defaultLatLng[1], 'Ubicación no encontrada - Montevideo (por defecto)');
                 }
             }
         } catch (error) {
-            console.error('Error en geocoding:', error);
-            // En caso de error, mantener el mapa en la ubicación por defecto
+            console.error('Error en geocoding:', error);            // En caso de error, mantener el mapa en la ubicación por defecto
             if (this.map) {
                 this.map.setView(this.defaultLatLng, 13);
-                this.updateMarker(this.defaultLatLng[0], this.defaultLatLng[1], 'Error al buscar ubicación - Buenos Aires (por defecto)');
+                this.updateMarker(this.defaultLatLng[0], this.defaultLatLng[1], 'Error al buscar ubicación - Montevideo (por defecto)');
             }
         }
     }    private updateMarker(lat: number, lng: number, customTitle?: string) {

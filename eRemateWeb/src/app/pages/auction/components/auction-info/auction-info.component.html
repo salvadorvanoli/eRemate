@@ -49,8 +49,7 @@
                                 }
                             </span>
                         </div>
-                        
-                        <!-- Icono de ubicacion -->
+                          <!-- Icono de ubicacion -->
                         @if (hasLocation()) {
                             <button 
                                 (click)="openLocationDialog()"
@@ -91,19 +90,47 @@
                             (onClick)="pujar()" 
                             class="bid-button"> 
                         </app-primary-button>
-                    </div>
-                } @else {
+                    </div>                } @else {
                     <div class="no-lot-section">
                         <p class="no-lot-message">Actualmente no hay un lote siendo subastado</p>
                     </div>
-                }</div>
+                }
+                  
+            </div>
         </div>
     </div>
 </div>
 
-<!-- ubicacion -->
-<app-location-dialog 
-    [visible]="showLocationDialog"
-    [location]="item?.ubicacion || ''"
-    (closed)="closeLocationDialog()">
-</app-location-dialog>
+<!-- Modal del Mapa (overlay) -->
+@if (mapVisible && hasLocation()) {
+    <div class="map-modal-overlay" (click)="closeLocationDialog()">        <div class="map-modal-content" (click)="$event.stopPropagation()">
+            <div class="map-modal-header">
+                <h3 class="map-modal-title">Ubicación</h3>
+                <button 
+                    (click)="closeLocationDialog()"
+                    class="map-modal-close">
+                    <svg class="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12"></path>
+                    </svg>
+                </button>
+            </div>
+            
+            <div class="map-modal-body">
+                <!-- Texto de la ubicación -->
+                <div class="location-text">
+                    <p class="location-address">{{ item?.ubicacion }}</p>
+                </div>
+                
+                <!-- Mapa -->
+                <div class="map-container">
+                    <div id="auction-map" 
+                         #mapContainer 
+                         (window:resize)="onMapResize()">
+                    </div>
+                </div>
+                <small class="map-attribution">Vista previa de la ubicación usando OpenStreetMap</small>
+            </div>
+        </div>
+    </div>
+}
+          
