@@ -502,52 +502,28 @@ class SubastaService implements SubastaServiceInterface
     private function sendNuevaPujaNotification(Subasta $subasta, $puja, Lote $lote)
     {
         try {
-            \Log::info('🚀 Iniciando envío de NuevaPujaNotification', [
-                'subasta_id' => $subasta->id,
-                'lote_id' => $lote->id,
-                'puja_usuario_id' => $puja->usuarioRegistrado_id
-            ]);
-
             $loteWithRelations = Lote::with('usuariosInteresados')->find($lote->id);
             
             if (!$loteWithRelations) {
-                \Log::warning('❌ Lote no encontrado con relaciones', ['lote_id' => $lote->id]);
                 return;
             }
 
             $usuariosInteresados = $loteWithRelations->usuariosInteresados;
-            \Log::info('👥 Usuarios interesados encontrados', [
-                'count' => $usuariosInteresados->count(),
-                'lote_id' => $lote->id
-            ]);
 
             if ($usuariosInteresados->count() === 0) {
-                \Log::info('📭 No hay usuarios interesados en este lote', ['lote_id' => $lote->id]);
                 return;
             }
 
             foreach ($usuariosInteresados as $usuarioRegistrado) {
                 if ($usuarioRegistrado->id !== $puja->usuarioRegistrado_id) {
-                    \Log::info('📧 Enviando notificación a usuario', [
-                        'usuario_registrado_id' => $usuarioRegistrado->id,
-                        'lote_id' => $lote->id
-                    ]);
-                    
                     $usuarioNotificado = Usuario::find($usuarioRegistrado->id);
                     if ($usuarioNotificado) {
                         $usuarioNotificado->notify(new NuevaPujaNotification($subasta, $puja, $lote));
-                        \Log::info('✅ Notificación enviada exitosamente', ['usuario_id' => $usuarioNotificado->id]);
-                    } else {
-                        \Log::warning('❌ Usuario no encontrado para notificar', ['usuario_registrado_id' => $usuarioRegistrado->id]);
                     }
-                } else {
-                    \Log::info('⏭️ Saltando usuario que hizo la puja', ['usuario_id' => $usuarioRegistrado->id]);
                 }
             }
         } catch (\Exception $e) {
-            \Log::error('❌ Error sending NuevaPujaNotification: ' . $e->getMessage(), [
-                'exception' => $e->getTraceAsString()
-            ]);
+            \Log::error('Error sending NuevaPujaNotification: ' . $e->getMessage());
         }
     }
 
@@ -748,20 +724,9 @@ class SubastaService implements SubastaServiceInterface
             
         }
 
-        // mandar notificación a los usuarios interesados en el lote
-        \Log::info('🔔 Preparando envío de notificación de nueva puja', [
-            'subasta_id' => $subasta->id,
-            'lote_actual_es_instancia' => $loteActual instanceof Lote,
-            'lote_id' => $loteActual ? $loteActual->id : 'null'
-        ]);
-
+        // Send notification to interested users
         if ($loteActual instanceof Lote){
             $this->sendNuevaPujaNotification($subasta, $pujaCreada, $loteActual);
-        } else {
-            \Log::warning('❌ LoteActual no es instancia de Lote', [
-                'tipo' => gettype($loteActual),
-                'clase' => is_object($loteActual) ? get_class($loteActual) : 'no es objeto'
-            ]);
         }
 
         return response()->json([
@@ -978,8 +943,8 @@ class SubastaService implements SubastaServiceInterface
         // Mandar notis
          if ($loteActual instanceof Lote){
             $this->sendNuevaPujaNotification($subasta, $pujaCreada, $loteActual);
-
         }
+        
         return $pujaCreada;
     }
 

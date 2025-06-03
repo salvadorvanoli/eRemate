@@ -33,7 +33,7 @@ class SubastaFinalizadaNotification extends Notification
 
  
         return $message
-            ->action('Ver Resultados', url("/auction/{$this->subasta->id}"))
+            ->action('Ver Resultados', url("http://localhost:4200/subasta/{$this->subasta->id}"))
             ->line('¡Gracias por participar!');
     }
 }
