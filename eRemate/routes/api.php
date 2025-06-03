@@ -7,7 +7,6 @@ use Illuminate\Support\Facades\Route;
 use App\Http\Controllers\AuthController;
 use App\Http\Controllers\GoogleAuthController;
 use App\Http\Controllers\UsuarioController;
-use App\Http\Controllers\NotificationController;
 
 use App\Http\Controllers\RematadorController;
 use App\Http\Controllers\CasaDeRematesController;
@@ -101,11 +100,6 @@ Route::post('/login', [AuthController::class, 'login']);
 Route::middleware('auth:sanctum')->post('/logout', [AuthController::class, 'logout']);
 Route::middleware('auth:sanctum')->get('/me', [AuthController::class, 'getAuthenticatedUser']);
 
-// Rutas de notificaciones (Testing)
-Route::post('/notify/user-register', [NotificationController::class, 'testBienvenida']);
-Route::post('/notify/auction-start', [NotificationController::class, 'notificarInicioSubasta']);
-Route::post('/notify/auction-end', [NotificationController::class, 'notificarFinSubasta']);
-Route::post('/notify/auction-bid', [NotificationController::class, 'notificarNuevaPuja']);
 
 // Ruta de Home (Carrusel)
 Route::get('/auction/page', [SubastaController::class, 'obtenerSubastasOrdenadasPorCierre']);
