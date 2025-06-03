@@ -80,4 +80,15 @@ export class SubastaService extends BaseHttpService<any, Subasta> {
       })
     );
   }
+
+  obtenerImagenAleatoria(subastaId: number): Observable<any> {
+    return this.http.get<any>(`${this.baseUrl}/auction/${subastaId}/random-image`).pipe(
+      map(response => {
+        if (response.success) {
+          return response.data;
+        }
+        throw new Error(response.message || 'No hay imágenes disponibles para esta subasta');
+      })
+    );
+  }
 }

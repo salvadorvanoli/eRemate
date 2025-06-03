@@ -420,4 +420,16 @@ class SubastaController extends Controller
             ], 500);
         }
     }
+
+    public function obtenerImagenAleatoria(Request $request, $subastaId)
+    {
+        try {
+            return $this->subastaService->obtenerImagenAleatoria($subastaId);
+        } catch (\Exception $e) {
+            return response()->json([
+                'success' => false,
+                'message' => 'Error al obtener imagen aleatoria: ' . $e->getMessage()
+            ], 500);
+        }
+    }
 }

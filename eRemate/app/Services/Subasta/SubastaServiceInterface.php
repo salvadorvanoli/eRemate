@@ -24,4 +24,5 @@ interface SubastaServiceInterface
     public function iniciarProcesoDeAutomatizacion(Subasta $subasta, Lote $lote);
     public function realizarPujaInterna(array $puja, int $subastaId, int $usuarioId);
     public function eliminarSubasta(int $id);
+    public function obtenerImagenAleatoria(int $subastaId);
 }

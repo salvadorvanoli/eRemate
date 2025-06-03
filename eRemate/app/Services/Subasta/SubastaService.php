@@ -749,4 +749,68 @@ class SubastaService implements SubastaServiceInterface
             'message' => 'Subasta eliminada correctamente'
         ]);
     }
+
+    public function obtenerImagenAleatoria(int $subastaId)
+    {
+        $subasta = $this->buscarSubastaPorId($subastaId);
+        if (!$subasta instanceof Subasta) {
+            return $subasta;
+        }
+
+        // Obtener todos los lotes con sus artículos que tengan imágenes
+        $lotes = $subasta->lotes()->with('articulos')->get();
+        
+        // Recopilar todas las imágenes disponibles con información de contexto
+        $todasLasImagenes = [];
+        
+        foreach ($lotes as $lote) {
+            foreach ($lote->articulos as $articulo) {
+                if (!empty($articulo->imagenes)) {
+                    $imagenes = is_string($articulo->imagenes) 
+                        ? json_decode($articulo->imagenes, true) 
+                        : $articulo->imagenes;
+                    
+                    if (is_array($imagenes)) {
+                        foreach ($imagenes as $index => $imagen) {
+                            $todasLasImagenes[] = [
+                                'imagen' => $imagen,
+                                'lote_id' => $lote->id,
+                                'lote_numero' => $lote->numero,
+                                'articulo_id' => $articulo->id,
+                                'articulo_descripcion' => $articulo->descripcion,
+                                'imagen_index' => $index + 1
+                            ];
+                        }
+                    }
+                }
+            }
+        }
+
+        // Verificar si hay imágenes disponibles
+        if (empty($todasLasImagenes)) {
+            return response()->json([
+                'success' => false,
+                'message' => 'No hay imágenes disponibles en esta subasta'
+            ], 404);
+        }
+
+        // Seleccionar una imagen aleatoria
+        $imagenAleatoria = $todasLasImagenes[array_rand($todasLasImagenes)];
+
+        return response()->json([
+            'success' => true,
+            'data' => [
+                'imagen' => $imagenAleatoria['imagen'],
+                'contexto' => [
+                    'subasta_id' => $subasta->id,
+                    'subasta_titulo' => $subasta->titulo,
+                    'lote_id' => $imagenAleatoria['lote_id'],
+                    'lote_numero' => $imagenAleatoria['lote_numero'],
+                    'articulo_id' => $imagenAleatoria['articulo_id'],
+                    'articulo_descripcion' => $imagenAleatoria['articulo_descripcion'],
+                    'imagen_index' => $imagenAleatoria['imagen_index']
+                ]
+            ]
+        ]);
+    }
 }

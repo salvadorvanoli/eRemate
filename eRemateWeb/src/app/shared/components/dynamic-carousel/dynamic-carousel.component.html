@@ -6,12 +6,11 @@
   [responsiveOptions]="responsiveOptions">
 
   <ng-template let-item pTemplate="item">
-    <div class="border-none rounded m-2 p-4 text-center break-all">
-      <div class="mb-3 relative mx-auto">
+    <div class="border-none rounded m-2 p-4 text-center break-all">      <div class="mb-3 relative mx-auto carousel-image-container">
         <img 
           [src]="getImageUrl ? getImageUrl(item) : 'https://developers.elementor.com/docs/assets/img/elementor-placeholder-image.png'" 
           alt="Imagen de la publicación" 
-          class="mx-auto rounded" />
+          class="carousel-image" />
       </div>
       <div class="font-medium text-lg">
         {{ getTitle(item) }}

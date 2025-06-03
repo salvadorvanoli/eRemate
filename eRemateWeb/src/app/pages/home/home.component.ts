@@ -24,6 +24,7 @@ export class HomeComponent implements OnInit, OnDestroy {
 
   subastas: Subasta[] = [];
   countdowns: { [id: number]: string } = {};
+  imagenesAleatorias: { [id: number]: string } = {};
   private timerSub?: Subscription;
   pagina: number = 1;
   cantidad: number = 6;
@@ -53,11 +54,11 @@ export class HomeComponent implements OnInit, OnDestroy {
               fechaCierre: new Date(s.fechaCierre)
             }))
         })
-      )
-      .subscribe(
+      )      .subscribe(
         (data: Subasta[]) => {
           this.subastas = data;
           this.updateCountdowns();
+          this.cargarImagenesAleatorias();
         },
         (error) => {
           console.error('Error al obtener las subastas:', error);
@@ -72,9 +73,32 @@ export class HomeComponent implements OnInit, OnDestroy {
   getLink(subasta: Subasta): string {
     return '/subasta/' + subasta.id;
   }
-
-getCountdown = (subasta: Subasta): string => {
+  getCountdown = (subasta: Subasta): string => {
     return this.countdowns[subasta.id] || '';
+  }
+
+  getImage = (subasta: Subasta): string => {
+    if (!subasta || !subasta.id) {
+      return 'https://developers.elementor.com/docs/assets/img/elementor-placeholder-image.png';
+    }
+
+    return this.imagenesAleatorias[subasta.id] || 'https://developers.elementor.com/docs/assets/img/elementor-placeholder-image.png';
+  }
+
+  private cargarImagenesAleatorias(): void {
+    this.subastas.forEach(subasta => {
+      this.subastaService.obtenerImagenAleatoria(subasta.id).subscribe(
+        (response) => {
+          if (response && response.imagen) {
+            this.imagenesAleatorias[subasta.id] = response.imagen;
+          }
+        },
+        (error) => {
+          console.log(`No se pudo cargar imagen para subasta ${subasta.id}:`, error);
+          this.imagenesAleatorias[subasta.id] = '/remate.jpg';
+        }
+      );
+    });
   }
 
   private updateCountdowns() {

@@ -127,6 +127,7 @@ Route::prefix('auction')->group(function () {
     Route::get('/filtered', [SubastaController::class, 'obtenerSubastasFiltradas']);
     Route::get('/{id}/lots', [SubastaController::class, 'obtenerLotes']);
     Route::get('/{id}/live-stream', [SubastaController::class, 'obtenerTransmisionEnVivo']);
+    Route::get('/{id}/random-image', [SubastaController::class, 'obtenerImagenAleatoria']);
 
     //Route::get('/{id}/bids', [SubastaController::class, 'obtenerPujas']);
 

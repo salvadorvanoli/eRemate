@@ -7,6 +7,7 @@ import { RouterModule } from '@angular/router';
   selector: 'app-dynamic-carousel',
   standalone: true,
   templateUrl: './dynamic-carousel.component.html',
+  styleUrl: './dynamic-carousel.component.scss',
   imports: [ 
     CarouselModule,
     CommonModule,
@@ -32,7 +33,8 @@ export class DynamicCarouselComponent implements OnInit {  @Input() items: any[]
   onItemClick(item: any): void {
     this.itemClick.emit(item);
   }
-    ngOnInit() {
+
+  ngOnInit() {
     this.responsiveOptions = [
       { 
         breakpoint: '1024px', 
