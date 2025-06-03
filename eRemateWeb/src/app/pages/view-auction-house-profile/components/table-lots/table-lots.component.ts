@@ -327,9 +327,7 @@ export class TableLotsComponent implements OnInit, OnChanges {
             
             return;
         }
-        
-        articuloToSave.lote_id = parseInt(this.selectedLotForArticles.id);
-        articuloToSave.imagenes = ["https://picsum.photos/id/237/200/300"];
+          articuloToSave.lote_id = parseInt(this.selectedLotForArticles.id);
         
         this.loading = true;
         

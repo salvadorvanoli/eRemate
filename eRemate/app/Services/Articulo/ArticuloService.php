@@ -80,9 +80,8 @@ class ArticuloService implements ArticuloServiceInterface
             'lote_id' => $data['lote_id'],
             'nombre' => $data['nombre'],
             'imagenes' => $data['imagenes'] ?? [],
-            'especificacionesTecnicas' => $data['especificacionesTecnicas'] ?? '', // Cambiado de [] a ''
+            'especificacionesTecnicas' => $data['especificacionesTecnicas'] ?? '',
             'estado' => $data['estado'],
-            'nombre' => $data['nombre'],
             'categoria_id' => $data['categoria_id'] ?? null
         ]);
     }
@@ -129,6 +128,11 @@ class ArticuloService implements ArticuloServiceInterface
             unset($data['lote_id']);
         }
 
+        // Si se están actualizando las imágenes, eliminar las anteriores
+        if (isset($data['imagenes'])) {
+            $this->eliminarImagenesAnteriores($articulo->imagenes);
+        }
+
         $articulo->update($data);
         
         return Articulo::find($id)->first();
@@ -146,5 +150,66 @@ class ArticuloService implements ArticuloServiceInterface
         }
 
         return $articulos;
+    }
+
+    /**
+     * Elimina las imágenes anteriores del servidor
+     * 
+     * @param array|null $imagenesAnteriores Array de URLs de imágenes
+     * @return bool
+     */
+    private function eliminarImagenesAnteriores(?array $imagenesAnteriores): bool
+    {
+        if (!$imagenesAnteriores || empty($imagenesAnteriores)) {
+            return true;
+        }
+
+        $exitoGeneral = true;
+
+        foreach ($imagenesAnteriores as $imagenUrl) {
+            if (empty($imagenUrl)) {
+                continue;
+            }
+
+            try {
+                // Extraer información de la URL de la imagen
+                $partesUrl = parse_url($imagenUrl);
+                
+                if (!$partesUrl || !isset($partesUrl['path'])) {
+                    \Log::warning('URL de imagen inválida para eliminar: ' . $imagenUrl);
+                    $exitoGeneral = false;
+                    continue;
+                }
+                
+                $path = $partesUrl['path'];
+                
+                // Buscar patrón: /api/images/serve/carpeta/archivo
+                if (preg_match('/\/api\/images\/serve\/([^\/]+)\/(.+)$/', $path, $matches)) {
+                    $folder = $matches[1];
+                    $filename = $matches[2];
+                    
+                    // Usar el ImageController para eliminar la imagen
+                    $imageController = new \App\Http\Controllers\ImageController();
+                    $response = $imageController->delete($folder, $filename);
+                    
+                    $responseData = json_decode($response->getContent(), true);
+                    if ($responseData && isset($responseData['success']) && $responseData['success']) {
+                        \Log::info('Imagen anterior eliminada correctamente: ' . $imagenUrl);
+                    } else {
+                        \Log::warning('No se pudo eliminar la imagen anterior: ' . $imagenUrl);
+                        $exitoGeneral = false;
+                    }
+                } else {
+                    \Log::warning('Formato de URL de imagen no reconocido: ' . $imagenUrl);
+                    $exitoGeneral = false;
+                }
+                
+            } catch (\Exception $e) {
+                \Log::error('Error al eliminar imagen anterior: ' . $e->getMessage() . ' - URL: ' . $imagenUrl);
+                $exitoGeneral = false;
+            }
+        }
+
+        return $exitoGeneral;
     }
 }
