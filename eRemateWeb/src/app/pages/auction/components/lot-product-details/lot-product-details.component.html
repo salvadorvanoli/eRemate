@@ -1,8 +1,39 @@
-<div class="lot-product-details max-w-full overflow-hidden">  <!-- Info lote -->
-  <div class="lot-header mb-6 lg:mb-8">
-    <h2 class="text-2xl sm:text-3xl lg:text-4xl font-bold text-gray-800 mb-4">
-      {{ lote?.nombre || 'Lote #' + lote?.id }}
-    </h2>
+<!-- Toast for notifications -->
+<p-toast></p-toast>
+
+<div class="lot-product-details max-w-full overflow-hidden">  <!-- Info lote -->  <div class="lot-header mb-6 lg:mb-8">
+    <div class="flex items-center gap-3 mb-4">
+      <h2 class="text-2xl sm:text-3xl lg:text-4xl font-bold text-gray-800">
+        {{ lote?.nombre || 'Lote #' + lote?.id }}
+      </h2>
+      
+      <!-- Heart/Favorite Icon -->
+      @if (isUserLoggedIn()) {
+        <button
+          (click)="toggleFavorite()"
+          [disabled]="favoritesLoading"
+          class="p-2 rounded-full transition-colors duration-200 hover:bg-gray-100 focus:outline-none focus:ring-2 focus:ring-blue-500 focus:ring-offset-2 disabled:opacity-50 disabled:cursor-not-allowed"
+          [title]="isFavorite ? 'Quitar de favoritos' : 'Agregar a favoritos'"
+        >
+          @if (favoritesLoading) {
+            <div class="animate-spin rounded-full h-6 w-6 border-b-2 border-red-500"></div>
+          } @else {
+            <svg 
+              class="w-6 h-6 transition-colors duration-200"
+              [class.text-red-500]="isFavorite"
+              [class.fill-current]="isFavorite"
+              [class.text-gray-400]="!isFavorite"
+              viewBox="0 0 24 24" 
+              fill="none" 
+              stroke="currentColor" 
+              stroke-width="2"
+            >
+              <path d="M20.84 4.61a5.5 5.5 0 0 0-7.78 0L12 5.67l-1.06-1.06a5.5 5.5 0 0 0-7.78 7.78l1.06 1.06L12 21.23l7.78-7.78 1.06-1.06a5.5 5.5 0 0 0 0-7.78z"></path>
+            </svg>
+          }
+        </button>
+      }
+    </div>
     
     <!-- Descripción del lote -->
     @if (lote?.descripcion) {

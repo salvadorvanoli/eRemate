@@ -36,7 +36,7 @@ class NuevaPujaNotification extends Notification
             ->line("📦 Lote #{$this->lote->id}")
             ->line("💵 Nueva puja: {$this->formatearMonto($this->puja->monto)}")
             ->line("⏰ Cierre: {$this->subasta->fechaCierre->format('d/m/Y H:i')}")
-            ->action('Hacer Contraoferta', url("/auction/{$this->subasta->id}/lot/{$this->lote->id}"))
+            ->action('Hacer Contraoferta', url("/auction/{$this->subasta->id}"))
             ->line('¡No dejes que te lo ganen!');
     }
 

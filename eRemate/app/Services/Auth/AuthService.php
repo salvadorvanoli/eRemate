@@ -6,6 +6,7 @@ use App\Models\Usuario;
 use App\Models\Rematador;
 use App\Models\CasaDeRemates;
 use App\Models\UsuarioRegistrado;
+use App\Notifications\BienvenidaUsuarioNotification;
 use Illuminate\Support\Facades\Hash;
 use Illuminate\Support\Facades\Validator;
 
@@ -50,6 +51,9 @@ class AuthService implements AuthServiceInterface
         }
 
         $usuario->update(['perfil_completo' => true]);
+
+        // Send welcome notification
+        $this->sendBienvenidaNotification($usuario);
 
         // Generar token con Sanctum
         $token = $usuario->createToken('auth_token')->plainTextToken;
@@ -116,5 +120,18 @@ class AuthService implements AuthServiceInterface
         UsuarioRegistrado::create([
             'id' => $usuarioId,
         ]);
+    }
+
+    /**
+     * Send BienvenidaUsuarioNotification to the newly registered user
+     */
+    private function sendBienvenidaNotification(Usuario $usuario)
+    {
+        try {
+            $usuario->notify(new BienvenidaUsuarioNotification());
+        } catch (\Exception $e) {
+            // Log the error but don't fail the registration process
+            \Log::error('Error sending BienvenidaUsuarioNotification: ' . $e->getMessage());
+        }
     }
 }

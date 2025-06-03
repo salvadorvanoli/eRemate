@@ -67,9 +67,17 @@ Route::get('registered-users/{id}/purchase-history', [UsuarioRegistradoControlle
 Route::get('registered-users/{usuarioId}/bidded-lots', [UsuarioRegistradoController::class, 'getLotesConPujas']);
 
 // Rutas de Lotes Favoritos
+Route::middleware('auth:sanctum')->group(function () {
+
 Route::get('registered-users/{usuarioId}/favorite-lots', [UsuarioRegistradoController::class, 'getLotesFavoritos']);
 Route::post('registered-users/{usuarioId}/favorite-lots', [UsuarioRegistradoController::class, 'addLoteFavorito']);
 Route::delete('registered-users/{usuarioId}/favorite-lots/{loteId}', [UsuarioRegistradoController::class, 'removeLoteFavorito']);
+
+// Nuevas rutas de favoritos simplificadas (sin usuarioId en la URL, se obtiene del token)
+Route::get('lotes-favoritos', [UsuarioRegistradoController::class, 'getLotesFavoritosAuth']);
+Route::post('lotes-favoritos', [UsuarioRegistradoController::class, 'addLoteFavoritoAuth']);
+Route::delete('lotes-favoritos/{loteId}', [UsuarioRegistradoController::class, 'removeLoteFavoritoAuth']);
+});
 
 // Rutas de Rematador
 Route::prefix('auctioneer')->group(function () {

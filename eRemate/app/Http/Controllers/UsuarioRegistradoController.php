@@ -141,4 +141,80 @@ class UsuarioRegistradoController extends Controller
             return response()->json(['error' => 'Error al obtener lotes con pujas: ' . $e->getMessage()], 500);
         }
     }
+
+    // Nuevos métodos para favoritos con autenticación
+    // Obtener lotes favoritos del usuario autenticado
+    public function getLotesFavoritosAuth(Request $request)
+    {
+        try {
+            $usuario = $request->user();
+            
+            if (!$usuario) {
+                return response()->json(['error' => 'Usuario no autenticado'], 401);
+            }
+            
+            $lotesFavoritos = $this->usuarioRegistradoService->obtenerLotesFavoritos($usuario->id);
+            
+            if (isset($lotesFavoritos['error'])) {
+                return response()->json(['error' => $lotesFavoritos['error']], 500);
+            }
+            
+            return response()->json($lotesFavoritos);
+        } catch (Exception $e) {
+            return response()->json(['error' => 'Error al obtener lotes favoritos: ' . $e->getMessage()], 500);
+        }
+    }
+    
+    // Agregar un lote a favoritos del usuario autenticado
+    public function addLoteFavoritoAuth(Request $request)
+    {
+        try {
+            $usuario = $request->user();
+            
+            if (!$usuario) {
+                return response()->json(['error' => 'Usuario no autenticado'], 401);
+            }
+            
+            $request->validate([
+                'lote_id' => 'required|integer|exists:lotes,id'
+            ]);
+            
+            $resultado = $this->usuarioRegistradoService->agregarLoteFavorito($usuario->id, $request->lote_id);
+            
+            if (isset($resultado['error'])) {
+                return response()->json(['error' => $resultado['error']], 422);
+            }
+            
+            return response()->json(['mensaje' => 'Lote agregado a favoritos exitosamente']);
+        } catch (\Illuminate\Validation\ValidationException $e) {
+            return response()->json([
+                'error' => 'Error de validación',
+                'mensajes' => $e->errors()
+            ], 422);
+        } catch (Exception $e) {
+            return response()->json(['error' => 'Error al agregar lote a favoritos: ' . $e->getMessage()], 500);
+        }
+    }
+    
+    // Quitar un lote de favoritos del usuario autenticado
+    public function removeLoteFavoritoAuth(Request $request, $loteId)
+    {
+        try {
+            $usuario = $request->user();
+            
+            if (!$usuario) {
+                return response()->json(['error' => 'Usuario no autenticado'], 401);
+            }
+            
+            $resultado = $this->usuarioRegistradoService->quitarLoteFavorito($usuario->id, $loteId);
+            
+            if (isset($resultado['error'])) {
+                return response()->json(['error' => $resultado['error']], 422);
+            }
+            
+            return response()->json(['mensaje' => 'Lote eliminado de favoritos exitosamente']);
+        } catch (Exception $e) {
+            return response()->json(['error' => 'Error al quitar lote de favoritos: ' . $e->getMessage()], 500);
+        }
+    }
 }
