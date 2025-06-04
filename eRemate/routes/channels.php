@@ -20,10 +20,10 @@ Broadcast::channel('subasta.{id}', function ($user, $id) {
 
 // Canal para chats específicos
 Broadcast::channel('chat.{id}', function ($user, $id) {
-    return true; // Por ahora público, puedes agregar validación si necesitas autenticación
+    return true;
 });
 
 // Canal para solicitudes de pago por chat
 Broadcast::channel('payment-request.{id}', function ($user, $id) {
-    return true; // Por ahora público, puedes agregar validación si necesitas autenticación
+    return true;
 });
