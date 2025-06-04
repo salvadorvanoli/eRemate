@@ -65,7 +65,6 @@ export class ChatAccessGuard implements CanActivate {
               return false;
             }
 
-            console.log('Chat Access Guard: Acceso autorizado al chat', chatId);
             return true;
           }),
           catchError(error => {

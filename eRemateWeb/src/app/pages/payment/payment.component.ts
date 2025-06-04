@@ -248,7 +248,7 @@ export class PaymentComponent implements OnInit {
 
   cancelar() {
     if (this.chatId) {
-      this.router.navigate(['/chat', this.chatId]);
+      this.router.navigate(['/chat-detail', this.chatId]);
     } else {
       this.router.navigate(['/']);
     }

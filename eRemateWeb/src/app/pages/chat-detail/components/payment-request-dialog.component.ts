@@ -2,7 +2,7 @@ import { Component, EventEmitter, Input, OnInit, Output } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { FormsModule } from '@angular/forms';
 import { PaypalService } from '../../../core/services/paypal.service';
-import { PrimaryButtonComponent } from '../buttons/primary-button/primary-button.component';
+import { PrimaryButtonComponent } from '../../../shared/components/buttons/primary-button/primary-button.component';
 import { ChatService } from '../../../core/services/chat.service';
 import { SecurityService } from '../../../core/services/security.service';
 

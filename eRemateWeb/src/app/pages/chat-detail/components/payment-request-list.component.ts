@@ -1,6 +1,6 @@
 import { Component, EventEmitter, Input, Output, OnInit, OnDestroy } from '@angular/core';
 import { CommonModule } from '@angular/common';
-import { PrimaryButtonComponent } from '../buttons/primary-button/primary-button.component';
+import { PrimaryButtonComponent } from '../../../shared/components/buttons/primary-button/primary-button.component';
 import { PaypalService } from '../../../core/services/paypal.service';
 import { WebsocketService } from '../../../core/services/websocket.service';
 import { Subscription } from 'rxjs';
@@ -29,9 +29,6 @@ export class PaymentRequestListComponent implements OnInit, OnDestroy {
   ) {}
   
   ngOnInit() {
-    if (this.chatId) {
-      this.subscribeToPaymentRequestUpdates();
-    }
   }
   
   ngOnDestroy() {
@@ -41,33 +38,6 @@ export class PaymentRequestListComponent implements OnInit, OnDestroy {
     if (this.paymentRequestUpdateSubscription) {
       this.paymentRequestUpdateSubscription.unsubscribe();
     }
-  }
-  
-  private subscribeToPaymentRequestUpdates() {
-    this.paymentRequestSubscription = this.websocketService.subscribeToPaymentRequests(this.chatId).subscribe({
-      next: (event) => {
-        console.log('Nueva solicitud de pago recibida en lista:', event);
-        this.requests.push(event.payment_request);
-        this.onRequestsUpdated.emit(this.requests);
-      },
-      error: (error) => {
-        console.error('Error en suscripción de solicitudes de pago:', error);
-      }
-    });
-
-    this.paymentRequestUpdateSubscription = this.websocketService.subscribeToPaymentRequestUpdates(this.chatId).subscribe({
-      next: (event) => {
-        console.log('Actualización de solicitud de pago recibida en lista:', event);
-        const index = this.requests.findIndex(req => req.id === event.payment_request.id);
-        if (index !== -1) {
-          this.requests[index] = event.payment_request;
-          this.onRequestsUpdated.emit(this.requests);
-        }
-      },
-      error: (error) => {
-        console.error('Error en suscripción de actualizaciones:', error);
-      }
-    });
   }
   
   getMetodoEntregaLabel(metodo: string): string {

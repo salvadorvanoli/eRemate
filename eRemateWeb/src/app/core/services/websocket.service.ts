@@ -80,11 +80,8 @@ export class WebsocketService {
         
         window.Echo.channel(channelName)
           .listen('.nuevo.mensaje', (event: any) => {
-            console.log('Nuevo mensaje recibido:', event);
             this.nuevoMensajeSubject.next(event);
           });
-          
-        console.log(`Suscrito al canal de chat ${channelName}`);
       } else {
         console.error('Echo no está inicializado');
       }
@@ -117,7 +114,6 @@ export class WebsocketService {
             this.estadoSolicitudPagoSubject.next(event);
           });
           
-        console.log(`Suscrito al canal de solicitudes de pago ${channelName}`);
       } else {
         console.error('Echo no está inicializado');
       }
@@ -144,8 +140,6 @@ export class WebsocketService {
               console.log('Estado de solicitud de pago actualizado:', event);
               this.estadoSolicitudPagoSubject.next(event);
             });
-            
-          console.log(`Suscrito al canal de actualizaciones de solicitudes de pago ${channelName}`);
         }
       } else {
         console.error('Echo no está inicializado');
