@@ -17,3 +17,13 @@ use Illuminate\Support\Facades\Broadcast;
 Broadcast::channel('subasta.{id}', function ($user, $id) {
     return true; // Canal público, cualquiera puede suscribirse
 });
+
+// Canal para chats específicos
+Broadcast::channel('chat.{id}', function ($user, $id) {
+    return true; // Por ahora público, puedes agregar validación si necesitas autenticación
+});
+
+// Canal para solicitudes de pago por chat
+Broadcast::channel('payment-request.{id}', function ($user, $id) {
+    return true; // Por ahora público, puedes agregar validación si necesitas autenticación
+});

@@ -1,12 +1,14 @@
-import { Component, OnInit, ViewChild, ElementRef, AfterViewChecked } from '@angular/core';
+import { Component, OnInit, ViewChild, ElementRef, AfterViewChecked, OnDestroy } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { FormsModule } from '@angular/forms';
 import { ActivatedRoute, Router } from '@angular/router';
 import { ChatService } from '../../core/services/chat.service';
 import { SecurityService } from '../../core/services/security.service';
+import { WebsocketService } from '../../core/services/websocket.service';
 import { PaymentRequestDialogComponent } from '../../shared/components/payment/payment-request-dialog.component';
 import { PaymentRequestListComponent } from '../../shared/components/payment/payment-request-list.component';
 import { PaypalService } from '../../core/services/paypal.service';
+import { Subscription } from 'rxjs';
 
 @Component({
   selector: 'app-chat-detail',
@@ -127,7 +129,7 @@ import { PaypalService } from '../../core/services/paypal.service';
     }
   `
 })
-export class ChatDetailComponent implements OnInit, AfterViewChecked {
+export class ChatDetailComponent implements OnInit, AfterViewChecked, OnDestroy {
   @ViewChild('messagesContainer') private messagesContainer!: ElementRef;
   
   chatId: number = 0;
@@ -136,6 +138,10 @@ export class ChatDetailComponent implements OnInit, AfterViewChecked {
   loading: boolean = true;
   sending: boolean = false;
   currentUser: any = null;
+    // WebSocket subscription
+  private chatSubscription?: Subscription;
+  private paymentRequestSubscription?: Subscription;
+  private paymentRequestUpdateSubscription?: Subscription;
   
   // Payment related
   isCasaDeRemates: boolean = false;
@@ -149,14 +155,16 @@ export class ChatDetailComponent implements OnInit, AfterViewChecked {
     private router: Router,
     private chatService: ChatService,
     private securityService: SecurityService,
+    private websocketService: WebsocketService,
     private paypalService: PaypalService
   ) {}
   
   ngOnInit() {
     this.route.params.subscribe(params => {
-      this.chatId = +params['id'];
-      this.loadChat();
+      this.chatId = +params['id'];      this.loadChat();
       this.loadMessages();
+      this.subscribeToChat(); // Suscribirse al WebSocket del chat
+      this.subscribeToPaymentRequests(); // Suscribirse a las solicitudes de pago
     });
       this.securityService.getActualUser().subscribe(user => {
       this.currentUser = user;
@@ -176,6 +184,70 @@ export class ChatDetailComponent implements OnInit, AfterViewChecked {
   
   ngAfterViewChecked() {
     this.scrollToBottom();
+  }
+    ngOnDestroy() {
+    // Limpiar suscripciones al salir del componente
+    if (this.chatSubscription) {
+      this.chatSubscription.unsubscribe();
+    }
+    if (this.paymentRequestSubscription) {
+      this.paymentRequestSubscription.unsubscribe();
+    }
+    if (this.paymentRequestUpdateSubscription) {
+      this.paymentRequestUpdateSubscription.unsubscribe();
+    }
+    this.websocketService.leaveChatChannel(this.chatId);
+    this.websocketService.leavePaymentRequestChannel(this.chatId);
+  }
+  private subscribeToChat() {
+    // Suscribirse a mensajes en tiempo real para este chat
+    this.chatSubscription = this.websocketService.subscribeToChat(this.chatId).subscribe({
+      next: (newMessage) => {
+        console.log('Nuevo mensaje recibido via WebSocket:', newMessage);
+        // Solo agregar el mensaje si no es del usuario actual (evitar duplicados)
+        if (newMessage.usuario_id !== this.currentUser?.id) {
+          this.messages.push(newMessage);
+          this.scrollToBottom();
+        }
+      },
+      error: (error) => {
+        console.error('Error en suscripción de chat:', error);
+      }
+    });
+  }
+
+  private subscribeToPaymentRequests() {
+    // Suscribirse a nuevas solicitudes de pago
+    this.paymentRequestSubscription = this.websocketService.subscribeToPaymentRequests(this.chatId).subscribe({
+      next: (event) => {
+        console.log('Nueva solicitud de pago recibida via WebSocket:', event);
+        if (this.isUsuarioRegistrado) {
+          // Agregar la nueva solicitud a la lista
+          this.paymentRequests.push(event.payment_request);
+          
+          // Opcional: mostrar notificación
+          alert('¡Nueva solicitud de pago recibida!');
+        }
+      },
+      error: (error) => {
+        console.error('Error en suscripción de solicitudes de pago:', error);
+      }
+    });
+
+    // Suscribirse a actualizaciones de estado de solicitudes de pago
+    this.paymentRequestUpdateSubscription = this.websocketService.subscribeToPaymentRequestUpdates(this.chatId).subscribe({
+      next: (event) => {
+        console.log('Actualización de solicitud de pago recibida via WebSocket:', event);
+        // Actualizar el estado en la lista local
+        const index = this.paymentRequests.findIndex(req => req.id === event.payment_request.id);
+        if (index !== -1) {
+          this.paymentRequests[index] = event.payment_request;
+        }
+      },
+      error: (error) => {
+        console.error('Error en suscripción de actualizaciones de solicitudes de pago:', error);
+      }
+    });
   }
   
   loadChat() {
@@ -214,10 +286,20 @@ export class ChatDetailComponent implements OnInit, AfterViewChecked {
       chat_id: this.chatId,
       usuario_id: this.currentUser?.id
     }).subscribe({
-      next: () => {
+      next: (response) => {
+        // Agregar el mensaje inmediatamente a la lista local
+        const newMsg = {
+          id: response.id || Date.now(),
+          contenido: this.newMessage,
+          chat_id: this.chatId,
+          usuario_id: this.currentUser?.id,
+          created_at: new Date().toISOString(),
+          tipo: 'mensaje'
+        };
+        this.messages.push(newMsg);
         this.newMessage = '';
         this.sending = false;
-        this.loadMessages();
+        this.scrollToBottom();
       },
       error: (err) => {
         console.error('Error al enviar mensaje:', err);
@@ -234,7 +316,6 @@ export class ChatDetailComponent implements OnInit, AfterViewChecked {
   }
   
   formatMessageContent(content: string): string {
-    // Resaltar mensajes de solicitud de pago
     if (content.includes('solicitud de pago')) {
       return content.replace(/([$]\d+(\.\d{1,2})?)/, '<span class="font-bold">$1</span>');
     }
@@ -245,7 +326,6 @@ export class ChatDetailComponent implements OnInit, AfterViewChecked {
     this.paypalService.obtenerSolicitudesPago(this.currentUser.id).subscribe({
       next: (response) => {
         if (response.success) {
-          // Filtrar solo las solicitudes relacionadas con este chat
           this.paymentRequests = response.data.filter((req: any) => req.chat_id === this.chatId);
         }
       },
@@ -256,14 +336,12 @@ export class ChatDetailComponent implements OnInit, AfterViewChecked {
   }
   
   onPaymentRequestCreated(request: any) {
-    // Recargar mensajes después de crear una solicitud
     this.loadMessages();
   }
   
   processPayment(request: any) {
     this.showPaymentRequestList = false;
     
-    // Redirigir a la página de pago con los parámetros necesarios
     this.router.navigate(['/pago'], {
       queryParams: {
         chat_id: this.chatId,
