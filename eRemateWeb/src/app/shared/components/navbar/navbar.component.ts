@@ -32,7 +32,8 @@ export class NavbarComponent {
 
       this.items = [
         { label: 'Inicio', icon: 'pi pi-home', routerLink: '/' },
-        { label: 'Catálogo', icon: 'pi pi-shop', routerLink: '/catalogo' },
+        { label: 'Subastas', icon: 'pi pi-shop', routerLink: '/subastas' },
+        { label: 'Artículos', icon: 'pi pi-box', routerLink: '/articulos' },
         { label: 'Contáctanos', icon: 'pi pi-envelope', routerLink: '/contacto' }
       ];
 

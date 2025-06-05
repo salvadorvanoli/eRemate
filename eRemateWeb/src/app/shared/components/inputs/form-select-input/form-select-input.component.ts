@@ -24,7 +24,7 @@ export class FormSelectInputComponent {
   @Input() errorMessage: string = "";
   @Input() formSubmitted = signal(false);
 
-  @Output() textValue = new EventEmitter<string>();
+  @Output() textValue = new EventEmitter<any>();
   @Output() isInputInvalid = new EventEmitter<boolean>();
 
   value = signal('');

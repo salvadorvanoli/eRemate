@@ -36,7 +36,7 @@ class ComienzoSubastaNotification extends Notification
             ->line("📅 Fecha de inicio: {$fechaInicio}")
             ->line("📍 Ubicación: {$this->subasta->ubicacion}")
             ->line("🎥 Transmisión: {$this->subasta->urlTransmision}")
-            ->action('Ver Subasta', url("/auction/{$this->subasta->id}"))
+            ->action('Ver Subasta', url("http://localhost:4200/subasta/{$this->subasta->id}"))
             ->line('¡No te la pierdas!');
     }
 

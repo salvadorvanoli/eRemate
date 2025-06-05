@@ -11,7 +11,8 @@ import { ButtonModule } from 'primeng/button';
   styleUrl: './primary-button.component.scss'
 })
 export class PrimaryButtonComponent {
-  @Input() label: string = '';
+  @Input() label?: string = '';
+  @Input() icon?: string = '';
   @Input() classes: string = '';
   @Input() disabled: boolean = false;
 

@@ -3,6 +3,7 @@ import { HttpClient, HttpHeaders } from '@angular/common/http';
 import { map, Observable, switchMap } from 'rxjs';
 import { BaseHttpService } from './base-http.service';
 import { Subasta } from '../models/subasta';
+import { CatalogElement } from '../models/catalog-element';
 import { Lote } from '../models/lote';
 
 @Injectable({
@@ -81,6 +82,7 @@ export class SubastaService extends BaseHttpService<any, Subasta> {
     );
   }
 
+
   obtenerImagenAleatoria(subastaId: number): Observable<any> {
     return this.http.get<any>(`${this.baseUrl}/auction/${subastaId}/random-image`).pipe(
       map(response => {
@@ -90,5 +92,17 @@ export class SubastaService extends BaseHttpService<any, Subasta> {
         throw new Error(response.message || 'No hay imágenes disponibles para esta subasta');
       })
     );
+  }
+
+  getAllOrdered(): Observable<CatalogElement[]> {
+    return this.http.get<CatalogElement[]>(`${this.baseUrl}/auction/ordered`);
+  }
+
+  getAllFiltered(textoBusqueda: string | null, cerrada: boolean, categoria: number | null, ubicacion: string | null, fechaCierreLimite: string | null): Observable<CatalogElement[]> {
+    return this.http.get<CatalogElement[]>(`${this.baseUrl}/auction/filtered?textoBusqueda=${textoBusqueda}&cerrada=${cerrada}&categoria=${categoria}&ubicacion=${ubicacion}&fechaCierreLimite=${fechaCierreLimite}`);
+  }
+
+  getLocations(): Observable<string[]> {
+    return this.http.get<string[]>(`${this.baseUrl}/auction/locations`);
   }
 }

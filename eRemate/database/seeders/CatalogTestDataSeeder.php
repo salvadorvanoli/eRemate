@@ -28,9 +28,9 @@ class CatalogTestDataSeeder extends Seeder
             'Muebles', 'Relojes', 'Tecnología', 'Vinos', 'Otros'
         ];
         
-        foreach ($nombresCategorias as $index => $nombre) {
+         foreach ($nombresCategorias as $index => $nombre) {
             $categoria = Categoria::create([
-                'nombre' => $nombre,
+                'nombre' => $nombre
             ]);
             $categorias[] = $categoria;
         }

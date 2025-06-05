@@ -12,8 +12,12 @@ use App\Models\UsuarioRegistrado;
 use App\Models\Lote;
 use App\Events\NuevaPujaEvent;
 use App\Jobs\ProcesarPujasAutomaticas;
+use App\Notifications\ComienzoSubastaNotification;
+use App\Notifications\NuevaPujaNotification;
+use App\Notifications\SubastaFinalizadaNotification;
 use Illuminate\Support\Facades\Auth;
 use Illuminate\Http\JsonResponse;
+use Carbon\Carbon;
 
 class SubastaService implements SubastaServiceInterface
 {
@@ -95,7 +99,7 @@ class SubastaService implements SubastaServiceInterface
         if (!$casaDeRemates) {
             return response()->json([
                 'success' => false,
-                'error' => 'El ID de la casa de remates es requerido.'
+                'error' => 'La casa de remates especificada no existe.'
             ], 422);
         }
 
@@ -217,6 +221,9 @@ class SubastaService implements SubastaServiceInterface
     public function obtenerSubastasOrdenadas() 
     {
         $subastas = Subasta::whereNotIn('estado', [EstadoSubasta::CANCELADA, EstadoSubasta::CERRADA])
+            ->with(['lotes.articulos', 'lotes' => function ($query) {
+                $query->select('id', 'subasta_id', 'nombre');
+            }])
             ->orderBy('fechaInicio', 'asc')
             ->get();
 
@@ -227,17 +234,66 @@ class SubastaService implements SubastaServiceInterface
             ], 404);
         }
 
-        return $subastas;
+        $catalogElements = $subastas->map(function ($subasta) {
+            $loteIds = $subasta->lotes->pluck('id')->toArray();
+            $totalLotes = count($loteIds);
+            
+            $imagen = null;
+            if ($subasta->loteActual_id) {
+                $loteActual = $subasta->lotes->firstWhere('id', $subasta->loteActual_id);
+                if ($loteActual && $loteActual->articulos->isNotEmpty() && !empty($loteActual->articulos[0]->imagenes)) {
+                    $imagenes = is_string($loteActual->articulos[0]->imagenes) ? 
+                        json_decode($loteActual->articulos[0]->imagenes, true) : 
+                        $loteActual->articulos[0]->imagenes;
+                    $imagen = is_array($imagenes) && !empty($imagenes) ? $imagenes[0] : null;
+                }
+            }
+            
+            if (!$imagen && $subasta->lotes->isNotEmpty() && $subasta->lotes[0]->articulos->isNotEmpty() && !empty($subasta->lotes[0]->articulos[0]->imagenes)) {
+                $primerLote = $subasta->lotes[0];
+                $imagenes = is_string($primerLote->articulos[0]->imagenes) ? 
+                    json_decode($primerLote->articulos[0]->imagenes, true) : 
+                    $primerLote->articulos[0]->imagenes;
+                $imagen = is_array($imagenes) && !empty($imagenes) ? $imagenes[0] : null;
+            }
+
+            return [
+                'id' => $subasta->id,
+                'imagen' => $imagen,
+                'lotes' => $loteIds,
+                'lote_id' => $subasta->loteActual_id,
+                'subasta_id' => $subasta->id,
+                'etiqueta' => strtoupper($subasta->estado->name),
+                'texto1' => strtoupper($subasta->tipoSubasta),
+                'texto2' => strtoupper($subasta->ubicacion),
+                'texto3' => "{$totalLotes} LOTES EN TOTAL",
+                'fechaInicio' => $subasta->fechaInicio,
+                'fechaCierre' => $subasta->fechaCierre
+            ];
+        });
+        
+        return $catalogElements;
     }
 
     public function obtenerSubastasFiltradas(array $data)
     {
-        $query = Subasta::query();
+        $query = Subasta::query()
+            ->with(['lotes.articulos', 'lotes' => function ($query) {
+                $query->select('id', 'subasta_id', 'nombre');
+            }]);
 
-        $cerrada = $data['cerrada'] ?? false;
-        $categoria = $data['categoria'] ?? null;
-        $ubicacion = $data['ubicacion'] ?? null;
-        $fechaCierreLimite = $data['fechaCierreLimite'] ?? null;
+        $textoBusqueda = (isset($data['textoBusqueda']) && $data['textoBusqueda'] !== null && $data['textoBusqueda'] !== "null") ? $data['textoBusqueda'] : null;
+        $cerrada = (isset($data['cerrada']) && $data['cerrada'] !== null && is_bool($data['cerrada'])) ? $data['cerrada'] : false;
+        $categoria = (isset($data['categoria']) && $data['categoria'] !== null && $data['categoria'] !== "null") ? $data['categoria'] : null;
+        $ubicacion = (isset($data['ubicacion']) && $data['ubicacion'] !== null && $data['ubicacion'] !== "null") ? $data['ubicacion'] : null;
+        $fechaCierreLimite = (isset($data['fechaCierreLimite']) && $data['fechaCierreLimite'] !== null && $data['fechaCierreLimite'] !== "null") ? $data['fechaCierreLimite'] : null;
+
+        if ($textoBusqueda) {
+            $query->where(function($q) use ($textoBusqueda) {
+                $q->where('tipoSubasta', 'like', "%{$textoBusqueda}%")
+                  ->orWhere('ubicacion', 'like', "%{$textoBusqueda}%");
+            });
+        }
 
         if ($cerrada) {
             $query->where('estado', EstadoSubasta::CERRADA);
@@ -259,6 +315,8 @@ class SubastaService implements SubastaServiceInterface
             $query->where('fechaCierre', '<=', $fechaCierreLimite);
         }
 
+        $query->orderBy('fechaCierre', 'asc');
+
         $subastas = $query->get();
 
         if ($subastas->isEmpty()) {
@@ -268,7 +326,64 @@ class SubastaService implements SubastaServiceInterface
             ], 404);
         }
 
-        return $subastas;
+        $catalogElements = $subastas->map(function ($subasta) {
+            $loteIds = $subasta->lotes->pluck('id')->toArray();
+            $totalLotes = count($loteIds);
+            
+            $imagen = null;
+            if ($subasta->loteActual_id) {
+                $loteActual = $subasta->lotes->firstWhere('id', $subasta->loteActual_id);
+                if ($loteActual && $loteActual->articulos->isNotEmpty() && !empty($loteActual->articulos[0]->imagenes)) {
+                    $imagenes = is_string($loteActual->articulos[0]->imagenes) ? 
+                        json_decode($loteActual->articulos[0]->imagenes, true) : 
+                        $loteActual->articulos[0]->imagenes;
+                    $imagen = is_array($imagenes) && !empty($imagenes) ? $imagenes[0] : null;
+                }
+            }
+            
+            if (!$imagen && $subasta->lotes->isNotEmpty() && $subasta->lotes[0]->articulos->isNotEmpty() && !empty($subasta->lotes[0]->articulos[0]->imagenes)) {
+                $primerLote = $subasta->lotes[0];
+                $imagenes = is_string($primerLote->articulos[0]->imagenes) ? 
+                    json_decode($primerLote->articulos[0]->imagenes, true) : 
+                    $primerLote->articulos[0]->imagenes;
+                $imagen = is_array($imagenes) && !empty($imagenes) ? $imagenes[0] : null;
+            }
+
+            return [
+                'id' => $subasta->id,
+                'imagen' => $imagen,
+                'lotes' => $loteIds,
+                'lote_id' => $subasta->loteActual_id,
+                'subasta_id' => $subasta->id,
+                'etiqueta' => strtoupper($subasta->estado->name),
+                'texto1' => strtoupper($subasta->tipoSubasta),
+                'texto2' => strtoupper($subasta->ubicacion),
+                'texto3' => "{$totalLotes} LOTES EN TOTAL",
+                'fechaInicio' => $subasta->fechaInicio,
+                'fechaCierre' => $subasta->fechaCierre
+            ];
+        });
+        
+        return $catalogElements;
+    }
+
+    public function obtenerUbicaciones()
+    {
+        $ubicaciones = Subasta::select('ubicacion')
+            ->whereNotNull('ubicacion')
+            ->distinct()
+            ->orderBy('ubicacion', 'asc')
+            ->pluck('ubicacion')
+            ->toArray();
+        
+        if (empty($ubicaciones)) {
+            return response()->json([
+                'success' => false,
+                'message' => 'No hay ubicaciones disponibles'
+            ], 404);
+        }
+        
+        return $ubicaciones;
     }
 
     public function obtenerSubastasOrdenadasPorCierre($pagina = 1, $cantidad = 10)
@@ -344,11 +459,97 @@ class SubastaService implements SubastaServiceInterface
 
         $this->iniciarProcesoDeAutomatizacion($subasta, $primerLote);
 
+        // Send notifications to interested users
+        $this->sendComienzoSubastaNotification($subasta);
+
         return response()->json([
             'success' => true,
             'message' => 'Subasta iniciada correctamente',
             'data' => $subasta
         ]);
+    }
+
+    /**
+     * Send ComienzoSubastaNotification to all users interested in the auction lots
+     */
+    private function sendComienzoSubastaNotification(Subasta $subasta)
+    {
+        try {
+            $subastaWithRelations = Subasta::with('lotes.usuariosInteresados')->find($subasta->id);
+            
+            if (!$subastaWithRelations) {
+                return;
+            }
+
+            $usuariosInteresados = $subastaWithRelations->lotes
+                ->flatMap(fn($lote) => $lote->usuariosInteresados)
+                ->unique('id');
+
+            foreach ($usuariosInteresados as $usuarioRegistrado) {
+                $usuarioNotificado = Usuario::find($usuarioRegistrado->id);
+                if ($usuarioNotificado) {
+                    $usuarioNotificado->notify(new ComienzoSubastaNotification($subasta));
+                }
+            }
+        } catch (\Exception $e) {
+            \Log::error('Error sending ComienzoSubastaNotification: ' . $e->getMessage());
+        }
+    }
+
+    /**
+     * Send NuevaPujaNotification to all users interested in the specific lot
+     */
+    private function sendNuevaPujaNotification(Subasta $subasta, $puja, Lote $lote)
+    {
+        try {
+            $loteWithRelations = Lote::with('usuariosInteresados')->find($lote->id);
+            
+            if (!$loteWithRelations) {
+                return;
+            }
+
+            $usuariosInteresados = $loteWithRelations->usuariosInteresados;
+
+            if ($usuariosInteresados->count() === 0) {
+                return;
+            }
+
+            foreach ($usuariosInteresados as $usuarioRegistrado) {
+                if ($usuarioRegistrado->id !== $puja->usuarioRegistrado_id) {
+                    $usuarioNotificado = Usuario::find($usuarioRegistrado->id);
+                    if ($usuarioNotificado) {
+                        $usuarioNotificado->notify(new NuevaPujaNotification($subasta, $puja, $lote));
+                    }
+                }
+            }
+        } catch (\Exception $e) {
+            \Log::error('Error sending NuevaPujaNotification: ' . $e->getMessage());
+        }
+    }
+
+
+    private function sendSubastaFinalizadaNotification(Subasta $subasta)
+    {
+        try {
+            $subastaWithRelations = Subasta::with('lotes.usuariosInteresados')->find($subasta->id);
+            
+            if (!$subastaWithRelations) {
+                return;
+            }
+
+            $usuariosInteresados = $subastaWithRelations->lotes
+                ->flatMap(fn($lote) => $lote->usuariosInteresados)
+                ->unique('id');
+
+            foreach ($usuariosInteresados as $usuarioRegistrado) {
+                $usuarioNotificado = Usuario::find($usuarioRegistrado->id);
+                if ($usuarioNotificado) {
+                    $usuarioNotificado->notify(new SubastaFinalizadaNotification($subasta, $subastaWithRelations->lotes));
+                }
+            }
+        } catch (\Exception $e) {
+            \Log::error('Error sending SubastaFinalizadaNotification: ' . $e->getMessage());
+        }
     }
 
     public function cerrarSubasta(int $id)
@@ -395,6 +596,9 @@ class SubastaService implements SubastaServiceInterface
                 'estado' => EstadoSubasta::CERRADA,
                 'loteActual_id' => null
             ]);
+
+            // Send notifications to interested users
+            $this->sendSubastaFinalizadaNotification($subasta);
 
             return response()->json([
                 'success' => true,
@@ -453,7 +657,7 @@ class SubastaService implements SubastaServiceInterface
         }
 
         $loteActual = $subasta->lotes()->find($loteActual_id);
-
+        
         $ultimaPuja = $loteActual->pujas()->latest()->first();
         if ($ultimaPuja && $ultimaPuja->usuarioRegistrado_id === $usuario->id) {
             return response()->json([
@@ -518,6 +722,11 @@ class SubastaService implements SubastaServiceInterface
             event(new NuevaPujaEvent($nuevaPujaData));
         } catch (\Exception $e) {
             
+        }
+
+        // Send notification to interested users
+        if ($loteActual instanceof Lote){
+            $this->sendNuevaPujaNotification($subasta, $pujaCreada, $loteActual);
         }
 
         return response()->json([
@@ -731,6 +940,11 @@ class SubastaService implements SubastaServiceInterface
 
         event(new NuevaPujaEvent($nuevaPujaData));
 
+        // Mandar notis
+         if ($loteActual instanceof Lote){
+            $this->sendNuevaPujaNotification($subasta, $pujaCreada, $loteActual);
+        }
+        
         return $pujaCreada;
     }
 

@@ -7,7 +7,6 @@ use Illuminate\Support\Facades\Route;
 use App\Http\Controllers\AuthController;
 use App\Http\Controllers\GoogleAuthController;
 use App\Http\Controllers\UsuarioController;
-use App\Http\Controllers\NotificationController;
 
 use App\Http\Controllers\RematadorController;
 use App\Http\Controllers\CasaDeRematesController;
@@ -67,9 +66,17 @@ Route::get('registered-users/{id}/purchase-history', [UsuarioRegistradoControlle
 Route::get('registered-users/{usuarioId}/bidded-lots', [UsuarioRegistradoController::class, 'getLotesConPujas']);
 
 // Rutas de Lotes Favoritos
+Route::middleware('auth:sanctum')->group(function () {
+
 Route::get('registered-users/{usuarioId}/favorite-lots', [UsuarioRegistradoController::class, 'getLotesFavoritos']);
 Route::post('registered-users/{usuarioId}/favorite-lots', [UsuarioRegistradoController::class, 'addLoteFavorito']);
 Route::delete('registered-users/{usuarioId}/favorite-lots/{loteId}', [UsuarioRegistradoController::class, 'removeLoteFavorito']);
+
+// Nuevas rutas de favoritos simplificadas (sin usuarioId en la URL, se obtiene del token)
+Route::get('lotes-favoritos', [UsuarioRegistradoController::class, 'getLotesFavoritosAuth']);
+Route::post('lotes-favoritos', [UsuarioRegistradoController::class, 'addLoteFavoritoAuth']);
+Route::delete('lotes-favoritos/{loteId}', [UsuarioRegistradoController::class, 'removeLoteFavoritoAuth']);
+});
 
 // Rutas de Rematador
 Route::prefix('auctioneer')->group(function () {
@@ -93,11 +100,6 @@ Route::post('/login', [AuthController::class, 'login']);
 Route::middleware('auth:sanctum')->post('/logout', [AuthController::class, 'logout']);
 Route::middleware('auth:sanctum')->get('/me', [AuthController::class, 'getAuthenticatedUser']);
 
-// Rutas de notificaciones (Testing)
-Route::post('/notify/user-register', [NotificationController::class, 'testBienvenida']);
-Route::post('/notify/auction-start', [NotificationController::class, 'notificarInicioSubasta']);
-Route::post('/notify/auction-end', [NotificationController::class, 'notificarFinSubasta']);
-Route::post('/notify/auction-bid', [NotificationController::class, 'notificarNuevaPuja']);
 
 // Ruta de Home (Carrusel)
 Route::get('/auction/page', [SubastaController::class, 'obtenerSubastasOrdenadasPorCierre']);
@@ -124,9 +126,10 @@ Route::prefix('auction-house')->group(function () {
 // Rutas de Subasta
 Route::prefix('auction')->group(function () {
     Route::get('/', [SubastaController::class, 'obtenerSubastas']);
-    Route::get('/{id}', [SubastaController::class, 'obtenerSubasta']);
     Route::get('/ordered', [SubastaController::class, 'obtenerSubastasOrdenadas']);
     Route::get('/filtered', [SubastaController::class, 'obtenerSubastasFiltradas']);
+    Route::get('/locations', [SubastaController::class, 'obtenerUbicaciones']);
+    Route::get('/{id}', [SubastaController::class, 'obtenerSubasta']);
     Route::get('/{id}/lots', [SubastaController::class, 'obtenerLotes']);
     Route::get('/{id}/live-stream', [SubastaController::class, 'obtenerTransmisionEnVivo']);
     Route::get('/{id}/random-image', [SubastaController::class, 'obtenerImagenAleatoria']);
@@ -165,9 +168,13 @@ Route::prefix('lot')->group(function () {
 
 // Rutas de Artículo
 Route::prefix('item')->group(function () {
-    Route::get('/{id}', [ArticuloController::class, 'obtenerArticulo']);
     Route::get('/', [ArticuloController::class, 'obtenerArticulos']);
-    Route::get('/categories/all', [ArticuloController::class, 'obtenerCategorias']); // <-- NUEVA RUTA
+
+    Route::get('/categories/all', [ArticuloController::class, 'obtenerAllCategorias']); 
+    Route::get('/ordered', [ArticuloController::class, 'obtenerArticulosOrdenados']);
+    Route::get('/filtered', [ArticuloController::class, 'obtenerArticulosFiltrados']);
+    Route::get('/categories', [ArticuloController::class, 'obtenerCategorias']);
+    Route::get('/{id}', [ArticuloController::class, 'obtenerArticulo']);
 
     Route::middleware('auth:sanctum')->group(function () {
         Route::post('/', [ArticuloController::class, 'crearArticulo']);

@@ -1,7 +1,11 @@
 import { Component, Input, OnInit, OnChanges, SimpleChanges } from '@angular/core';
 import { CommonModule } from '@angular/common';
+import { ToastModule } from 'primeng/toast';
+import { MessageService } from 'primeng/api';
 import { DynamicCarouselComponent } from '../../../../shared/components/dynamic-carousel/dynamic-carousel.component';
 import { LoteService } from '../../../../core/services/lote.service';
+import { RegisteredUsersService } from '../../../../core/services/registered-users.service';
+import { SecurityService } from '../../../../core/services/security.service';
 import { Lote } from '../../../../core/models/lote';
 import { Articulo } from '../../../../core/models/producto';
 
@@ -10,8 +14,10 @@ import { Articulo } from '../../../../core/models/producto';
   standalone: true,
   imports: [
     CommonModule,
-    DynamicCarouselComponent
+    DynamicCarouselComponent,
+    ToastModule
   ],
+  providers: [MessageService],
   templateUrl: './lot-product-details.component.html',
   styleUrl: './lot-product-details.component.scss'
 })
@@ -22,50 +28,48 @@ export class LotProductDetailsComponent implements OnInit, OnChanges {
   articuloSeleccionado?: Articulo;
   loading = false;
   error = false;
-
-  constructor(private loteService: LoteService) {}
-
-  ngOnInit() {
+  isFavorite = false;
+  favoritesLoading = false;
+  constructor(
+    private loteService: LoteService,
+    private registeredUsersService: RegisteredUsersService,
+    private securityService: SecurityService,
+    private messageService: MessageService
+  ) {}  ngOnInit() {
     this.loadArticulos();
+    this.checkFavoriteStatus();
   }
   ngOnChanges(changes: SimpleChanges) {
     if (changes['lote']) {
-      
       this.articulos = [];
       this.articuloSeleccionado = undefined;
       this.error = false;
+      this.isFavorite = false;
       
       if (changes['lote'].currentValue) {
         setTimeout(() => {
           this.loadArticulos();
+          this.checkFavoriteStatus();
         }, 10);
       }
     }
-  }  loadArticulos() {
+  }loadArticulos() {
     if (!this.lote || !this.lote.id) {
       this.articulos = [];
       this.articuloSeleccionado = undefined;
       this.error = false;
       this.loading = false;
       return;
-    }
-
-    this.loading = true;
+    }    this.loading = true;
     this.error = false;
     this.articulos = [];
     this.articuloSeleccionado = undefined;
 
-    console.log('Cargando artículos para lote ID:', this.lote.id);
-
-    this.loteService.getArticulosByLote(this.lote.id).subscribe({
-      next: (articulos: Articulo[]) => {
-        console.log('Artículos cargados:', articulos);
+    this.loteService.getArticulosByLote(this.lote.id).subscribe({      next: (articulos: Articulo[]) => {
         this.articulos = articulos;
         this.articuloSeleccionado = articulos.length > 0 ? articulos[0] : undefined;
         this.loading = false;
-      },
-      error: (error) => {
-        console.error('Error al cargar artículos para lote', this.lote?.id, ':', error);
+      },      error: (error) => {
         
         if (error.status === 404 && error.error?.message === 'No hay artículos para este lote') {
           this.articulos = [];
@@ -154,8 +158,101 @@ export class LotProductDetailsComponent implements OnInit, OnChanges {
   getImageTitle = (image: string): string => {
     return '';
   }
-
   getCarouselImageUrl = (image: string): string => {
     return this.getImageUrl(image);
+  }  // Métodos para gestión de favoritos
+  checkFavoriteStatus() {
+    if (!this.lote || !this.lote.id) {
+      this.isFavorite = false;
+      return;
+    }
+
+    const currentUser = this.securityService.actualUser;
+    if (!currentUser || !currentUser.id) {
+      this.isFavorite = false;
+      return;
+    }
+
+    this.favoritesLoading = true;
+    
+    this.registeredUsersService.checkIfFavoriteAuth(this.lote.id).subscribe({
+      next: (isFavorite) => {
+        this.isFavorite = isFavorite;
+        this.favoritesLoading = false;
+      },
+      error: (error) => {
+        this.isFavorite = false;
+        this.favoritesLoading = false;
+      }
+    });
+  }
+  toggleFavorite() {
+    if (this.favoritesLoading || !this.lote || !this.lote.id) {
+      return;
+    }
+
+    const currentUser = this.securityService.actualUser;
+    if (!currentUser || !currentUser.id) {
+      this.messageService.add({
+        severity: 'warn',
+        summary: 'Acción requerida',
+        detail: 'Debes iniciar sesión para agregar favoritos',
+        life: 4000
+      });
+      return;
+    }
+
+    this.favoritesLoading = true;
+
+    if (this.isFavorite) {
+      // Remover de favoritos
+      this.registeredUsersService.removeFromFavoritesAuth(this.lote.id).subscribe({
+        next: () => {
+          this.isFavorite = false;
+          this.favoritesLoading = false;
+          this.messageService.add({
+            severity: 'success',
+            summary: 'Éxito',
+            detail: 'Lote removido de favoritos',
+            life: 3000
+          });
+        },        error: (error) => {
+          this.favoritesLoading = false;
+          this.messageService.add({
+            severity: 'error',
+            summary: 'Error',
+            detail: 'Error al remover de favoritos',
+            life: 4000
+          });
+        }
+      });
+    } else {
+      // Agregar a favoritos
+      this.registeredUsersService.addToFavoritesAuth(this.lote.id).subscribe({
+        next: () => {
+          this.isFavorite = true;
+          this.favoritesLoading = false;
+          this.messageService.add({
+            severity: 'success',
+            summary: 'Éxito',
+            detail: 'Lote agregado a favoritos',
+            life: 3000
+          });
+        },        error: (error) => {
+          this.favoritesLoading = false;
+          this.messageService.add({
+            severity: 'error',
+            summary: 'Error',
+            detail: 'Error al agregar a favoritos',
+            life: 4000
+          });
+        }
+      });
+    }
+  }
+
+  isUserLoggedIn(): boolean {
+    const currentUser = this.securityService.actualUser;
+    return !!currentUser && !!currentUser.id;
   }
 }

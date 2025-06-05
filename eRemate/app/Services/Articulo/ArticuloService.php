@@ -5,53 +5,66 @@ namespace App\Services\Articulo;
 use App\Models\Articulo;
 use App\Models\Categoria; 
 use App\Models\CasaDeRemates;
+use App\Models\Categoria;
+use App\Models\Rematador;
 use App\Models\Usuario;
+use App\Models\UsuarioRegistrado;
+use App\Models\Subasta;
+use App\Enums\EstadoSubasta;
 use Illuminate\Support\Facades\Auth;
 use Illuminate\Http\JsonResponse;
+use Carbon\Carbon;
 
 class ArticuloService implements ArticuloServiceInterface
 {
 
     private function validarUsuario()
     {
-        // Comentamos toda la lógica de validación para pruebas
-        // $usuarioAutenticado = Auth::user();
+        $usuarioAutenticado = Auth::user();
 
-        // if (!$usuarioAutenticado) {
-        //     return response()->json(['error' => 'Token no proporcionado o inválido'], 401);
-        // }
+        if (!$usuarioAutenticado) {
+            return response()->json(['error' => 'Token no proporcionado o inválido'], 401);
+        }
 
-        // $usuario = Usuario::find($usuarioAutenticado)->first();
-        // if (!$usuario) {
-        //     return response()->json(['error' => 'Usuario no encontrado'], 404);
-        // }
+        $usuario = Usuario::find($usuarioAutenticado->id);
+        if (!$usuario) {
+            return response()->json(['error' => 'Usuario no encontrado'], 404);
+        }
 
-        // $casaDeRemates = CasaDeRemates::where('id', $usuarioAutenticado->id)->first();
+        $usuarioEspecifico = null;
 
-        // if (!$casaDeRemates) {
-        //     return response()->json(['error' => 'No tienes permiso para acceder a esta información'], 403);
-        // }
+        if ($usuario->tipo === 'rematador') {
+            $usuarioEspecifico = Rematador::where('id', $usuarioAutenticado->id)->first();
+        } else if ($usuario->tipo === 'casa') {
+            $usuarioEspecifico = CasaDeRemates::where('id', $usuarioAutenticado->id)->first();
+        } else {
+            $usuarioEspecifico = UsuarioRegistrado::where('id', $usuarioAutenticado->id)->first();
+        }
 
-        // return $usuario;
+        if (!$usuarioEspecifico) {
+            return response()->json(['error' => 'No tienes permiso para acceder a esta información'], 403);
+        }
 
-        // Siempre retorna el primer usuario para pruebas
-        return Usuario::first();
+        return $usuario;
     }
     
     private function verificarUsuario($usuario, $subasta)
     {
-
-        // REVISAR ESTA FUNCIÓN
-
-        /*
-        $casaDeRemates = CasaDeRemates::where('id', $usuario->id);
-
-        $casaDeRematesSubasta = $subasta->casaDeRemates->$id ?? null;
-
-        if (($casaDeRemates && $casaDeRemates->id !== $casaDeRematesSubasta?->id)) {
-            return response()->json(['error' => 'No tienes permiso para acceder a este artículo'], 403);
+        $usuarioEspecifico = null;
+        $subastaUsuario  = null;
+        
+        if ($usuario->tipo === 'rematador') {
+            $usuarioEspecifico = Rematador::where('id', $usuario->id)->first();
+            $subastaUsuario = $subasta->rematador ?? null;
+        } else {
+            $usuarioEspecifico = CasaDeRemates::where('id', $usuario->id)->first();
+            $subastaUsuario = $subasta->casaRemates ?? null;
         }
-        */
+
+        if (($usuarioEspecifico && $usuarioEspecifico->id !== $subastaUsuario?->id)) {
+            return response()->json(['error' => 'No tienes permiso para acceder a esta subasta'], 403);
+        }
+
         return $usuario;
     }
 
@@ -72,9 +85,16 @@ class ArticuloService implements ArticuloServiceInterface
     public function crearArticulo(array $data): mixed
     {
         $usuario = $this->validarUsuario();
-        
         if (!$usuario instanceof Usuario) {
             return $usuario;
+        }
+
+        $casaDeRemates = CasaDeRemates::where('id', $usuario->id)->first();
+        if (!$casaDeRemates) {
+            return response()->json([
+                'success' => false,
+                'error' => 'La casa de remates especificada no existe.'
+            ], 422);
         }
 
         return Articulo::create([
@@ -106,6 +126,14 @@ class ArticuloService implements ArticuloServiceInterface
         $usuario = $this->validarUsuario();
         if (!$usuario instanceof Usuario) {
             return $usuario;
+        }
+
+        $casaDeRemates = CasaDeRemates::where('id', $usuario->id)->first();
+        if (!$casaDeRemates) {
+            return response()->json([
+                'success' => false,
+                'error' => 'La casa de remates especificada no existe.'
+            ], 422);
         }
 
         $articulo = $this->buscarArticuloPorId($id);
@@ -153,19 +181,191 @@ class ArticuloService implements ArticuloServiceInterface
         return $articulos;
     }
 
+
+   
+    public function obtenerArticulosOrdenados() 
+    {
+        $query = Articulo::query()
+            ->join('lotes', 'articulos.lote_id', '=', 'lotes.id')
+            ->join('subastas', 'lotes.subasta_id', '=', 'subastas.id')
+            ->leftJoin('categorias', 'articulos.categoria_id', '=', 'categorias.id')
+            ->whereNotIn('subastas.estado', [EstadoSubasta::CANCELADA, EstadoSubasta::CERRADA])
+            ->select([
+                'articulos.*',
+                'subastas.id as subasta_id',
+                'subastas.fechaInicio',
+                'subastas.fechaCierre',
+                'lotes.oferta',
+                'lotes.id as lote_id',
+                'lotes.ganador_id',
+                'categorias.nombre as categoria_nombre'
+            ])
+            ->orderBy('subastas.fechaCierre', 'asc');
+
+        $articulos = $query->get();
+        
+        if ($articulos->isEmpty()) {
+            return response()->json([
+                'success' => false,
+                'message' => 'No hay artículos disponibles'
+            ], 404);
+        }
+
+        $catalogElements = $articulos->map(function ($articulo) {
+            $primerImagen = null;
+            if (!empty($articulo->imagenes)) {
+                $imagenes = is_string($articulo->imagenes) ? json_decode($articulo->imagenes, true) : $articulo->imagenes;
+                $primerImagen = is_array($imagenes) && !empty($imagenes) ? $imagenes[0] : null;
+            }
+
+            $texto3 = "No se está subastando";
+            if ($articulo->oferta > 0) {
+                if ($articulo->ganador_id) {
+                    $texto3 = "Subastado por $" . number_format($articulo->oferta, 2);
+                } else {
+                    $texto3 = "Oferta actual: $" . number_format($articulo->oferta, 2);
+                }
+            }
+
+            return [
+                'id' => $articulo->id,
+                'imagen' => $primerImagen,
+                'lotes' => null,
+                'lote_id' => $articulo->lote_id,
+                'subasta_id' => $articulo->subasta_id,
+                'etiqueta' => strtoupper($articulo->estado),
+                'texto1' => $articulo->categoria_nombre ?? 'Sin categoría',
+                'texto2' => $articulo->nombre,
+                'texto3' => $texto3,
+                'fechaInicio' => $articulo->fechaInicio,
+                'fechaCierre' => $articulo->fechaCierre
+            ];
+        });
+        
+        return $catalogElements;
+    }
+
+    public function obtenerArticulosFiltrados(array $data)
+    {
+        $query = Articulo::query()
+            ->join('lotes', 'articulos.lote_id', '=', 'lotes.id')
+            ->join('subastas', 'lotes.subasta_id', '=', 'subastas.id')
+            ->leftJoin('categorias', 'articulos.categoria_id', '=', 'categorias.id')
+            ->select([
+                'articulos.*',
+                'subastas.id as subasta_id',
+                'subastas.fechaInicio',
+                'subastas.fechaCierre',
+                'lotes.oferta',
+                'lotes.id as lote_id',
+                'lotes.ganador_id',
+                'categorias.nombre as categoria_nombre'
+            ]);
+
+        $textoBusqueda = (isset($data['textoBusqueda']) && $data['textoBusqueda'] !== null && $data['textoBusqueda'] !== "null") ? $data['textoBusqueda'] : null;
+        $cerrada = (isset($data['cerrada']) && $data['cerrada'] !== null && is_bool($data['cerrada'])) ? $data['cerrada'] : false;
+        $categoria = (isset($data['categoria']) && $data['categoria'] !== null && $data['categoria'] !== "null") ? $data['categoria'] : null;
+        $ubicacion = (isset($data['ubicacion']) && $data['ubicacion'] !== null && $data['ubicacion'] !== "null") ? $data['ubicacion'] : null;
+        $fechaCierreLimite = (isset($data['fechaCierreLimite']) && $data['fechaCierreLimite'] !== null && $data['fechaCierreLimite'] !== "null") ? $data['fechaCierreLimite'] : null;
+
+        if ($textoBusqueda) {
+            $query->where(function($q) use ($textoBusqueda) {
+                $q->where('articulos.nombre', 'like', '%' . $textoBusqueda . '%')
+                  ->orWhere('articulos.especificacionesTecnicas', 'like', '%' . $textoBusqueda . '%')
+                  ->orWhereHas('categoria', function($q) use ($textoBusqueda) {
+                      $q->where('categorias.nombre', 'like', '%' . $textoBusqueda . '%');
+                  });
+            });
+        }
+
+        if ($cerrada) {
+            $query->where('subastas.estado', EstadoSubasta::CERRADA);
+        } else {
+            $query->whereNotIn('subastas.estado', [EstadoSubasta::CANCELADA, EstadoSubasta::CERRADA]);
+        }
+        
+        if ($categoria) {
+            $query->where('articulos.categoria_id', $categoria);
+        }
+        
+        if ($ubicacion) {
+            $query->where('subastas.ubicacion', $ubicacion);
+        }
+        
+        if ($fechaCierreLimite) {
+            $query->where('subastas.fechaCierre', '<=', $fechaCierreLimite);
+        }
+        
+        $query->orderBy('subastas.fechaCierre', 'asc');
+        
+        $articulos = $query->get();
+        
+        if ($articulos->isEmpty()) {
+            return response()->json([
+                'success' => false,
+                'message' => 'No hay artículos disponibles con los filtros aplicados'
+            ], 404);
+        }
+        
+        $catalogElements = $articulos->map(function ($articulo) {
+            $primerImagen = null;
+            if (!empty($articulo->imagenes)) {
+                $imagenes = is_string($articulo->imagenes) ? json_decode($articulo->imagenes, true) : $articulo->imagenes;
+                $primerImagen = is_array($imagenes) && !empty($imagenes) ? $imagenes[0] : null;
+            }
+
+            $texto3 = "No se está subastando";
+            if ($articulo->oferta > 0) {
+                if ($articulo->ganador_id) {
+                    $texto3 = "Subastado por $" . number_format($articulo->oferta, 2);
+                } else {
+                    $texto3 = "Oferta actual: $" . number_format($articulo->oferta, 2);
+                }
+            }
+
+            return [
+                'id' => $articulo->id,
+                'imagen' => $primerImagen,
+                'lotes' => null,
+                'lote_id' => $articulo->lote_id,
+                'subasta_id' => $articulo->subasta_id,
+                'etiqueta' => strtoupper($articulo->estado),
+                'texto1' => $articulo->categoria_nombre ?? 'Sin categoría',
+                'texto2' => $articulo->nombre,
+                'texto3' => $texto3,
+                'fechaInicio' => $articulo->fechaInicio,
+                'fechaCierre' => $articulo->fechaCierre
+            ];
+        });
+        
+        return $catalogElements;
+    }
+
+    
     public function obtenerCategorias()
     {
-        $categorias = Categoria::all();
-
-        if (!$categorias || $categorias->isEmpty()) {
+        $categorias = Categoria::select('id', 'nombre')
+        ->whereIn('id', function($query) {
+            $query->select('categoria_id')
+                ->from('articulos')
+                ->whereNotNull('categoria_id')
+                ->distinct();
+        })
+        ->orderBy('nombre', 'asc')
+        ->get();
+        
+        if ($categorias->isEmpty()) {
             return response()->json([
                 'success' => false,
                 'message' => 'No hay categorías disponibles'
             ], 404);
         }
 
+
         return $categorias;
     }
+
+    
 
     /**
      * Elimina las imágenes anteriores del servidor
@@ -227,4 +427,20 @@ class ArticuloService implements ArticuloServiceInterface
 
         return $exitoGeneral;
     }
+
+    public function obtenerAllCategorias()
+    {
+        $categorias = Categoria::all();
+
+        if (!$categorias || $categorias->isEmpty()) {
+            return response()->json([
+                'success' => false,
+                'message' => 'No hay categorías disponibles'
+            ], 404);
+        }
+
+        return $categorias;
+    }
+     
+
 }

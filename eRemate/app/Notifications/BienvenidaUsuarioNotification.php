@@ -27,8 +27,8 @@ class BienvenidaUsuarioNotification extends Notification
             ->greeting("¡Hola {$notifiable->nombre}!")
             ->line('Gracias por registrarte en eRemate.')
             ->line('Tu cuenta ha sido creada exitosamente.')
-            ->line('Ya puedes empezar a participar en subastas y hacer pujas.')
-            ->action('Comenzar a Explorar', url('/'))
+            ->line('Ya puedes empezar a participar en el mundo de las subastas virtuales.')
+            ->action('Comenzar a Explorar', url('http://localhost:4200/inicio'))
             ->line('Si tienes alguna pregunta, no dudes en contactarnos.');
     }
 }

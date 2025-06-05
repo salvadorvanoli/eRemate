@@ -6,6 +6,7 @@ use App\Models\Usuario;
 use App\Models\UsuarioRegistrado;
 use App\Models\Rematador;
 use App\Models\CasaDeRemates;
+use App\Notifications\BienvenidaUsuarioNotification;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Hash;
 use Google_Client;
@@ -119,6 +120,7 @@ class GoogleAuthController extends Controller
                 return response()->json(['error' => 'Usuario no válido o perfil ya completado'], 400);
             }
 
+
             $request->validate([
                 'telefono' => 'required|string|max:15',
                 'tipo' => 'required|string|in:registrado,rematador,casa',
@@ -179,6 +181,12 @@ class GoogleAuthController extends Controller
 
             $user->refresh();
 
+        
+            // Mandar noti
+            if ($user instanceof Usuario) {
+                $this->sendBienvenidaNotification($user);
+            }
+
             return response()->json([
                 'message' => 'Perfil completado exitosamente',
                 'user' => $user
@@ -187,6 +195,19 @@ class GoogleAuthController extends Controller
         } catch (\Exception $e) {
             \Log::error('Complete Profile Error: ' . $e->getMessage());
             return response()->json(['error' => 'Error al completar el perfil'], 500);
+        }
+    }
+
+    /**
+     * Send BienvenidaUsuarioNotification to the user
+     */
+    private function sendBienvenidaNotification(Usuario $usuario)
+    {
+        try {
+            $usuario->notify(new BienvenidaUsuarioNotification());
+        } catch (\Exception $e) {
+            // Log the error but don't fail the profile completion process
+            \Log::error('Error sending BienvenidaUsuarioNotification: ' . $e->getMessage());
         }
     }
 }

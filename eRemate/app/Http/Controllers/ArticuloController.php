@@ -170,6 +170,7 @@ class ArticuloController extends Controller
             ], 500);
         }
     }
+
     
     public function obtenerCategorias()
     {
@@ -194,6 +195,7 @@ class ArticuloController extends Controller
         }
     }
     
+    
     private function verificarUsuario($usuario, $subasta)
     {
         // Comentamos toda la lógica de verificación para pruebas
@@ -201,9 +203,90 @@ class ArticuloController extends Controller
         // $casaDeRematesSubasta = $subasta->casaRemates ?? null;
         // if (($casaDeRemates && $casaDeRemates->id !== $casaDeRematesSubasta?->id)) {
         //     return response()->json(['error' => 'No tienes permiso para acceder a este artículo'], 403);
-        // }
+        // 
+    }
 
-        // Siempre devuelve el usuario (siempre verifica OK)
-        return $usuario;
+
+    public function obtenerArticulosOrdenados()
+    {
+        try {
+            $articulos = $this->articuloService->obtenerArticulosOrdenados();
+
+            if ($articulos instanceof JsonResponse) {
+                return $articulos;
+            }
+
+            return response()->json([
+                'success' => true,
+                'data' => $articulos,
+                'message' => 'Artículos ordenados obtenidas correctamente'
+            ], 200);
+        
+        } catch (\Exception $e) {
+            return response()->json([
+                'success' => false,
+                'message' => 'Error al obtener artículos ordenados: ' . $e->getMessage()
+            ], 500);
+        }
+    }
+
+    public function obtenerArticulosFiltrados(Request $request)
+    {
+        try {
+            $textoBusqueda = $request->query('textoBusqueda', null);
+            $cerrada = filter_var($request->query('cerrada', false), FILTER_VALIDATE_BOOLEAN);
+            $categoria = $request->query('categoria', null);
+            $ubicacion = $request->query('ubicacion', null);
+            $fechaCierreLimite = $request->query('fechaCierreLimite', null);
+            
+            $data = [
+                'textoBusqueda' => $textoBusqueda,
+                'cerrada' => $cerrada,
+                'categoria' => $categoria,
+                'ubicacion' => $ubicacion,
+                'fechaCierreLimite' => $fechaCierreLimite,
+            ];
+
+            $articulos = $this->articuloService->obtenerArticulosFiltrados($data);
+
+            if ($articulos instanceof JsonResponse) {
+                return $articulos;
+            }
+
+            return response()->json([
+                'success' => true,
+                'data' => $articulos,
+                'message' => 'Artículos filtrados obtenidas correctamente'
+            ], 200);
+        
+        } catch (\Exception $e) {
+            return response()->json([
+                'success' => false,
+                'message' => 'Error al obtener artículos filtrados: ' . $e->getMessage()
+            ], 500);
+        }
+    }
+
+    public function obtenerAllCategorias()
+    {
+        try {
+            $categorias = $this->articuloService->obtenerCategorias();
+
+            if ($categorias instanceof JsonResponse) {
+                return $categorias;
+            }
+
+            return response()->json([
+                'success' => true,
+                'data' => $categorias,
+                'message' => 'Categorías obtenidas correctamente'
+            ], 200);
+        
+        } catch (\Exception $e) {
+            return response()->json([
+                'success' => false,
+                'message' => 'Error al obtener categorías: ' . $e->getMessage()
+            ], 500);
+        }
     }
 }
