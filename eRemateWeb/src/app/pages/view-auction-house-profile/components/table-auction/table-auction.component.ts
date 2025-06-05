@@ -17,6 +17,7 @@ import { AuctionHouseService } from '../../../../core/services/auction-house.ser
 import { Subasta } from '../../../../core/models/subasta';
 import { UsuarioRematador, RematadorResponse } from '../../../../core/models/usuario';
 import { SecurityService } from '../../../../core/services/security.service';
+import { Router } from '@angular/router';
 
 
 @Component({
@@ -40,7 +41,8 @@ import { SecurityService } from '../../../../core/services/security.service';
   templateUrl: './table-auction.component.html',
   styleUrl: './table-auction.component.scss'
 })
-export class TableAuctionComponent implements OnInit, AfterViewInit, OnDestroy {    auctions: Subasta[] = [];
+export class TableAuctionComponent implements OnInit, AfterViewInit, OnDestroy {
+    auctions: Subasta[] = [];
     cols: any[] = [];
     loading = false;
     auctionDialog: boolean = false;
@@ -63,6 +65,18 @@ export class TableAuctionComponent implements OnInit, AfterViewInit, OnDestroy {
     private searchTimeout: any;
     private defaultLatLng: [number, number] = [-34.6037, -58.3816]; // Buenos Aires por defecto
 
+    // ✅ Agregar nuevas propiedades para edición
+    editAuctionDialog: boolean = false;
+    editingAuction: any = {};
+    editSubmitted: boolean = false;
+    editMinDate: string = '';
+    editMinEndDate: string = '';
+    editDateErrors: { startDate: string, endDate: string } = { startDate: '', endDate: '' };
+    editMapVisible: boolean = false;
+    private editMap: L.Map | null = null;
+    private editMarker: L.Marker | null = null;
+    private editSearchTimeout: any;
+
     @ViewChild('dt') dt!: Table;
     @Output() auctionSelected = new EventEmitter<number>();
 
@@ -70,7 +84,8 @@ export class TableAuctionComponent implements OnInit, AfterViewInit, OnDestroy {
         private messageService: MessageService,
         private confirmationService: ConfirmationService,
         private auctionHouseService: AuctionHouseService,
-        private securityService: SecurityService
+        private securityService: SecurityService,
+        private router: Router // ✅ Agregar Router
     ) {        console.log('[CONSTRUCTOR] SecurityService actualUser:', this.securityService.actualUser);
     }
 
@@ -83,8 +98,14 @@ export class TableAuctionComponent implements OnInit, AfterViewInit, OnDestroy {
         if (this.map) {
             this.map.remove();
         }
+        if (this.editMap) {
+            this.editMap.remove();
+        }
         if (this.searchTimeout) {
             clearTimeout(this.searchTimeout);
+        }
+        if (this.editSearchTimeout) {
+            clearTimeout(this.editSearchTimeout);
         }
     }    onLocationChange() {
         console.log('onLocationChange llamado con:', this.auction.ubicacion);
@@ -296,7 +317,7 @@ export class TableAuctionComponent implements OnInit, AfterViewInit, OnDestroy {
         this.configureTable();
         this.loadAuctionsData();
         this.loadRematadores();
-        this.loading = false; 
+        // this.loading = false; // ❌ Eliminar esta línea
     }
     
     configureTable() {
@@ -345,9 +366,11 @@ export class TableAuctionComponent implements OnInit, AfterViewInit, OnDestroy {
 
                     console.log('Valor final de this.auctions:', this.auctions);
                 },
-                error: () => {
+                error: (error) => {
+                    console.error('Error al cargar subastas:', error);
                     this.auctions = [];
-                    this.messageService.add({ severity: 'error', summary: 'Error', detail: 'No se pudieron cargar las subastas', life: 3000 });
+                    // Toast eliminado - solo se muestra si hay un error real de conexión/servidor
+                    // No se muestra toast cuando simplemente no hay subastas
                 }
             });
     }
@@ -403,7 +426,7 @@ export class TableAuctionComponent implements OnInit, AfterViewInit, OnDestroy {
         console.log(`[OPEN_NEW] ID de casa para nueva subasta (desde currentUser.id): ${casaIdForNewAuction}`);
         
         const today = new Date();
-        this.minDate = this.formatDateForInput(today);
+        this.minDate = this.formatDateForInputLocal(today); // ✅ Cambiar aquí
         this.minEndDate = this.minDate; 
         
         this.auction = {
@@ -489,6 +512,275 @@ export class TableAuctionComponent implements OnInit, AfterViewInit, OnDestroy {
         this.submitted = false;
     }
     
+    
+    // ✅ Agregar método para abrir el modal de edición
+    editAuction(auction: Subasta) {
+        // Verificar si se puede editar antes de abrir el modal
+        if (!this.canEditAuction(auction.estado)) {
+            this.messageService.add({
+                severity: 'warn',
+                summary: 'Acción no permitida',
+                detail: `No se puede editar una subasta en estado "${auction.estado}"`,
+                life: 3000
+            });
+            return;
+        }
+
+        console.log('Editando subasta:', auction);
+        
+        // Configurar fechas mínimas
+        const today = new Date();
+        this.editMinDate = this.formatDateForInputLocal(today);
+        this.editMinEndDate = this.editMinDate;
+        
+        // Clonar la subasta para edición - USAR FECHA LOCAL
+        this.editingAuction = {
+            id: auction.id,
+            tipoSubasta: auction.tipoSubasta,
+            fechaInicio: this.formatDateForInputLocal(new Date(auction.fechaInicio)),
+            fechaCierre: this.formatDateForInputLocal(new Date(auction.fechaCierre)),
+            ubicacion: auction.ubicacion
+        };
+        
+        this.editSubmitted = false;
+        this.editDateErrors = { startDate: '', endDate: '' };
+        this.editMapVisible = false;
+        this.editAuctionDialog = true;
+        
+        // Si hay ubicación, mostrar el mapa
+        if (this.editingAuction.ubicacion && this.editingAuction.ubicacion.trim()) {
+            this.editMapVisible = true;
+            setTimeout(() => {
+                this.initializeEditMap();
+            }, 100);
+        }
+    }
+
+    // ✅ Agregar método para cerrar el modal de edición
+    hideEditDialog() {
+        this.editAuctionDialog = false;
+        this.editSubmitted = false;
+        this.editMapVisible = false;
+        
+        // Limpiar el mapa de edición
+        if (this.editMap) {
+            this.editMap.remove();
+            this.editMap = null;
+        }
+        if (this.editSearchTimeout) {
+            clearTimeout(this.editSearchTimeout);
+        }
+    }
+
+    // ✅ Agregar método para validar fechas en edición
+    validateEditDates(): void {
+        const now = new Date();
+        const startDate = new Date(this.editingAuction.fechaInicio);
+        const endDate = new Date(this.editingAuction.fechaCierre);
+        
+        this.editDateErrors = { startDate: '', endDate: '' };
+        
+        if (startDate < now) {
+            this.editDateErrors.startDate = 'La fecha de inicio debe ser posterior a la fecha actual';
+        } else {
+            this.editMinEndDate = this.formatDateForInputLocal(startDate); // ✅ Cambiar aquí
+        }
+        
+        if (endDate <= startDate) {
+            this.editDateErrors.endDate = 'La fecha de cierre debe ser posterior a la fecha de inicio';
+        }
+    }
+
+    // ✅ Agregar método para manejar cambio de ubicación en edición
+    onEditLocationChange() {
+        console.log('onEditLocationChange llamado con:', this.editingAuction.ubicacion);
+        
+        if (this.editingAuction.ubicacion && this.editingAuction.ubicacion.trim().length > 2) {
+            this.editMapVisible = true;
+            
+            setTimeout(() => {
+                if (!this.editMap) {
+                    this.initializeEditMap();
+                }
+            }, 100);
+            
+            clearTimeout(this.editSearchTimeout);
+            this.editSearchTimeout = setTimeout(() => {
+                this.searchEditLocation(this.editingAuction.ubicacion);
+            }, 800);
+        } else {
+            this.editMapVisible = false;
+        }
+    }
+
+    // ✅ Agregar método para inicializar el mapa de edición
+    private initializeEditMap() {
+        console.log('Inicializando mapa de edición...');
+        
+        // Limpiar mapa anterior si existe
+        if (this.editMap) {
+            this.editMap.remove();
+        }
+        
+        // Crear el mapa de edición
+        this.editMap = L.map('edit-auction-map').setView(this.defaultLatLng, 13);
+        
+        L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png', {
+            attribution: '© OpenStreetMap contributors'
+        }).addTo(this.editMap);
+        
+        console.log('Mapa de edición inicializado correctamente');
+        
+        // Buscar la ubicación actual
+        if (this.editingAuction.ubicacion && this.editingAuction.ubicacion.trim()) {
+            setTimeout(() => {
+                this.searchEditLocation(this.editingAuction.ubicacion);
+            }, 100);
+        }
+    }
+
+    // ✅ Agregar método para buscar ubicación en edición
+    private async searchEditLocation(address: string) {
+        console.log('Buscando ubicación para edición:', address);
+        
+        try {
+            const addressLower = address.toLowerCase();
+            let searchUrl = '';
+            
+            const southAmericanCountries = [
+                'uruguay', 'brasil', 'brazil', 'chile', 'bolivia', 'paraguay', 
+                'colombia', 'venezuela', 'ecuador', 'peru', 'perú', 'guyana', 'suriname'
+            ];
+            
+            const detectedCountry = southAmericanCountries.find(country => 
+                addressLower.includes(country)
+            );
+            
+            if (detectedCountry) {
+                searchUrl = `https://nominatim.openstreetmap.org/search?format=json&q=${encodeURIComponent(address)}&limit=3&addressdetails=1`;
+            } else {
+                searchUrl = `https://nominatim.openstreetmap.org/search?format=json&q=${encodeURIComponent(address)}&countrycodes=ar&limit=3&addressdetails=1`;
+            }
+            
+            const response = await fetch(searchUrl);
+            const results: any[] = await response.json();
+            
+            if (results && results.length > 0) {
+                let bestResult = results[0];
+                
+                if (detectedCountry && results.length > 1) {
+                    const countryFilteredResult = results.find((result: any) => {
+                        const country = result.address?.country?.toLowerCase() || '';
+                        return country.includes(detectedCountry);
+                    });
+                    
+                    if (countryFilteredResult) {
+                        bestResult = countryFilteredResult;
+                    }
+                }
+                
+                const lat = parseFloat(bestResult.lat);
+                const lng = parseFloat(bestResult.lon);
+                
+                if (this.editMap) {
+                    this.editMap.setView([lat, lng], 15);
+                    this.updateEditMarker(lat, lng, bestResult.display_name);
+                }
+            } else {
+                if (this.editMap) {
+                    this.editMap.setView(this.defaultLatLng, 13);
+                    this.updateEditMarker(this.defaultLatLng[0], this.defaultLatLng[1], 'Ubicación no encontrada');
+                }
+            }
+        } catch (error) {
+            console.error('Error en geocoding para edición:', error);
+            if (this.editMap) {
+                this.editMap.setView(this.defaultLatLng, 13);
+                this.updateEditMarker(this.defaultLatLng[0], this.defaultLatLng[1], 'Error al buscar ubicación');
+            }
+        }
+    }
+
+    // ✅ Agregar método para actualizar marcador en edición
+    private updateEditMarker(lat: number, lng: number, customTitle?: string) {
+        if (!this.editMap) return;
+        
+        if (this.editMarker) {
+            this.editMap.removeLayer(this.editMarker);
+        }
+        
+        this.editMarker = L.marker([lat, lng]).addTo(this.editMap);
+        const popupText = customTitle || this.editingAuction.ubicacion || 'Ubicación seleccionada';
+        this.editMarker.bindPopup(popupText).openPopup();
+    }
+
+    // ✅ Agregar método para actualizar la subasta
+    updateAuction() {
+        this.editSubmitted = true;
+        console.log('Actualizando subasta:', this.editingAuction);
+        
+        this.validateEditDates();
+        
+        if (!this.editingAuction.tipoSubasta?.trim() || 
+            !this.editingAuction.ubicacion?.trim() || 
+            !this.editingAuction.fechaInicio || 
+            !this.editingAuction.fechaCierre ||
+            this.editDateErrors.startDate ||
+            this.editDateErrors.endDate) {
+            console.warn('Faltan campos requeridos o hay errores de validación en edición.');
+            return;
+        }
+        
+        const updateData = {
+            tipoSubasta: this.editingAuction.tipoSubasta,
+            fechaInicio: this.editingAuction.fechaInicio,
+            fechaCierre: this.editingAuction.fechaCierre,
+            ubicacion: this.editingAuction.ubicacion
+        };
+        
+        console.log('Datos a actualizar:', updateData);
+        
+        this.loading = true;
+        this.auctionHouseService.updateAuction(this.editingAuction.id, updateData)
+            .pipe(finalize(() => this.loading = false))
+            .subscribe({
+                next: (response) => {
+                    console.log('Subasta actualizada correctamente:', response);
+                    
+                    // Actualizar la subasta en la lista local
+                    const index = this.auctions.findIndex(a => a.id === this.editingAuction.id);
+                    if (index !== -1) {
+                        this.auctions[index] = {
+                            ...this.auctions[index],
+                            tipoSubasta: this.editingAuction.tipoSubasta,
+                            fechaInicio: new Date(this.editingAuction.fechaInicio),
+                            fechaCierre: new Date(this.editingAuction.fechaCierre),
+                            ubicacion: this.editingAuction.ubicacion
+                        };
+                        this.auctions = [...this.auctions];
+                    }
+                    
+                    this.messageService.add({
+                        severity: 'success',
+                        summary: 'Éxito',
+                        detail: 'Subasta actualizada correctamente',
+                        life: 3000
+                    });
+                    
+                    this.hideEditDialog();
+                },
+                error: (error) => {
+                    console.error('Error al actualizar subasta:', error);
+                    this.messageService.add({
+                        severity: 'error',
+                        summary: 'Error',
+                        detail: 'No se pudo actualizar la subasta',
+                        life: 3000
+                    });
+                }
+            });
+    }
+
     findRematadorByEmail(email: string): number | null {
         console.log('Buscando email:', email);
         console.log('Rematadores disponibles:', this.rematadores);
@@ -503,10 +795,23 @@ export class TableAuctionComponent implements OnInit, AfterViewInit, OnDestroy {
         return null;
     }
     
+    // ✅ REEMPLAZAR el método existente formatDateForInput() en la línea 786
     formatDateForInput(date: Date): string {
-        return date.toISOString().slice(0, 16); 
+        // Crear una nueva fecha ajustada a la zona horaria local
+        const localDate = new Date(date.getTime() - (date.getTimezoneOffset() * 60000));
+        return localDate.toISOString().slice(0, 16);
     }
 
+    // ✅ También agregar este método alternativo más claro
+    formatDateForInputLocal(date: Date): string {
+        const year = date.getFullYear();
+        const month = String(date.getMonth() + 1).padStart(2, '0');
+        const day = String(date.getDate()).padStart(2, '0');
+        const hours = String(date.getHours()).padStart(2, '0');
+        const minutes = String(date.getMinutes()).padStart(2, '0');
+        
+        return `${year}-${month}-${day}T${hours}:${minutes}`;
+    }
 
     validateDates(): void {
         const now = new Date();
@@ -515,14 +820,12 @@ export class TableAuctionComponent implements OnInit, AfterViewInit, OnDestroy {
         
         this.dateErrors = { startDate: '', endDate: '' };
         
- 
         if (startDate < now) {
             this.dateErrors.startDate = 'La fecha de inicio debe ser posterior a la fecha actual';
         } else {
- 
-            this.minEndDate = this.formatDateForInput(startDate);
+            this.minEndDate = this.formatDateForInputLocal(startDate); // ✅ Cambiar aquí
         }
- 
+        
         if (endDate <= startDate) {
             this.dateErrors.endDate = 'La fecha de cierre debe ser posterior a la fecha de inicio';
         }
@@ -671,5 +974,24 @@ export class TableAuctionComponent implements OnInit, AfterViewInit, OnDestroy {
                 this.map?.invalidateSize();
             }, 100);
         }
+    }
+
+    // ✅ Modificar método para incluir estado de navegación
+    viewAuction(auction: Subasta) {
+        if (auction.id) {
+            // Navegar con estado para recordar dónde estábamos
+            this.router.navigate(['/subasta', auction.id], {
+                state: { 
+                    returnUrl: '/perfil-casa',
+                    returnState: { selectedInfoType: 'auctions' }
+                }
+            });
+        }
+    }
+
+    // Agregar este método después de los métodos existentes
+    canEditAuction(estado: string): boolean {
+      const editableStates = ['pendiente', 'pendiente_aprobacion', 'aceptada'];
+      return editableStates.includes(estado?.toLowerCase());
     }
 }

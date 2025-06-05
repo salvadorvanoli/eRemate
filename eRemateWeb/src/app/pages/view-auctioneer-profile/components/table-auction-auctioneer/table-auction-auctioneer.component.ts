@@ -1,6 +1,7 @@
 import { Component, Input, OnInit, OnChanges, SimpleChanges, ViewChild } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { FormsModule } from '@angular/forms';
+import { Router } from '@angular/router'; // ✅ AGREGAR ESTA IMPORTACIÓN
 import { TableModule } from 'primeng/table';
 import { ButtonModule } from 'primeng/button';
 import { InputTextModule } from 'primeng/inputtext';
@@ -57,7 +58,8 @@ export class TableAuctionAuctioneerComponent implements OnInit, OnChanges {
     private auctioneerService: AuctioneerService,
     private securityService: SecurityService,
     private confirmationService: ConfirmationService,
-    private messageService: MessageService
+    private messageService: MessageService,
+    private router: Router // ✅ AGREGAR ESTA LÍNEA
   ) {}
 
   ngOnInit() {
@@ -318,5 +320,19 @@ export class TableAuctionAuctioneerComponent implements OnInit, OnChanges {
       this.auctionDialog = false;
       this.loadAuctions();
     }, 1000);
+  }
+  
+  // ✅ AGREGAR ESTE MÉTODO
+  viewAuctionDetails(auction: Subasta) {
+    if (auction.id) {
+      this.router.navigate(['/subasta', auction.id]);
+    } else {
+      this.messageService.add({
+        severity: 'warn',
+        summary: 'Advertencia',
+        detail: 'No se puede acceder a los detalles de esta subasta',
+        life: 3000
+      });
+    }
   }
 }

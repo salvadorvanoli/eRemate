@@ -12,4 +12,11 @@ export class ItemService extends BaseHttpService<Articulo, Articulo> {
   constructor(http: HttpClient) {
     super(http, '/item');
   }
+
+   getAllCategories(): Observable<any[]> {
+    const url = `${this.baseUrl}${this.end}/categories/all`;
+    console.log('🏷️ Obteniendo categorías desde:', url);
+    return this.http.get<any[]>(url);
+  }
+  
 }

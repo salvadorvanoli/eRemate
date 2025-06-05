@@ -1,5 +1,5 @@
 .stats-container {
-  width: 1040px;
+  width: 100%;
   margin: 0 auto;
   margin-bottom: 40px;
 }
@@ -12,24 +12,80 @@
   display: inline-block;
 }
 
+// Hacer que las tarjetas ocupen espacio completo
 .card {
   background-color: white;
   border-radius: 8px;
   box-shadow: 0 2px 6px rgba(0, 0, 0, 0.05);
-  padding: 1.5rem;
+  padding: 1rem; // Reducir el padding para más espacio utilizable
   height: 100%;
+  width: 100%; // Asegurar ancho completo
+  display: flex;
+  flex-direction: column;
   
   h3 {
     color: #495057;
     margin-top: 0;
-    margin-bottom: 1.5rem;
+    margin-bottom: 1rem;
     font-size: 1.2rem;
     text-align: center;
   }
 }
 
+// Configuración base para contenedores de gráficos
+.chart-container {
+  width: 100%;
+  height: 100%;
+  min-height: 300px;
+  display: flex;
+  flex-direction: column;
+  align-items: stretch;
+  justify-content: center;
+}
+
 :host ::ng-deep {
+  // Estilos comunes para todos los gráficos
   .p-chart {
-    min-height: 250px;
+    width: 100% !important;
+    display: flex !important;
+    align-items: center !important;
+    justify-content: center !important;
   }
+  
+  // Ajustes específicos para cada contenedor de gráficos
+  .bar-chart .p-chart {
+    min-height: 350px !important;
+    
+    canvas {
+      width: 100% !important;
+      height: 330px !important;
+    }
+  }
+  
+  .pie-chart .p-chart {
+    min-height: 120px !important; // Reducido significativamente
+    
+    canvas {
+      width: 120px !important; // Tamaño fijo y pequeño
+      height: 120px !important;
+      max-width: 120px !important;
+      max-height: 120px !important;
+    }
+  }
+  
+  .line-chart .p-chart {
+    min-height: 320px !important;
+    
+    canvas {
+      width: 100% !important;
+      height: 300px !important;
+    }
+  }
+}
+
+// Contenedor extra para la torta
+.small-pie-container {
+  max-width: 100%;
+  max-height: 100%;
+  margin: 0 auto;
 }

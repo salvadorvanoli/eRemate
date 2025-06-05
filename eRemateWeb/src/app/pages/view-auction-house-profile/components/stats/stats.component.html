@@ -1,30 +1,47 @@
 <div class="stats-container">
+  <!-- ✅ Spinner de carga -->
+  <div *ngIf="loading" class="flex justify-content-center my-3">
+    <p-progressSpinner strokeWidth="4" [style]="{'width': '50px', 'height': '50px'}" />
+  </div>
   
-  <div class="grid">
-    <!-- Gráfico de ventas mensuales -->
-    <div class="col-12 md:col-6 lg:col-6 mb-4">
+  <!-- ✅ CONTENEDOR grid -->
+  <div class="grid" *ngIf="!loading">
+    <!-- ✅ Gráfico de ventas mensuales -->
+    <div class="col-12 lg:col-6 xl:col-4 mb-4">
       <div class="card shadow-2">
-        
-        <p-chart type="bar" [data]="salesData" [options]="barOptions"></p-chart>
-      </div>
-    </div>
-    
-    <!-- Gráfico de categorías más vendidas (REDUCIDO) -->
-    <div class="col-12 md:col-6 lg:col-6 mb-4">
-      <div class="card shadow-2">
-       
-        <div class="pie-chart-container" style="max-width: 300px; margin: 0 auto;">
-          <p-chart type="pie" [data]="categoryData" [options]="pieOptions"></p-chart>
+        <div class="chart-container bar-chart">
+          <p-chart type="bar" [data]="salesData" [options]="barOptions"></p-chart>
         </div>
       </div>
     </div>
     
-    <!-- Gráfico de pujas por subasta -->
-    <div class="col-12 md:col-6 lg:col-6 mb-4">
+    <!-- ✅ Gráfico de categorías -->
+    <div class="col-12 lg:col-6 xl:col-4 mb-4">
       <div class="card shadow-2">
-        
-        <p-chart type="line" [data]="bidsData" [options]="lineOptions"></p-chart>
+        <div class="chart-container pie-chart">
+          <div class="small-pie-container">
+            <p-chart type="pie" [data]="categoryData" [options]="pieOptions"></p-chart>
+          </div>
+          
+          <!-- Mensaje adicional cuando no hay datos -->
+          <div *ngIf="isEmptyCategories()" class="text-center mt-3">
+            <p class="text-muted" style="color: #999; font-size: 14px; margin: 0;">
+              <i class="pi pi-info-circle mr-2"></i>
+              No hay categorías con ventas registradas
+            </p>
+          </div>
+        </div>
+      </div>
+    </div>
+    
+    <!-- ✅ Gráfico de pujas -->
+    <div class="col-12 lg:col-6 xl:col-4 mb-4">
+      <div class="card shadow-2">
+        <div class="chart-container line-chart">
+          <p-chart type="line" [data]="bidsData" [options]="lineOptions"></p-chart>
+        </div>
       </div>
     </div>
   </div>
 </div>
+

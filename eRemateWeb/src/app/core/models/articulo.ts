@@ -1,8 +1,12 @@
+import { CategoriaSimple } from './categoria';
+
 export interface Articulo {
-    id?: number; 
-    lote_id: number;
+    id?: number;
     nombre: string;
-    imagenes: string[]; 
-    estado?: string;
-    especificacionesTecnicas: string; 
+    lote_id: number;
+    imagenes: string[];
+    estado: string;
+    especificacionesTecnicas: string;
+    categoria?: CategoriaSimple; // ✅ Agregar categoría
+    categoria_id?: number; // ✅ Agregar ID de categoría para envío
 }

@@ -66,4 +66,5 @@ export interface RematadorResponse {
     created_at?: string;
     updated_at?: string;
   };
+  displayEmail?: string; // ✅ Agregar esta línea
 }

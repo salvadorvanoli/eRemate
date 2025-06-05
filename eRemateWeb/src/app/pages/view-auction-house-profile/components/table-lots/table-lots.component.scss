@@ -26,6 +26,102 @@
   justify-content: center;
 }
 
+// ✅ AGREGAR ESTILOS RESPONSIVE COMO EN table-auction
+.table-scroll-x {
+  width: 100%;
+  overflow-x: auto;
+}
+
+.table-scroll-x .p-table,
+.table-scroll-x .p-datatable {
+  min-width: 900px; // Ancho mínimo para las columnas de lotes
+}
+
+/* ✅ FORZAR que los modales aparezcan en el viewport visible */
+::ng-deep .p-dialog-mask {
+  position: fixed !important;
+  top: 0 !important;
+  left: 0 !important;
+  width: 100vw !important;
+  height: 100vh !important;
+  display: flex !important;
+  align-items: center !important;
+  justify-content: center !important;
+  z-index: 1000 !important;
+}
+
+::ng-deep .p-dialog {
+  margin: 0 !important;
+  position: relative !important;
+  top: auto !important;
+  left: auto !important;
+  transform: none !important;
+  
+  @media screen and (max-width: 768px) {
+    width: 95vw !important;
+    max-width: 95vw !important;
+    max-height: 90vh !important;
+    
+    .p-dialog-header {
+      padding: 1rem !important;
+      
+      .p-dialog-title {
+        font-size: 1.1rem !important;
+      }
+    }
+    
+    .p-dialog-content {
+      padding: 1rem !important;
+      max-height: 60vh !important;
+      overflow-y: auto !important;
+    }
+    
+    .p-dialog-footer {
+      padding: 1rem !important;
+      flex-direction: column !important;
+      gap: 0.5rem !important;
+      
+      .p-button {
+        width: 100% !important;
+        margin: 0 !important;
+      }
+    }
+  }
+  
+  @media screen and (max-width: 480px) {
+    width: 98vw !important;
+    max-width: 98vw !important;
+    max-height: 95vh !important;
+    
+    .p-dialog-content {
+      max-height: 65vh !important;
+      padding: 0.75rem !important;
+    }
+    
+    .p-dialog-header {
+      padding: 0.75rem !important;
+    }
+    
+    .p-dialog-footer {
+      padding: 0.75rem !important;
+    }
+  }
+}
+
+/* Asegurar que el modal nunca se salga del viewport */
+::ng-deep .p-dialog-mask.p-component-overlay {
+  position: fixed !important;
+  top: 0 !important;
+  left: 0 !important;
+  width: 100% !important;
+  height: 100% !important;
+  display: flex !important;
+  align-items: center !important;
+  justify-content: center !important;
+  padding: 1rem !important;
+  box-sizing: border-box !important;
+}
+
 /* Estilos responsivos para tablas principales y de artículos */
 @media screen and (max-width: 768px) {
   /* Estilos para la tabla de artículos */
@@ -74,19 +170,6 @@
           content: none;
         }
       }
-    }
-  }
-  
-  /* Estilos para diálogos */
-  ::ng-deep .p-dialog {
-    .p-dialog-content {
-      padding: 1rem !important;
-      max-height: 80vh !important;
-      overflow-y: auto !important;
-    }
-    
-    .p-dialog-footer {
-      padding: 1rem !important;
     }
   }
   
@@ -144,6 +227,47 @@
   }
 }
 
+/* Inputs más grandes para móviles */
+@media screen and (max-width: 768px) {
+  ::ng-deep .p-dialog .p-inputtext,
+  ::ng-deep .p-dialog .p-inputnumber,
+  ::ng-deep .p-dialog .p-inputtextarea,
+  ::ng-deep .p-dialog .p-radiobutton {
+    font-size: 1rem !important;
+    padding: 0.75rem !important;
+    min-height: 44px !important; // Tamaño mínimo táctil
+  }
+  
+  ::ng-deep .p-dialog .field {
+    margin-bottom: 1.25rem !important;
+  }
+  
+  ::ng-deep .p-dialog label {
+    font-size: 0.9rem !important;
+    margin-bottom: 0.5rem !important;
+    display: block !important;
+  }
+  
+  // Botones más grandes en móviles
+  ::ng-deep .p-dialog .p-button {
+    min-height: 44px !important;
+    font-size: 1rem !important;
+  }
+  
+  // Mejoras específicas para radio buttons
+  ::ng-deep .p-dialog .p-radiobutton {
+    width: 20px !important;
+    height: 20px !important;
+  }
+  
+  ::ng-deep .p-dialog .field-radiobutton {
+    display: flex !important;
+    align-items: center !important;
+    gap: 0.5rem !important;
+    margin-bottom: 0.75rem !important;
+  }
+}
+
 /* Estilos específicos para móviles muy pequeños */
 @media screen and (max-width: 480px) {
   ::ng-deep .p-button {
@@ -166,6 +290,55 @@
   /* Mejor visualización de inputs numéricos */
   ::ng-deep .p-inputnumber .p-inputtext {
     width: 100% !important;
+  }
+}
+
+/* Asegurar que p-confirmDialog también sea responsive */
+::ng-deep .p-confirm-dialog {
+  @media screen and (max-width: 768px) {
+    width: 95vw !important;
+    max-width: 95vw !important;
+    
+    .p_dialog-content {
+      padding: 1rem !important;
+    }
+    
+    .p_dialog-footer {
+      flex-direction: column !important;
+      gap: 0.5rem !important;
+      
+      .p_button {
+        width: 100% !important;
+      }
+    }
+  }
+  
+  @media screen and (max-width: 480px) {
+    width: 98vw !important;
+    max-width: 98vw !important;
+  }
+}
+
+/* Estilos específicos para el modal de artículos en móviles */
+@media screen and (max-width: 768px) {
+  ::ng-deep .p-dialog[aria-labelledby*="Artículos"] {
+    .p_dialog-content {
+      max-height: 75vh !important;
+    }
+  }
+  
+  // Mejoras para el componente app-add-item en móviles
+  ::ng-deep app-add-item {
+    .p-fluid .p-inputtext,
+    .p-fluid .p-inputtextarea,
+    .p-fluid .p-dropdown {
+      font-size: 1rem !important;
+      padding: 0.75rem !important;
+    }
+    
+    .field {
+      margin-bottom: 1.25rem !important;
+    }
   }
 }
 

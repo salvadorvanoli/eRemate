@@ -164,5 +164,86 @@ export class AuctionHouseService extends BaseHttpService<Casa, Casa> {
     );
   }
 
- 
+  // ✅ Agregar método para actualizar subasta
+  updateAuction(auctionId: string | number, auctionData: any): Observable<any> {
+    const url = `${this.baseUrl}/auction/${auctionId}`;
+    console.log('🔄 Actualizando subasta:', url, auctionData);
+    return this.http.put<any>(url, auctionData, {
+      headers: this.getAuthHeaders()
+    }).pipe(
+      tap(response => {
+        console.log('✅ Respuesta de actualización de subasta:', response);
+      }),
+      catchError(error => {
+        console.error('❌ Error al actualizar subasta:', error);
+        return throwError(() => error);
+      })
+    );
+  }
+
+ updateLot(lotId: string | number, lotData: any): Observable<any> {
+  const url = `${this.baseUrl}/lot/${lotId}`;
+  console.log('🔄 Actualizando lote:', url, lotData);
+  return this.http.put<any>(url, lotData, {
+    headers: this.getAuthHeaders()
+  }).pipe(
+    tap(response => {
+      console.log('✅ Respuesta de actualización de lote:', response);
+    }),
+    catchError(error => {
+      console.error('❌ Error al actualizar lote:', error);
+      return throwError(() => error);
+    })
+  );
+}
+
+getSalesStatistics(auctionHouseId: string | number): Observable<any> {
+  const url = `${this.baseUrl}${this.end}/${auctionHouseId}/sales-statistics`;
+  console.log('🔄 Obteniendo estadísticas de ventas:', url);
+  return this.http.get<any>(url, {
+    headers: this.getAuthHeaders()
+  }).pipe(
+    tap(response => {
+      console.log('✅ Respuesta de estadísticas de ventas:', response);
+    }),
+    catchError(error => {
+      console.error('❌ Error al obtener estadísticas de ventas:', error);
+      return throwError(() => error);
+    })
+  );
+}
+
+getCategoryStatistics(auctionHouseId: string | number): Observable<any> {
+  const url = `${this.baseUrl}${this.end}/${auctionHouseId}/category-statistics`;
+  console.log('🔄 Obteniendo estadísticas por categoría:', url);
+  return this.http.get<any>(url, {
+    headers: this.getAuthHeaders()
+  }).pipe(
+    tap(response => {
+      console.log('✅ Respuesta de estadísticas por categoría:', response);
+    }),
+    catchError(error => {
+      console.error('❌ Error al obtener estadísticas por categoría:', error);
+      return throwError(() => error);
+    })
+  );
+}
+
+// ✅ Agregar método para estadísticas de pujas
+getBidStatistics(auctionHouseId: string | number): Observable<any> {
+  const url = `${this.baseUrl}${this.end}/${auctionHouseId}/bid-statistics`;
+  console.log('🔄 Obteniendo estadísticas de pujas:', url);
+  return this.http.get<any>(url, {
+    headers: this.getAuthHeaders()
+  }).pipe(
+    tap(response => {
+      console.log('✅ Respuesta de estadísticas de pujas:', response);
+    }),
+    catchError(error => {
+      console.error('❌ Error al obtener estadísticas de pujas:', error);
+      return throwError(() => error);
+    })
+  );
+}
+
 }

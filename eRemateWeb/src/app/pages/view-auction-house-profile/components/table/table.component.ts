@@ -177,26 +177,51 @@ export class TableComponent implements OnInit {
                     else if (Array.isArray(response)) {
                         this.products = response;
                     } 
-                    else {
-                        console.error('La respuesta de la API no tiene el formato esperado:', response);
+                    // ✅ CAMBIO: Solo mostrar error si realmente hay un error, no cuando está vacío
+                    else if (response && response.success === false) {
+                        console.error('Error en la respuesta de la API:', response);
                         this.products = []; 
                         this.messageService.add({
                             severity: 'error',
                             summary: 'Error',
-                            detail: 'Formato de datos incorrecto',
+                            detail: response.message || 'Error al cargar rematadores',
                             life: 3000
                         });
+                    }
+                    else {
+                        // ✅ CAMBIO: Si no hay datos o está vacío, simplemente mostrar array vacío sin error
+                        console.log('No hay rematadores o respuesta vacía');
+                        this.products = [];
                     }
                 },
                 error: (error) => {
                     console.error('Error al cargar rematadores:', error);
+                    
+                    // ✅ CAMBIO: Ser más específico con los errores
+                    let errorMessage = 'No se pudieron cargar los rematadores';
+                    
+                    // Si es un error 404 o de "no encontrado", no mostrar como error crítico
+                    if (error.status === 404) {
+                        console.log('No se encontraron rematadores (404)');
+                        this.products = [];
+                        return; // No mostrar toast de error para 404
+                    }
+                    
+                    // Solo mostrar toast para errores reales (500, network, etc.)
+                    if (error.status >= 500) {
+                        errorMessage = 'Error del servidor al cargar rematadores';
+                    } else if (error.status === 0) {
+                        errorMessage = 'Error de conexión';
+                    }
+                    
                     this.messageService.add({ 
                         severity: 'error', 
                         summary: 'Error', 
-                        detail: 'No se pudieron cargar los rematadores', 
+                        detail: errorMessage, 
                         life: 3000 
                     });
-                
+                    
+                    this.products = [];
                 }
             });
     }
@@ -413,46 +438,55 @@ export class TableComponent implements OnInit {
     }
 }
 
-    removeRematador(rematador: any) {
-        if (!this.casaId) {
-            this.messageService.add({
-                severity: 'error',
-                summary: 'Error',
-                detail: 'No se puede identificar la casa de remates',
-                life: 3000
-            });
-            return;
-        }
-
-        this.confirmationService.confirm({
-            message: `¿Está seguro de que desea eliminar a ${rematador.nombre} ${rematador.apellido}?`,
-            header: 'Confirmar eliminación',
-            icon: 'pi pi-exclamation-triangle',
-            accept: () => {
-                this.loading = true;
-                this.auctionHouseService.removeAuctioneerFromHouse(this.casaId!, rematador.id)
-                    .pipe(finalize(() => this.loading = false))
-                    .subscribe({
-                        next: (response) => {
-                            this.messageService.add({
-                                severity: 'success',
-                                summary: 'Éxito',
-                                detail: `Rematador eliminado correctamente`,
-                                life: 3000
-                            });
-                            this.loadRematadoresData(this.casaId!);
-                        },
-                        error: (error) => {
-                            console.error('Error al eliminar rematador:', error);
-                            this.messageService.add({
-                                severity: 'error',
-                                summary: 'Error',
-                                detail: 'No se pudo eliminar el rematador',
-                                life: 3000
-                            });
-                        }
-                    });
-            }
+   // En table.component.ts - método removeRematador()
+removeRematador(rematador: any) {
+    if (!this.casaId) {
+        this.messageService.add({
+            severity: 'error',
+            summary: 'Error',
+            detail: 'No se puede identificar la casa de remates',
+            life: 3000
         });
+        return;
     }
+
+    this.confirmationService.confirm({
+        message: `¿Está seguro de que desea eliminar a ${rematador.nombre} ${rematador.apellido}?`,
+        header: 'Confirmar eliminación',
+        icon: 'pi pi-exclamation-triangle',
+        accept: () => {
+            this.loading = true;
+            this.auctionHouseService.removeAuctioneerFromHouse(this.casaId!, rematador.id)
+                .pipe(finalize(() => this.loading = false))
+                .subscribe({
+                    next: (response) => {
+                        // ✅ CAMBIO: Actualizar la lista inmediatamente sin esperar recarga
+                        this.products = this.products.filter(item => item.id !== rematador.id);
+                        
+                        this.messageService.add({
+                            severity: 'success',
+                            summary: 'Éxito',
+                            detail: `Rematador eliminado correctamente`,
+                            life: 3000
+                        });
+                        
+                        // ✅ OPCIONAL: También recargar desde servidor para asegurar sincronización
+                        // Puedes comentar esta línea si prefieres solo la actualización local
+                        setTimeout(() => {
+                            this.loadRematadoresData(this.casaId!);
+                        }, 500);
+                    },
+                    error: (error) => {
+                        console.error('Error al eliminar rematador:', error);
+                        this.messageService.add({
+                            severity: 'error',
+                            summary: 'Error',
+                            detail: 'No se pudo eliminar el rematador',
+                            life: 3000
+                        });
+                    }
+                });
+        }
+    });
+}
 }
