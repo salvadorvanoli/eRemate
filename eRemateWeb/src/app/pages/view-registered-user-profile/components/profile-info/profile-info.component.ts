@@ -58,22 +58,18 @@ export class ProfileInfoComponent implements OnInit {
     
     if (currentUser) {
       this.userId = currentUser.id;
-      console.log('ID de usuario obtenido del SecurityService:', this.userId);
       this.loadProfileData();
     } else {
       this.securityService.getActualUser().subscribe({
         next: (user) => {
           if (user) {
             this.userId = user.id;
-            console.log('ID de usuario obtenido de la API:', this.userId);
           } else {
-            console.warn('No se pudo obtener el usuario');
             this.userId = 1; 
           }
           this.loadProfileData();
         },
         error: (error) => {
-          console.error('Error al obtener usuario:', error);
           this.userId = 1; 
           this.loadProfileData();
         }
@@ -83,20 +79,15 @@ export class ProfileInfoComponent implements OnInit {
 
   loadProfileData(): void {
     if (!this.userId) {
-      console.warn('No se ha establecido el ID del usuario, usando valor por defecto');
       this.userId = 1;
     }
     
     this.loading = true;
     
-    console.log('Cargando datos del perfil para el usuario con ID:', this.userId);
-    
     this.userService.getUserProfile(this.userId)
       .pipe(finalize(() => this.loading = false))
       .subscribe({
         next: (response) => {
-          console.log('Datos del perfil recibidos:', response);
-          
           if (response && response.usuario) {
             const { usuario } = response;
             
@@ -106,10 +97,7 @@ export class ProfileInfoComponent implements OnInit {
               email: usuario.email || '',
               telefono: usuario.telefono || ''
             };
-            
-            console.log('Perfil actualizado con datos del servidor:', this.profile);
           } else {
-            console.warn('La respuesta no tiene la estructura esperada');
             this.messageService.add({
               severity: 'warning',
               summary: 'Formato incorrecto',
@@ -119,7 +107,6 @@ export class ProfileInfoComponent implements OnInit {
           }
         },
         error: (error) => {
-          console.error('Error al cargar el perfil:', error);
           this.messageService.add({
             severity: 'warning',
             summary: 'Conexión al servidor',
@@ -138,12 +125,10 @@ export class ProfileInfoComponent implements OnInit {
   }
 
   onImageUpload(event: any): void {
-    console.log('Imagen seleccionada:', event);
   }
   
   updateProfile(): void {
     if (!this.userId) {
-      console.warn('No se ha establecido el ID del usuario, usando valor por defecto');
       this.userId = 1;
     }
     
@@ -156,12 +141,8 @@ export class ProfileInfoComponent implements OnInit {
       email: this.profile.email
     };
     
-    console.log(`📤 Enviando datos de actualización para usuario ID ${this.userId}:`, userData);
-    
-    
     setTimeout(() => {
       this.loading = false;
-      console.log('✅ Perfil actualizado con éxito (simulado)');
       this.messageService.add({
         severity: 'success',
         summary: 'Éxito',
@@ -169,7 +150,5 @@ export class ProfileInfoComponent implements OnInit {
         life: 3000
       });
     }, 1000);
-    
-
   }
 }

@@ -1,91 +1,273 @@
 .stats-container {
   width: 100%;
+  max-width: 1400px;
   margin: 0 auto;
-  margin-bottom: 40px;
+  padding: 1rem;
 }
 
 .section-title {
   color: #333;
-  margin-bottom: 1.5rem;
-  border-bottom: 2px solid #6334E3;
-  padding-bottom: 0.5rem;
+  margin-bottom: 2rem;
+  border-bottom: 3px solid #6334E3;
+  padding-bottom: 0.75rem;
+  font-size: 1.8rem;
+  font-weight: 600;
   display: inline-block;
+  text-transform: uppercase;
+  letter-spacing: 0.5px;
 }
 
-// Hacer que las tarjetas ocupen espacio completo
-.card {
-  background-color: white;
-  border-radius: 8px;
-  box-shadow: 0 2px 6px rgba(0, 0, 0, 0.05);
-  padding: 1rem; // Reducir el padding para más espacio utilizable
-  height: 100%;
-  width: 100%; // Asegurar ancho completo
-  display: flex;
-  flex-direction: column;
+.stats-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(350px, 1fr));
+  gap: 2rem;
+  margin-top: 2rem;
+}
+
+.stat-card {
+  background: linear-gradient(145deg, #ffffff 0%, #f8f9ff 100%);
+  border-radius: 16px;
+  box-shadow: 0 8px 32px rgba(99, 52, 227, 0.1);
+  padding: 2rem;
+  transition: all 0.3s ease;
+  border: 1px solid rgba(99, 52, 227, 0.08);
+  position: relative;
+  overflow: hidden;
   
-  h3 {
-    color: #495057;
-    margin-top: 0;
-    margin-bottom: 1rem;
-    font-size: 1.2rem;
-    text-align: center;
+  &::before {
+    content: '';
+    position: absolute;
+    top: 0;
+    left: 0;
+    right: 0;
+    height: 4px;
+    background: linear-gradient(90deg, #6334E3, #9C27B0, #E91E63);
+  }
+  
+  &:hover {
+    transform: translateY(-5px);
+    box-shadow: 0 16px 48px rgba(99, 52, 227, 0.15);
   }
 }
 
-// Configuración base para contenedores de gráficos
+.card-header {
+  text-align: center;
+  margin-bottom: 1.5rem;
+  
+  h3 {
+    color: #2c3e50;
+    margin: 0;
+    font-size: 1.3rem;
+    font-weight: 600;
+    line-height: 1.4;
+  }
+  
+  .card-icon {
+    font-size: 2rem;
+    color: #6334E3;
+    margin-bottom: 0.5rem;
+  }
+}
+
 .chart-container {
   width: 100%;
   height: 100%;
-  min-height: 300px;
+  min-height: 280px;
   display: flex;
   flex-direction: column;
-  align-items: stretch;
+  align-items: center;
   justify-content: center;
+  position: relative;
+}
+
+.loading-container {
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  min-height: 400px;
+  
+  .loading-content {
+    text-align: center;
+    
+    p {
+      margin-top: 1rem;
+      color: #6c757d;
+      font-size: 1.1rem;
+    }
+  }
+}
+
+.empty-state {
+  text-align: center;
+  padding: 2rem;
+  color: #6c757d;
+  
+  .empty-icon {
+    font-size: 3rem;
+    margin-bottom: 1rem;
+    opacity: 0.5;
+  }
+  
+  p {
+    margin: 0;
+    font-size: 1rem;
+    line-height: 1.5;
+  }
 }
 
 :host ::ng-deep {
-  // Estilos comunes para todos los gráficos
   .p-chart {
     width: 100% !important;
+    height: 100% !important;
     display: flex !important;
     align-items: center !important;
     justify-content: center !important;
   }
   
-  // Ajustes específicos para cada contenedor de gráficos
   .bar-chart .p-chart {
-    min-height: 350px !important;
+    min-height: 280px !important;
     
     canvas {
       width: 100% !important;
-      height: 330px !important;
+      max-height: 260px !important;
     }
   }
   
   .pie-chart .p-chart {
-    min-height: 120px !important; // Reducido significativamente
+    min-height: 200px !important;
     
     canvas {
-      width: 120px !important; // Tamaño fijo y pequeño
-      height: 120px !important;
-      max-width: 120px !important;
-      max-height: 120px !important;
+      max-width: 200px !important;
+      max-height: 200px !important;
     }
   }
   
   .line-chart .p-chart {
-    min-height: 320px !important;
+    min-height: 280px !important;
     
     canvas {
       width: 100% !important;
-      height: 300px !important;
+      max-height: 260px !important;
     }
   }
 }
 
-// Contenedor extra para la torta
-.small-pie-container {
-  max-width: 100%;
-  max-height: 100%;
-  margin: 0 auto;
+@media (max-width: 1200px) {
+  .stats-grid {
+    grid-template-columns: repeat(auto-fit, minmax(300px, 1fr));
+    gap: 1.5rem;
+  }
+  
+  .stat-card {
+    padding: 1.5rem;
+  }
+}
+
+@media (max-width: 768px) {
+  .stats-container {
+    padding: 0.5rem;
+  }
+  
+  .stats-grid {
+    grid-template-columns: 1fr;
+    gap: 1rem;
+  }
+  
+  .stat-card {
+    padding: 1rem;
+    margin-bottom: 1rem;
+  }
+  
+  .section-title {
+    font-size: 1.5rem;
+    margin-bottom: 1rem;
+  }
+  
+  .card-header h3 {
+    font-size: 1.1rem;
+  }
+  
+  .chart-container {
+    min-height: 250px;
+  }
+  
+  :host ::ng-deep {
+    .bar-chart .p-chart,
+    .line-chart .p-chart {
+      min-height: 250px !important;
+      
+      canvas {
+        max-height: 230px !important;
+      }
+    }
+    
+    .pie-chart .p-chart {
+      min-height: 180px !important;
+      
+      canvas {
+        max-width: 180px !important;
+        max-height: 180px !important;
+      }
+    }
+  }
+}
+
+@media (max-width: 480px) {
+  .stats-container {
+    padding: 0.25rem;
+  }
+  
+  .stat-card {
+    padding: 0.75rem;
+    border-radius: 12px;
+  }
+  
+  .section-title {
+    font-size: 1.3rem;
+  }
+  
+  .chart-container {
+    min-height: 220px;
+  }
+  
+  :host ::ng-deep {
+    .bar-chart .p-chart,
+    .line-chart .p-chart {
+      min-height: 220px !important;
+      
+      canvas {
+        max-height: 200px !important;
+      }
+    }
+    
+    .pie-chart .p-chart {
+      min-height: 160px !important;
+      
+      canvas {
+        max-width: 160px !important;
+        max-height: 160px !important;
+      }
+    }
+  }
+}
+
+.fade-in {
+  animation: fadeIn 0.6s ease-in-out;
+}
+
+@keyframes fadeIn {
+  from {
+    opacity: 0;
+    transform: translateY(20px);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
+}
+
+.chart-wrapper {
+  position: relative;
+  width: 100%;
+  height: 100%;
 }

@@ -90,29 +90,23 @@ export class TableComponent implements OnInit {
         this.configureTable();
         this.loading = true;
         
-        // Primero intentar obtener el usuario del BehaviorSubject
         const currentUser = this.securityService.actualUser;
         
-        if (currentUser) { // YA ESTÁ CORRECTO, SIN VERIFICACIÓN DE TIPO
+        if (currentUser) {
             this.casaId = currentUser.id.toString();
-            console.log('ID de casa obtenido del BehaviorSubject:', this.casaId);
             this.loadRematadoresData(this.casaId);
         } else {
-            // Si no, intentar obtenerlo de la API
             this.securityService.getActualUser().subscribe({
                 next: (user) => {
-                    if (user) { // ELIMINADA VERIFICACIÓN DE TIPO
+                    if (user) {
                         this.casaId = user.id.toString();
-                        console.log('ID de casa obtenido de la API:', this.casaId);
                     } else {
-                        console.warn('No se pudo obtener el usuario');
-                        this.casaId = "1"; // Fallback para desarrollo
+                        this.casaId = "1";
                     }
                     this.loadRematadoresData(this.casaId);
                 },
                 error: (error) => {
-                    console.error('Error al obtener usuario:', error);
-                    this.casaId = "1"; // Fallback para desarrollo
+                    this.casaId = "1";
                     this.loadRematadoresData(this.casaId);
                 }
             });
@@ -144,27 +138,20 @@ export class TableComponent implements OnInit {
             .pipe(finalize(() => this.loading = false))
             .subscribe({
                 next: (response: any) => {
-                    console.log('Respuesta completa:', response);
-                    
                     if (response && response.success && Array.isArray(response.data)) {
-                        // Aplanar la estructura anidada
                         this.products = response.data.map((item: RematadorResponse) => {
                             return {
-                                // Del objeto rematador
                                 id: item.rematador?.id,
                                 nombre: item.rematador?.nombre,
                                 apellido: item.rematador?.apellido,
                                 numeroMatricula: item.rematador?.numeroMatricula,
                                 direccionFiscal: item.rematador?.direccionFiscal,
                                 imagen: item.rematador?.imagen,
-                                
-                                // Del objeto usuario
                                 email: item.usuario?.email,
                                 telefono: item.usuario?.telefono,
                                 tipo: item.usuario?.tipo
                             };
                         });
-                        console.log('Datos procesados:', this.products);
                     }
                     else if (response && response.success && response.data && typeof response.data === 'object') {
                         if (response.data.id) {
@@ -177,9 +164,7 @@ export class TableComponent implements OnInit {
                     else if (Array.isArray(response)) {
                         this.products = response;
                     } 
-                    // ✅ CAMBIO: Solo mostrar error si realmente hay un error, no cuando está vacío
                     else if (response && response.success === false) {
-                        console.error('Error en la respuesta de la API:', response);
                         this.products = []; 
                         this.messageService.add({
                             severity: 'error',
@@ -189,25 +174,17 @@ export class TableComponent implements OnInit {
                         });
                     }
                     else {
-                        // ✅ CAMBIO: Si no hay datos o está vacío, simplemente mostrar array vacío sin error
-                        console.log('No hay rematadores o respuesta vacía');
                         this.products = [];
                     }
                 },
                 error: (error) => {
-                    console.error('Error al cargar rematadores:', error);
-                    
-                    // ✅ CAMBIO: Ser más específico con los errores
                     let errorMessage = 'No se pudieron cargar los rematadores';
                     
-                    // Si es un error 404 o de "no encontrado", no mostrar como error crítico
                     if (error.status === 404) {
-                        console.log('No se encontraron rematadores (404)');
                         this.products = [];
-                        return; // No mostrar toast de error para 404
+                        return;
                     }
                     
-                    // Solo mostrar toast para errores reales (500, network, etc.)
                     if (error.status >= 500) {
                         errorMessage = 'Error del servidor al cargar rematadores';
                     } else if (error.status === 0) {
@@ -416,8 +393,6 @@ export class TableComponent implements OnInit {
                     this.loadRematadoresData(this.casaId!);
                 },
                 error: (error) => {
-                    console.error('Error al agregar rematador:', error);
-
                     this.messageService.add({
                         severity: 'error',
                         summary: 'Error',
@@ -427,7 +402,6 @@ export class TableComponent implements OnInit {
                 }
             });
     } catch (error) {
-        console.error('Error inesperado:', error);
         this.loading = false;
         this.messageService.add({
             severity: 'error',
@@ -438,7 +412,6 @@ export class TableComponent implements OnInit {
     }
 }
 
-   // En table.component.ts - método removeRematador()
 removeRematador(rematador: any) {
     if (!this.casaId) {
         this.messageService.add({
@@ -460,7 +433,6 @@ removeRematador(rematador: any) {
                 .pipe(finalize(() => this.loading = false))
                 .subscribe({
                     next: (response) => {
-                        // ✅ CAMBIO: Actualizar la lista inmediatamente sin esperar recarga
                         this.products = this.products.filter(item => item.id !== rematador.id);
                         
                         this.messageService.add({
@@ -470,14 +442,11 @@ removeRematador(rematador: any) {
                             life: 3000
                         });
                         
-                        // ✅ OPCIONAL: También recargar desde servidor para asegurar sincronización
-                        // Puedes comentar esta línea si prefieres solo la actualización local
                         setTimeout(() => {
                             this.loadRematadoresData(this.casaId!);
                         }, 500);
                     },
                     error: (error) => {
-                        console.error('Error al eliminar rematador:', error);
                         this.messageService.add({
                             severity: 'error',
                             summary: 'Error',

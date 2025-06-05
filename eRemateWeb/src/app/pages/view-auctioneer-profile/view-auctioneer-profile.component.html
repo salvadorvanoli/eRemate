@@ -2,15 +2,15 @@
 
 <div class="view-container">
   <div class="info-selector-wrapper">
-    <app-select-info-type 
+    <app-select-info-type-auctioneer 
       [defaultOption]="selectedInfoType" 
       (optionChanged)="onInfoTypeChange($event)">
-    </app-select-info-type>
+    </app-select-info-type-auctioneer>
   </div>
 
   <!-- Información del perfil -->
   <div *ngIf="selectedInfoType === 'profile'">
-    <app-profile-info></app-profile-info>
+    <app-profile-info-auctioneer></app-profile-info-auctioneer>
   </div>
 
   <!-- Agenda de Subastas -->

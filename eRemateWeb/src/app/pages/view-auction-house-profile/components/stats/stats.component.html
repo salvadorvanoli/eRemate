@@ -1,47 +1,87 @@
 <div class="stats-container">
-  <!-- ✅ Spinner de carga -->
-  <div *ngIf="loading" class="flex justify-content-center my-3">
-    <p-progressSpinner strokeWidth="4" [style]="{'width': '50px', 'height': '50px'}" />
+  <!-- Título principal -->
+  <h2 class="section-title">
+    <i class="pi pi-chart-bar mr-2"></i>
+    Estadísticas de la Casa de Remates
+  </h2>
+  
+  <!-- Spinner de carga -->
+  <div *ngIf="loading" class="loading-container">
+    <div class="loading-content">
+      <p-progressSpinner 
+        strokeWidth="3" 
+        [style]="{'width': '60px', 'height': '60px'}" 
+        animationDuration="1s">
+      </p-progressSpinner>
+      <p>Cargando estadísticas...</p>
+    </div>
   </div>
   
-  <!-- ✅ CONTENEDOR grid -->
-  <div class="grid" *ngIf="!loading">
-    <!-- ✅ Gráfico de ventas mensuales -->
-    <div class="col-12 lg:col-6 xl:col-4 mb-4">
-      <div class="card shadow-2">
-        <div class="chart-container bar-chart">
+  <!-- Grid de estadísticas -->
+  <div class="stats-grid fade-in" *ngIf="!loading">
+    
+    <!-- Gráfico de ventas mensuales -->
+    <div class="stat-card">
+      <div class="card-header">
+        <div class="card-icon">
+          <i class="pi pi-chart-line"></i>
+        </div>
+        <h3>Subastas Concretadas por Mes</h3>
+      </div>
+      <div class="chart-container bar-chart">
+        <div class="chart-wrapper">
           <p-chart type="bar" [data]="salesData" [options]="barOptions"></p-chart>
         </div>
       </div>
     </div>
     
-    <!-- ✅ Gráfico de categorías -->
-    <div class="col-12 lg:col-6 xl:col-4 mb-4">
-      <div class="card shadow-2">
-        <div class="chart-container pie-chart">
-          <div class="small-pie-container">
-            <p-chart type="pie" [data]="categoryData" [options]="pieOptions"></p-chart>
+    <!-- Gráfico de categorías -->
+    <div class="stat-card">
+      <div class="card-header">
+        <div class="card-icon">
+          <i class="pi pi-chart-pie"></i>
+        </div>
+        <h3>Distribución por Categorías</h3>
+      </div>
+      <div class="chart-container pie-chart">
+        <div class="chart-wrapper">
+          <p-chart type="pie" [data]="categoryData" [options]="pieOptions"></p-chart>
+        </div>
+        
+        <!-- Estado vacío para categorías -->
+        <div *ngIf="isEmptyCategories()" class="empty-state">
+          <div class="empty-icon">
+            <i class="pi pi-info-circle"></i>
           </div>
-          
-          <!-- Mensaje adicional cuando no hay datos -->
-          <div *ngIf="isEmptyCategories()" class="text-center mt-3">
-            <p class="text-muted" style="color: #999; font-size: 14px; margin: 0;">
-              <i class="pi pi-info-circle mr-2"></i>
-              No hay categorías con ventas registradas
-            </p>
-          </div>
+          <p>No hay categorías con ventas registradas</p>
         </div>
       </div>
     </div>
     
-    <!-- ✅ Gráfico de pujas -->
-    <div class="col-12 lg:col-6 xl:col-4 mb-4">
-      <div class="card shadow-2">
-        <div class="chart-container line-chart">
+    <!-- Gráfico de pujas -->
+    <div class="stat-card">
+      <div class="card-header">
+        <div class="card-icon">
+          <i class="pi pi-trending-up"></i>
+        </div>
+        <h3>Tendencia de Pujas por Subasta</h3>
+      </div>
+      <div class="chart-container line-chart">
+        <!-- Solo mostrar gráfico si hay datos -->
+        <div class="chart-wrapper" *ngIf="!isEmptyBids() && bidsData">
           <p-chart type="line" [data]="bidsData" [options]="lineOptions"></p-chart>
+        </div>
+        
+        <!-- Estado vacío para pujas -->
+        <div *ngIf="isEmptyBids()" class="empty-state">
+          <div class="empty-icon">
+            <i class="pi pi-info-circle"></i>
+          </div>
+          <p>No hay datos de pujas disponibles</p>
         </div>
       </div>
     </div>
+    
   </div>
 </div>
 

@@ -1,7 +1,7 @@
 import { Component, OnInit } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { ChartModule } from 'primeng/chart';
-import { ProgressSpinnerModule } from 'primeng/progressspinner'; // ✅ Agregar esta importación
+import { ProgressSpinnerModule } from 'primeng/progressspinner';
 import { AuctionHouseService } from '../../../../core/services/auction-house.service';
 import { SecurityService } from '../../../../core/services/security.service';
 import { UsuarioCasaDeRemates } from '../../../../core/models/usuario';
@@ -13,33 +13,22 @@ import { finalize } from 'rxjs/operators';
   imports: [
     CommonModule,
     ChartModule,
-    ProgressSpinnerModule // ✅ Agregar aquí
+    ProgressSpinnerModule
   ],
   templateUrl: './stats.component.html',
   styleUrl: './stats.component.scss'
 })
 export class StatsComponent implements OnInit {
-  // Datos de ventas mensuales
   salesData: any;
-  
-  // Datos de categorías más vendidas
   categoryData: any;
-  
-  // Datos de pujas por subasta
   bidsData: any;
-  
-  // Opciones para los gráficos
   barOptions: any;
   pieOptions: any;
   lineOptions: any;
-
-  // ✅ Agregar propiedades para manejo de carga
   loading = false;
-
-  // ✅ Propiedad para rastrear si las categorías están vacías
   private emptyCategoriesData = false;
+  private emptyBidsData = false;
 
-  // ✅ Inyectar ambos servicios
   constructor(
     private auctionHouseService: AuctionHouseService,
     private securityService: SecurityService
@@ -50,93 +39,83 @@ export class StatsComponent implements OnInit {
     this.loadStatsFromCurrentUser();
   }
 
-  // ✅ Modificar para cargar ambas estadísticas
   loadStatsFromCurrentUser() {
     const currentUser = this.securityService.actualUser;
     
     if (currentUser && currentUser.id) {
-      console.log('📋 Usuario actual:', currentUser);
-      console.log('🆔 ID del usuario:', currentUser.id);
-      
       this.loadAllStatistics(currentUser.id.toString());
     } else {
-      console.warn('⚠️ No hay usuario actual o no tiene ID');
-      this.initChartData(); // Fallback a datos de prueba
+      this.initChartData();
     }
   }
 
-  // ✅ Método para cargar todas las estadísticas
   loadAllStatistics(auctionHouseId: string) {
     this.loading = true;
     
-    // Cargar estadísticas de ventas
     this.auctionHouseService.getSalesStatistics(auctionHouseId)
       .subscribe({
         next: (response) => {
-          console.log('📊 Datos de estadísticas de ventas recibidos:', response);
           this.mapSalesDataToChart(response.data);
         },
         error: (error) => {
-          console.error('❌ Error al cargar estadísticas de ventas:', error);
+          this.initDummySalesData();
         }
       });
 
-    // Cargar estadísticas de categorías
     this.auctionHouseService.getCategoryStatistics(auctionHouseId)
       .subscribe({
         next: (response) => {
-          console.log('📈 Datos de estadísticas de categorías recibidos:', response);
           this.mapCategoryDataToChart(response.data);
         },
         error: (error) => {
-          console.error('❌ Error al cargar estadísticas de categorías:', error);
+          this.initDummyCategoryData();
         }
       });
 
-    // ✅ Cargar estadísticas de pujas
     this.auctionHouseService.getBidStatistics(auctionHouseId)
       .pipe(finalize(() => this.loading = false))
       .subscribe({
         next: (response) => {
-          console.log('📈 Datos de estadísticas de pujas recibidos:', response);
           this.mapBidDataToChart(response.data);
-          this.initOtherChartsWithDummyData(); // Solo compradores por ahora
         },
         error: (error) => {
-          console.error('❌ Error al cargar estadísticas de pujas:', error);
-          this.initOtherChartsWithDummyData();
+          this.emptyBidsData = true;
+          this.bidsData = null;
         }
       });
       
-      // Agregar al final:
-      setTimeout(() => {
-        window.dispatchEvent(new Event('resize'));
-      }, 500);
+    setTimeout(() => {
+      window.dispatchEvent(new Event('resize'));
+    }, 500);
   }
 
-  // ✅ Mapear datos reales del servidor al gráfico de ventas
   mapSalesDataToChart(data: any) {
     this.salesData = {
       labels: data.months.map((month: any) => month.month),
       datasets: [
         {
-          label: `Ventas ${data.year}`,
-          backgroundColor: '#42A5F5',
+          label: `Subastas ${data.year}`,
+          backgroundColor: 'rgba(99, 52, 227, 0.8)',
+          borderColor: '#6334E3',
+          borderWidth: 2,
+          borderRadius: 6,
           data: data.months.map((month: any) => month.count)
         }
       ]
     };
   }
 
-  // ✅ Método helper para verificar si las categorías están vacías
   isEmptyCategories(): boolean {
     return this.emptyCategoriesData;
   }
 
-  // ✅ Actualizar método mapCategoryDataToChart
+  isEmptyBids(): boolean {
+    return this.emptyBidsData;
+  }
+
   mapCategoryDataToChart(data: any) {
     if (data.categorias && data.categorias.length > 0) {
-      this.emptyCategoriesData = false; // ✅ Hay datos
+      this.emptyCategoriesData = false;
       
       this.categoryData = {
         labels: data.categorias.map((cat: any) => cat.categoria),
@@ -144,371 +123,259 @@ export class StatsComponent implements OnInit {
           {
             data: data.categorias.map((cat: any) => cat.cantidad),
             backgroundColor: [
-              '#FF6384',
-              '#36A2EB', 
-              '#FFCE56',
-              '#4BC0C0',
-              '#9966FF',
-              '#FF9F40',
-              '#FF6384',
-              '#C9CBCF'
-            ]
+              '#6334E3',
+              '#9C27B0', 
+              '#E91E63',
+              '#FF5722',
+              '#FF9800',
+              '#FFC107',
+              '#4CAF50',
+              '#2196F3'
+            ],
+            borderWidth: 2,
+            borderColor: '#ffffff',
+            hoverBorderWidth: 3
           }
         ]
       };
-      
-      this.pieOptions = {
-        plugins: {
-          legend: {
-            position: 'right',
-            labels: {
-              color: '#495057'
-            }
-          },
-          title: {
-            display: true,
-            text: `Distribución por categorías de artículos vendidos `, // ✅ Título actualizado
-            font: {
-              size: 16
-            }
-          },
-          tooltip: {
-            callbacks: {
-              label: function(context: any) {
-                const categoria = data.categorias[context.dataIndex];
-                return categoria.label;
-              }
-            }
-          }
-        }
-      };
     } else {
-      this.emptyCategoriesData = true; // ✅ No hay datos
-      
-      // ✅ Círculo vacío con mensaje
+      this.emptyCategoriesData = true;
       this.categoryData = {
         labels: ['Sin datos'],
         datasets: [
           {
             data: [1],
-            backgroundColor: ['#F5F5F5'],
-            borderColor: ['#E0E0E0'],
+            backgroundColor: ['#f8f9fa'],
+            borderColor: ['#dee2e6'],
             borderWidth: 2
           }
         ]
       };
-      
-      this.pieOptions = {
-        plugins: {
-          legend: {
-            display: false
-          },
-          title: {
-            display: true,
-            text: 'Sin artículos vendidos por categoría', // ✅ Título actualizado
-            font: {
-              size: 16
-            },
-            color: '#666666'
-          },
-          tooltip: {
-            enabled: false
-          }
-        }
-      };
     }
   }
 
-  // ✅ Actualizar método para mapear datos de pujas con numeración secuencial
   mapBidDataToChart(data: any) {
-    console.log('🔍 DEBUG - Datos de pujas recibidos:', data);
-    
-    // ✅ Los datos vienen directamente como array
     if (data && Array.isArray(data) && data.length > 0) {
+      this.emptyBidsData = false;
       this.bidsData = {
-        labels: data.map((subasta: any, index: number) => `Subasta ${index + 1}`), // ✅ Usar índice + 1
+        labels: data.map((subasta: any, index: number) => `Subasta ${index + 1}`),
         datasets: [
           {
             label: 'Número de pujas',
             data: data.map((subasta: any) => subasta.total_pujas),
-            fill: false,
-            borderColor: '#4BC0C0',
-            backgroundColor: '#4BC0C0',
+            fill: true,
+            backgroundColor: 'rgba(99, 52, 227, 0.1)',
+            borderColor: '#6334E3',
+            borderWidth: 3,
+            pointBackgroundColor: '#6334E3',
+            pointBorderColor: '#ffffff',
+            pointBorderWidth: 2,
+            pointRadius: 6,
+            pointHoverRadius: 8,
             tension: 0.4
           }
         ]
-      };
-      
-      // ✅ Calcular total de pujas
-      const totalPujas = data.reduce((sum: number, subasta: any) => sum + (subasta.total_pujas || 0), 0);
-      
-      console.log('🔍 DEBUG - Total pujas calculado:', totalPujas);
-      console.log('🔍 DEBUG - Datos del gráfico:', this.bidsData);
-      
-      // ✅ Actualizar opciones del gráfico de líneas
-      this.lineOptions = {
-        plugins: {
-          legend: {
-            labels: {
-              color: '#495057'
-            }
-          },
-          title: {
-            display: true,
-            text: `Estadísticas de pujas por subasta (${totalPujas} pujas totales)`,
-            font: {
-              size: 16
-            }
-          },
-          tooltip: {
-            callbacks: {
-              label: function(context: any) {
-                const subasta = data[context.dataIndex];
-                // ✅ Mostrar numeración secuencial en tooltip pero con ID real
-                return `Subasta ${context.dataIndex + 1} (ID: ${subasta.subasta_id}): ${subasta.total_pujas} pujas`;
-              }
-            }
-          }
-        },
-        scales: {
-          x: {
-            ticks: {
-              color: '#495057'
-            },
-            grid: {
-              color: '#ebedef'
-            }
-          },
-          y: {
-            ticks: {
-              color: '#495057',
-              stepSize: 1,
-              precision: 0
-            },
-            grid: {
-              color: '#ebedef'
-            },
-            beginAtZero: true
-          }
-        },
-        animation: {
-          animateScale: true,
-          animateRotate: true
-        }
       };
     } else {
-      console.log('⚠️ No hay datos de subastas disponibles');
-      
-      // ✅ Si no hay datos, mostrar gráfico vacío
-      this.bidsData = {
-        labels: ['Sin datos'],
-        datasets: [
-          {
-            label: 'Número de pujas',
-            data: [0],
-            fill: false,
-            borderColor: '#E0E0E0',
-            backgroundColor: '#F5F5F5',
-            tension: 0.4
-          }
-        ]
-      };
-      
-      this.lineOptions = {
-        plugins: {
-          legend: {
-            display: false
-          },
-          title: {
-            display: true,
-            text: 'Sin datos de pujas disponibles',
-            font: {
-              size: 16
-            },
-            color: '#666666'
-          },
-          tooltip: {
-            enabled: false
-          }
-        },
-        scales: {
-          x: {
-            ticks: {
-              color: '#495057'
-            },
-            grid: {
-              color: '#ebedef'
-            }
-          },
-          y: {
-            ticks: {
-              color: '#495057',
-              stepSize: 1,
-              precision: 0
-            },
-            grid: {
-              color: '#ebedef'
-            },
-            beginAtZero: true
-          }
-        }
-      };
+      this.emptyBidsData = true;
+      this.bidsData = null;
     }
   }
 
-  // ✅ Solo mantener compradores con datos de prueba
-  initOtherChartsWithDummyData() {
-    // ✅ ELIMINADO: Datos de compradores frecuentes
-  }
-
-  // ✅ Datos de prueba como fallback
-  initChartData() {
-    // Datos de ventas mensuales (fallback)
+  initDummySalesData() {
     this.salesData = {
-      labels: ['Enero', 'Febrero', 'Marzo', 'Abril', 'Mayo', 'Junio', 'Julio', 'Agosto', 'Septiembre', 'Octubre', 'Noviembre', 'Diciembre'],
+      labels: ['Ene', 'Feb', 'Mar', 'Abr', 'May', 'Jun'],
       datasets: [
         {
-          label: 'Ventas 2025',
-          backgroundColor: '#42A5F5',
-          data: [65, 59, 80, 81, 56, 55, 0, 0, 0, 0, 0, 0]
+          label: 'Subastas 2025',
+          backgroundColor: 'rgba(99, 52, 227, 0.8)',
+          borderColor: '#6334E3',
+          borderWidth: 2,
+          borderRadius: 6,
+          data: [12, 8, 15, 10, 20, 18]
         }
       ]
     };
+  }
 
-    // Datos de categorías de prueba
+  initDummyCategoryData() {
+    this.emptyCategoriesData = false;
     this.categoryData = {
       labels: ['Antigüedades', 'Arte', 'Vehículos', 'Inmuebles', 'Joyas'],
       datasets: [
         {
-          data: [300, 250, 200, 150, 100],
+          data: [30, 25, 20, 15, 10],
           backgroundColor: [
-            '#FF6384',
-            '#36A2EB',
-            '#FFCE56',
-            '#4BC0C0',
-            '#9966FF'
-          ]
-        }
-      ]
-    };
-
-    // Datos de pujas de prueba
-    this.bidsData = {
-      labels: ['Subasta 1', 'Subasta 2', 'Subasta 3', 'Subasta 4', 'Subasta 5', 'Subasta 6'],
-      datasets: [
-        {
-          label: 'Número de pujas',
-          data: [28, 48, 40, 65, 59, 76],
-          fill: false,
-          borderColor: '#4BC0C0',
-          tension: 0.4
+            '#6334E3',
+            '#9C27B0',
+            '#E91E63',
+            '#FF5722',
+            '#FF9800'
+          ],
+          borderWidth: 2,
+          borderColor: '#ffffff',
+          hoverBorderWidth: 3
         }
       ]
     };
   }
 
+  initChartData() {
+    this.initDummySalesData();
+    this.initDummyCategoryData();
+    this.emptyBidsData = true;
+    this.bidsData = null;
+  }
+
   initChartOptions() {
-    // Opciones comunes
-    const commonOptions = {
+    const commonGridColor = 'rgba(99, 52, 227, 0.1)';
+    const commonTextColor = '#495057';
+
+    this.barOptions = {
       responsive: true,
       maintainAspectRatio: false,
       plugins: {
         legend: {
-          labels: {
-            color: '#495057'
-          }
+          display: false
+        },
+        tooltip: {
+          backgroundColor: 'rgba(0,0,0,0.8)',
+          titleColor: '#ffffff',
+          bodyColor: '#ffffff',
+          borderColor: '#6334E3',
+          borderWidth: 1,
+          cornerRadius: 8,
+          displayColors: false
         }
       },
       scales: {
         x: {
           ticks: {
-            color: '#495057'
+            color: commonTextColor,
+            font: {
+              size: 12,
+              weight: '500'
+            }
           },
           grid: {
-            color: '#ebedef'
+            color: commonGridColor,
+            drawBorder: false
           }
         },
         y: {
+          beginAtZero: true,
           ticks: {
-            color: '#495057',
-            stepSize: 1, // ✅ Agregar esto para valores discretos
-            precision: 0 // ✅ Sin decimales
+            color: commonTextColor,
+            stepSize: 1,
+            precision: 0,
+            font: {
+              size: 12,
+              weight: '500'
+            }
           },
           grid: {
-            color: '#ebedef'
+            color: commonGridColor,
+            drawBorder: false
           }
         }
       },
       animation: {
-        animateScale: true,
-        animateRotate: true
-      }
-    };
-
-    this.barOptions = {
-      ...commonOptions,
-      indexAxis: 'x', // Esto asegura que las barras sean verticales (más altura)
-      aspectRatio: 1.5, // Controla la proporción entre ancho y alto
-      plugins: {
-        ...commonOptions.plugins,
-        title: {
-          display: true,
-          text: 'Número de subastas concretadas por mes',
-          font: {
-            size: 16
-          }
-        }
-      },
-      scales: {
-        ...commonOptions.scales,
-        y: {
-          ...commonOptions.scales.y,
-          beginAtZero: true, // ✅ Empezar desde 0
-          ticks: {
-            ...commonOptions.scales.y.ticks,
-            stepSize: 1, // ✅ Solo números enteros
-            precision: 0, // ✅ Sin decimales
-            callback: function(value: any) {
-              // ✅ Asegurar que solo se muestren números enteros
-              if (Number.isInteger(value)) {
-                return value;
-              }
-            }
-          }
-        }
+        duration: 1000,
+        easing: 'easeInOutQuart'
       }
     };
 
     this.pieOptions = {
-      maintainAspectRatio: false, // ✅ AÑADIR ESTA LÍNEA TAMBIÉN PARA PIE (o moverla a commonOptions si aplica a todos)
+      responsive: true,
+      maintainAspectRatio: false,
       plugins: {
         legend: {
-          position: 'right',
+          position: 'bottom',
           labels: {
-            color: '#495057'
+            color: commonTextColor,
+            usePointStyle: true,
+            pointStyle: 'circle',
+            padding: 15,
+            font: {
+              size: 12,
+              weight: '500'
+            }
           }
         },
-        title: {
-          display: true,
-          text: 'Distribución por categorías de artículos vendidos', // ✅ Cambiar título
-          font: {
-            size: 16
+        tooltip: {
+          backgroundColor: 'rgba(0,0,0,0.8)',
+          titleColor: '#ffffff',
+          bodyColor: '#ffffff',
+          borderColor: '#6334E3',
+          borderWidth: 1,
+          cornerRadius: 8,
+          callbacks: {
+            label: function(context: any) {
+              const total = context.dataset.data.reduce((a: number, b: number) => a + b, 0);
+              const percentage = ((context.parsed / total) * 100).toFixed(1);
+              return `${context.label}: ${context.parsed} (${percentage}%)`;
+            }
           }
         }
+      },
+      animation: {
+        animateRotate: true,
+        animateScale: true,
+        duration: 1000
       }
     };
 
     this.lineOptions = {
-      ...commonOptions,
+      responsive: true,
+      maintainAspectRatio: false,
       plugins: {
-        ...commonOptions.plugins,
-        title: {
-          display: true,
-          text: 'Tendencia de pujas',
-          font: {
-            size: 16
+        legend: {
+          display: false
+        },
+        tooltip: {
+          backgroundColor: 'rgba(0,0,0,0.8)',
+          titleColor: '#ffffff',
+          bodyColor: '#ffffff',
+          borderColor: '#6334E3',
+          borderWidth: 1,
+          cornerRadius: 8,
+          displayColors: false
+        }
+      },
+      scales: {
+        x: {
+          ticks: {
+            color: commonTextColor,
+            font: {
+              size: 12,
+              weight: '500'
+            }
+          },
+          grid: {
+            color: commonGridColor,
+            drawBorder: false
+          }
+        },
+        y: {
+          beginAtZero: true,
+          ticks: {
+            color: commonTextColor,
+            stepSize: 1,
+            precision: 0,
+            font: {
+              size: 12,
+              weight: '500'
+            }
+          },
+          grid: {
+            color: commonGridColor,
+            drawBorder: false
           }
         }
+      },
+      animation: {
+        duration: 1000,
+        easing: 'easeInOutQuart'
       }
     };
   }

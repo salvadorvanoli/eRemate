@@ -2,15 +2,15 @@
 
 <div class="view-container p-2 md:p-4">
   <div class="info-selector-wrapper w-full mb-4">
-    <app-select-info-type 
+    <app-select-info-type-auction-house 
       [defaultOption]="selectedInfoType" 
       (optionChanged)="onInfoTypeChanged($event)">
-    </app-select-info-type>
+    </app-select-info-type-auction-house>
   </div>
 
   <!-- Información del perfil -->
   <div *ngIf="selectedInfoType === 'profile'" class="w-full">
-    <app-profile-info></app-profile-info>
+    <app-auction-house-profile-info></app-auction-house-profile-info>
   </div>
 
   <!-- Rematadores -->
@@ -43,7 +43,6 @@
   <!-- Estadísticas -->
   <div *ngIf="selectedInfoType === 'statistics'" class="w-full flex flex-col"> <!-- ✅ Asegurar layout de columna -->
     <div class="title-container mx-auto mb-4 w-full"> <!-- ✅ Título toma ancho completo -->
-      <app-bold-subtitle text="Panel de Estadísticas"></app-bold-subtitle>
     </div>
     <app-stats class="w-full"></app-stats> <!-- ✅ Stats toma ancho completo -->
   </div>

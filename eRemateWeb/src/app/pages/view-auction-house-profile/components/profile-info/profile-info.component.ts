@@ -12,7 +12,6 @@ import { MessageService } from 'primeng/api';
 import { ToastModule } from 'primeng/toast';
 import { SecurityService } from '../../../../core/services/security.service';
 
-
 interface CasaProfile {
   nombreLegal: string;
   identificacionFiscal: string;
@@ -23,7 +22,7 @@ interface CasaProfile {
 }
 
 @Component({
-  selector: 'app-profile-info',
+  selector: 'app-auction-house-profile-info',
   standalone: true,
   imports: [
     CommonModule,
@@ -39,7 +38,6 @@ interface CasaProfile {
   styleUrl: './profile-info.component.scss'
 })
 export class ProfileInfoComponent implements OnInit {
- 
   profileImage: string = '';
   profile: CasaProfile = {
     nombreLegal: '',
@@ -50,8 +48,6 @@ export class ProfileInfoComponent implements OnInit {
   };
   loading: boolean = false;
   
-  
-
   private userId: number | null = null;
   private casaId: number | null = null;
 
@@ -63,24 +59,19 @@ export class ProfileInfoComponent implements OnInit {
   ) { }
 
   ngOnInit(): void {
-
     const currentUser = this.securityService.actualUser;
     
     if (currentUser) { 
       this.userId = currentUser.id;
       this.casaId = currentUser.id; 
-      console.log('ID de usuario/casa obtenido:', this.userId);
       this.loadProfileData();
     } else {
-      console.warn('No se pudo obtener el ID del usuario, verificando API');
       this.securityService.getActualUser().subscribe({
         next: (user) => {
           if (user) {
             this.userId = user.id;
             this.casaId = user.id;
-            console.log('ID de usuario/casa obtenido de API:', this.userId);
           } else {
-            console.warn('No se pudo obtener el usuario');
             this.messageService.add({
               severity: 'warning',
               summary: 'Advertencia',
@@ -91,7 +82,6 @@ export class ProfileInfoComponent implements OnInit {
           this.loadProfileData();
         },
         error: (error) => {
-          console.error('Error al obtener usuario:', error);
           this.loadProfileData(); 
         }
       });
@@ -102,22 +92,15 @@ export class ProfileInfoComponent implements OnInit {
     this.loading = true;
     
     if (!this.userId) {
-      console.warn('Usando ID de desarrollo porque no se pudo obtener el usuario');
       this.userId = 1;
     }
-    
-    console.log('Cargando datos del perfil para el usuario con ID:', this.userId);
     
     this.userService.getUserProfile(this.userId)
       .pipe(finalize(() => this.loading = false))
       .subscribe({
         next: (response) => {
-          console.log('Datos del perfil recibidos:', response);
-          
-          
           if (response && response.casa && response.usuario) {
             const { casa, usuario } = response;
-            
             
             this.profile = {
               nombreLegal: casa.nombreLegal || '',
@@ -126,10 +109,7 @@ export class ProfileInfoComponent implements OnInit {
               email: usuario.email || '',
               telefono: usuario.telefono || ''
             };
-            
-            console.log('Perfil actualizado con datos del servidor:', this.profile);
           } else {
-            console.warn('La respuesta no tiene la estructura esperada');
             this.messageService.add({
               severity: 'warning',
               summary: 'Formato incorrecto',
@@ -139,14 +119,12 @@ export class ProfileInfoComponent implements OnInit {
           }
         },
         error: (error) => {
-          console.error('Error al cargar el perfil:', error);
           this.messageService.add({
             severity: 'warning',
             summary: 'Conexión al servidor',
             detail: 'Usando datos de desarrollo. No se pudo conectar al servidor.',
             life: 5000
           });
-          
           
           this.profile = {
             nombreLegal: 'Casa de Remates Ejemplo S.A.',
@@ -160,19 +138,15 @@ export class ProfileInfoComponent implements OnInit {
   }
 
   onImageUpload(event: any): void {
-    console.log('Imagen seleccionada:', event);
-   
   }
   
   updateProfile(): void {
     this.loading = true;
     
     if (!this.casaId) {
-      console.warn('Usando ID de desarrollo porque no se pudo obtener la casa');
       this.casaId = 1; 
     }
     
-   
     const casaData = {
       nombreLegal: this.profile.nombreLegal,
       identificacionFiscal: this.profile.identificacionFiscal,
@@ -181,13 +155,10 @@ export class ProfileInfoComponent implements OnInit {
       telefono: this.profile.telefono    
     };
     
-    console.log('📤 Enviando datos de actualización:', casaData);
-    
     this.auctionHouseService.updateAuctionHouse(this.casaId, casaData)
       .pipe(finalize(() => this.loading = false))
       .subscribe({
         next: (response) => {
-          console.log('✅ Perfil actualizado con éxito:', response);
           this.messageService.add({
             severity: 'success',
             summary: 'Éxito',
@@ -196,7 +167,6 @@ export class ProfileInfoComponent implements OnInit {
           });
         },
         error: (error) => {
-          console.error('❌ Error al actualizar perfil:', error);
           this.messageService.add({
             severity: 'error',
             summary: 'Error',

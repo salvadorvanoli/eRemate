@@ -56,7 +56,7 @@
                       (click)="sendMessage(lot)" 
                       pTooltip="Enviar mensaje" />
             
-            <!-- ✅ AGREGAR ESTE BOTÓN DE ESTRELLA AMARILLO -->
+         
             <p-button *ngIf="lot.es_ganador" 
                       icon="pi pi-star" 
                       severity="warn" 
@@ -78,7 +78,7 @@
     </ng-template>
   </p-table>
 
-  <!-- ✅ AGREGAR ESTE MODAL AL FINAL -->
+ 
   <p-dialog 
     [(visible)]="ratingDialog" 
     [style]="{width: '450px'}" 
@@ -94,13 +94,13 @@
       </div>
       
       <div *ngIf="!loading" class="flex flex-column align-items-center gap-3 p-3">
-        <!-- ✅ QUITAR EL NOMBRE DEL LOTE, SOLO MOSTRAR TEXTO -->
+      
         <div class="text-center">
           <p class="m-0 text-600" *ngIf="hasExistingRating">Puntuación actual:</p>
           <p class="m-0 text-600" *ngIf="!hasExistingRating">Selecciona una puntuación:</p>
         </div>
         
-        <!-- ✅ ESTRELLAS INTERACTIVAS -->
+        
         <div class="flex gap-1" style="font-size: 2rem;">
           <i *ngFor="let star of [1,2,3,4,5]; let i = index"
              class="pi"
@@ -123,7 +123,7 @@
     
     <ng-template pTemplate="footer">
       <div class="flex justify-content-center gap-2">
-        <!-- ✅ CAMBIAR TEXTO DEL BOTÓN SEGÚN SI HAY RATING EXISTENTE -->
+      
         <p-button 
           *ngIf="hasExistingRating"
           label="Aceptar" 
@@ -132,7 +132,7 @@
           [style]="{'background-color': '#6334E3', 'border-color': '#6334E3'}"
         />
         
-        <!-- ✅ BOTONES PARA CUANDO NO HAY RATING (CREAR NUEVO) -->
+   
         <ng-container *ngIf="!hasExistingRating">
           <p-button 
             label="Cancelar" 

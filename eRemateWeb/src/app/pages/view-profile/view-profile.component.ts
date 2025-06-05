@@ -3,7 +3,7 @@ import { CommonModule } from '@angular/common';
 import { Router } from '@angular/router';
 import { ViewAuctionHouseProfileComponent } from '../view-auction-house-profile/view-auction-house-profile.component';
 import { ViewRegisteredUserProfileComponent } from '../view-registered-user-profile/view-registered-user-profile.component';
-import { ViewAuctioneerProfileComponent } from '../view-auctioneer-profile/view-auctioneer-profile.component'; // Nuevo import
+import { ViewAuctioneerProfileComponent } from '../view-auctioneer-profile/view-auctioneer-profile.component';
 import { SecurityService } from '../../core/services/security.service';
 import { ToastModule } from 'primeng/toast';
 import { MessageService } from 'primeng/api';
@@ -16,7 +16,7 @@ import { ProgressSpinnerModule } from 'primeng/progressspinner';
     CommonModule,
     ViewAuctionHouseProfileComponent,
     ViewRegisteredUserProfileComponent,
-    ViewAuctioneerProfileComponent, // Añadido a imports
+    ViewAuctioneerProfileComponent,
     ToastModule,
     ProgressSpinnerModule
   ],
@@ -40,12 +40,6 @@ export class ViewProfileComponent implements OnInit {
     this.securityService.getActualUser().subscribe({
       next: (user: any) => {
         if (user) {
-          console.log('🔍 VIEW PROFILE - Usuario obtenido del servidor:', {
-            email: user.email,
-            perfil_completo: user.perfil_completo,
-            google_id: user.google_id
-          });
-          
           if (this.isGoogleUserWithIncompleteProfile(user)) {
             this.messageService.add({
               severity: 'info',
@@ -81,7 +75,6 @@ export class ViewProfileComponent implements OnInit {
   }
 
   private setUserType(tipo: string): void {
-
     this.isAuctionHouse = false;
     this.isRegisteredUser = false;
     this.isAuctioneer = false;
@@ -93,7 +86,6 @@ export class ViewProfileComponent implements OnInit {
     } else if (tipo === 'rematador') {
       this.isAuctioneer = true; 
     } else {
-      console.warn('Unsupported user type:', tipo);
       this.messageService.add({
         severity: 'warn',
         summary: 'Aviso',
