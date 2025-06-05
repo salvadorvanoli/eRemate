@@ -24,8 +24,9 @@ interface RematadorProfile {
 }
 
 @Component({
-  selector: 'app-profile-info',
-  standalone: true,  imports: [
+  selector: 'app-profile-info-auctioneer',
+  standalone: true,
+  imports: [
     CommonModule,
     FormsModule,
     InputTextModule,
@@ -52,10 +53,11 @@ export class ProfileInfoComponent implements OnInit {
   };
   loading: boolean = false;
   
-  private rematadorId: number | null = null;  // Señales para el manejo de imágenes temporales
+  private rematadorId: number | null = null;
   selectedImages = signal<File[]>([]);
   imagesInvalid = signal<boolean>(false);
   formSubmitted = signal<boolean>(false);
+
   constructor(
     private userService: UserService,
     private messageService: MessageService,
@@ -69,22 +71,18 @@ export class ProfileInfoComponent implements OnInit {
     
     if (currentUser) {
       this.rematadorId = currentUser.id;
-      console.log('ID de rematador obtenido del SecurityService:', this.rematadorId);
       this.loadProfileData();
     } else {
       this.securityService.getActualUser().subscribe({
         next: (user) => {
           if (user) {
             this.rematadorId = user.id;
-            console.log('ID de rematador obtenido de la API:', this.rematadorId);
           } else {
-            console.warn('No se pudo obtener el usuario');
             this.rematadorId = 1; 
           }
           this.loadProfileData();
         },
         error: (error) => {
-          console.error('Error al obtener usuario:', error);
           this.rematadorId = 1; 
           this.loadProfileData();
         }
@@ -94,19 +92,15 @@ export class ProfileInfoComponent implements OnInit {
 
   loadProfileData(): void {
     if (!this.rematadorId) {
-      console.warn('No se ha establecido el ID del rematador, usando valor por defecto');
       this.rematadorId = 1;
     }
     
     this.loading = true;
-    console.log('Cargando datos del rematador con ID:', this.rematadorId);
     
     this.userService.getUserProfile(this.rematadorId)
       .pipe(finalize(() => this.loading = false))
       .subscribe({
         next: (response) => {
-          console.log('Datos del perfil recibidos:', response);
-          
           if (response && response.rematador && response.usuario) {
             const { rematador, usuario } = response;
             
@@ -122,10 +116,7 @@ export class ProfileInfoComponent implements OnInit {
             if (rematador.imagen) {
               this.profileImage = rematador.imagen;
             }
-            
-            console.log('Perfil actualizado con datos del servidor:', this.profile);
           } else {
-            console.warn('La respuesta no tiene la estructura esperada');
             this.messageService.add({
               severity: 'warning',
               summary: 'Formato incorrecto',
@@ -135,7 +126,6 @@ export class ProfileInfoComponent implements OnInit {
           }
         },
         error: (error) => {
-          console.error('Error al cargar el perfil:', error);
           this.messageService.add({
             severity: 'warning',
             summary: 'Conexión al servidor',
@@ -152,18 +142,17 @@ export class ProfileInfoComponent implements OnInit {
             direccionFiscal: 'Av. 18 de Julio 1234, Montevideo'
           };
         }
-      });  }
+      });
+  }
 
-  // Método para manejar cuando se seleccionan imágenes
   onImagesSelected(images: File[]): void {
     this.selectedImages.set(images);
-    console.log('Imágenes seleccionadas:', images);
   }
-  // Método para manejar cambios en la validación de imágenes
+
   onImageValidationChange(isInvalid: boolean): void {
     this.imagesInvalid.set(isInvalid);
-    console.log('Estado de validación de imágenes - es inválida:', isInvalid);
-  }// Método para subir las imágenes al servidor
+  }
+
   private async uploadImages(): Promise<string[]> {
     const images = this.selectedImages();
     if (images.length === 0) {
@@ -186,43 +175,35 @@ export class ProfileInfoComponent implements OnInit {
       
       return imageUrls;
     } catch (error) {
-      console.error('Error al subir imágenes:', error);
       throw error;
     }
   }
-  
-  
 
-  // Función para validar email con expresión regular
   private validateEmail(email: string): boolean {
     const emailRegex = /^[a-zA-Z0-9._-]+@[a-zA-Z0-9.-]+\.[a-zA-Z]{2,6}$/;
     return emailRegex.test(email);
   }
 
-  // Función para validar dirección fiscal (letras seguidas de números)
   private validateAddress(address: string): boolean {
     const addressRegex = /^[a-zA-Z\s]+\s+\d+$/;
     return addressRegex.test(address);
   }
 
-  // Función para validar número de matrícula (3 números-3 números)
   private validateMatricula(matricula: string): boolean {
     const matriculaRegex = /^\d{3}-\d{3}$/;
     return matriculaRegex.test(matricula);
   }
 
-  // Función para validar teléfono (9 números)
   private validatePhone(phone: string): boolean {
     const phoneRegex = /^\d{9}$/;
     return phoneRegex.test(phone);
   }
+
   updateProfile(): void {
     if (!this.rematadorId) {
-      console.warn('No se ha establecido el ID del rematador, usando valor por defecto');
       this.rematadorId = 1;
     }
     
-    // Activar el flag de formulario enviado para mostrar errores de validación
     this.formSubmitted.set(true);
 
     const validationErrors = [];
@@ -241,7 +222,8 @@ export class ProfileInfoComponent implements OnInit {
     
     if (!this.validatePhone(this.profile.telefono)) {
       validationErrors.push('El teléfono debe contener exactamente 9 números');
-    }    // Validar imágenes
+    }
+
     if (this.imagesInvalid()) {
       validationErrors.push('Las imágenes seleccionadas no son válidas');
     }
@@ -260,7 +242,6 @@ export class ProfileInfoComponent implements OnInit {
     
     this.loading = true;
     
-    // Subir imágenes primero
     this.uploadImages().then(imageUrls => {
       const rematadorData = {
         numeroMatricula: this.profile.numeroMatricula,
@@ -269,9 +250,8 @@ export class ProfileInfoComponent implements OnInit {
         apellido: this.profile.apellido,
         email: this.profile.email,
         telefono: this.profile.telefono,
-        ...(imageUrls.length > 0 && { imagen: imageUrls[0] }) // Solo la primera imagen para el perfil
+        ...(imageUrls.length > 0 && { imagen: imageUrls[0] })
       };
-        console.log(`📤 Enviando datos de actualización para rematador ID ${this.rematadorId}:`, rematadorData);
       
       if (!this.rematadorId) {
         this.loading = false;
@@ -288,7 +268,6 @@ export class ProfileInfoComponent implements OnInit {
         .pipe(finalize(() => this.loading = false))
         .subscribe({
           next: (response) => {
-            console.log('✅ Perfil actualizado con éxito:', response);
             this.messageService.add({
               severity: 'success',
               summary: 'Éxito',
@@ -296,10 +275,10 @@ export class ProfileInfoComponent implements OnInit {
               life: 3000
             });
 
-            // Actualizar la imagen de perfil mostrada
             if (imageUrls.length > 0) {
               this.profileImage = imageUrls[0];
-            }            // Limpiar las imágenes seleccionadas
+            }
+
             this.selectedImages.set([]);
             this.formSubmitted.set(false);
             if (this.imageUploadComponent) {
@@ -307,7 +286,6 @@ export class ProfileInfoComponent implements OnInit {
             }
           },
           error: (error) => {
-            console.error('❌ Error al actualizar perfil:', error);
             this.messageService.add({
               severity: 'error',
               summary: 'Error',
@@ -318,7 +296,6 @@ export class ProfileInfoComponent implements OnInit {
         });
     }).catch(error => {
       this.loading = false;
-      console.error('❌ Error al subir imágenes:', error);
       this.messageService.add({
         severity: 'error',
         summary: 'Error',

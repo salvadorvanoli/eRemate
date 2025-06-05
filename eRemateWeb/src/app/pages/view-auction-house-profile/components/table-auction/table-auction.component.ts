@@ -17,7 +17,7 @@ import { AuctionHouseService } from '../../../../core/services/auction-house.ser
 import { Subasta } from '../../../../core/models/subasta';
 import { UsuarioRematador, RematadorResponse } from '../../../../core/models/usuario';
 import { SecurityService } from '../../../../core/services/security.service';
-
+import { Router } from '@angular/router';
 
 @Component({
   selector: 'app-table-auction',
@@ -40,7 +40,8 @@ import { SecurityService } from '../../../../core/services/security.service';
   templateUrl: './table-auction.component.html',
   styleUrl: './table-auction.component.scss'
 })
-export class TableAuctionComponent implements OnInit, AfterViewInit, OnDestroy {    auctions: Subasta[] = [];
+export class TableAuctionComponent implements OnInit, AfterViewInit, OnDestroy {
+    auctions: Subasta[] = [];
     cols: any[] = [];
     loading = false;
     auctionDialog: boolean = false;
@@ -56,12 +57,23 @@ export class TableAuctionComponent implements OnInit, AfterViewInit, OnDestroy {
     minDate: string = '';
     minEndDate: string = '';
     dateErrors: { startDate: string, endDate: string } = { startDate: '', endDate: '' };
-      // Leaflet Map properties
+    
     private map: L.Map | null = null;
     private marker: L.Marker | null = null;
     mapVisible: boolean = false;
     private searchTimeout: any;
-    private defaultLatLng: [number, number] = [-34.6037, -58.3816]; // Buenos Aires por defecto
+    private defaultLatLng: [number, number] = [-34.6037, -58.3816];
+
+    editAuctionDialog: boolean = false;
+    editingAuction: any = {};
+    editSubmitted: boolean = false;
+    editMinDate: string = '';
+    editMinEndDate: string = '';
+    editDateErrors: { startDate: string, endDate: string } = { startDate: '', endDate: '' };
+    editMapVisible: boolean = false;
+    private editMap: L.Map | null = null;
+    private editMarker: L.Marker | null = null;
+    private editSearchTimeout: any;
 
     @ViewChild('dt') dt!: Table;
     @Output() auctionSelected = new EventEmitter<number>();
@@ -70,37 +82,38 @@ export class TableAuctionComponent implements OnInit, AfterViewInit, OnDestroy {
         private messageService: MessageService,
         private confirmationService: ConfirmationService,
         private auctionHouseService: AuctionHouseService,
-        private securityService: SecurityService
-    ) {        console.log('[CONSTRUCTOR] SecurityService actualUser:', this.securityService.actualUser);
-    }
+        private securityService: SecurityService,
+        private router: Router
+    ) {}
 
     ngAfterViewInit() {
-        // Se ejecuta después de que la vista se inicializa
     }
 
     ngOnDestroy() {
-        // Limpiar el mapa y timeouts al destruir el componente
         if (this.map) {
             this.map.remove();
+        }
+        if (this.editMap) {
+            this.editMap.remove();
         }
         if (this.searchTimeout) {
             clearTimeout(this.searchTimeout);
         }
-    }    onLocationChange() {
-        console.log('onLocationChange llamado con:', this.auction.ubicacion);
-        
+        if (this.editSearchTimeout) {
+            clearTimeout(this.editSearchTimeout);
+        }
+    }
+
+    onLocationChange() {
         if (this.auction.ubicacion && this.auction.ubicacion.trim().length > 2) {
-            // Mostrar el mapa inmediatamente con ubicación por defecto
             this.mapVisible = true;
             
-            // Inicializar el mapa si no existe
             setTimeout(() => {
                 if (!this.map) {
                     this.initializeMap();
                 }
             }, 100);
             
-            // Debounce la búsqueda para evitar demasiadas llamadas a la API
             clearTimeout(this.searchTimeout);
             this.searchTimeout = setTimeout(() => {
                 this.searchLocation(this.auction.ubicacion);
@@ -111,9 +124,6 @@ export class TableAuctionComponent implements OnInit, AfterViewInit, OnDestroy {
     }
 
     initializeMap() {
-        console.log('Inicializando mapa Leaflet...');
-        
-        // Configurar iconos de Leaflet para corregir iconos faltantes
         delete (L.Icon.Default.prototype as any)._getIconUrl;
         L.Icon.Default.mergeOptions({
             iconRetinaUrl: 'https://cdnjs.cloudflare.com/ajax/libs/leaflet/1.9.4/images/marker-icon-2x.png',
@@ -121,31 +131,24 @@ export class TableAuctionComponent implements OnInit, AfterViewInit, OnDestroy {
             shadowUrl: 'https://cdnjs.cloudflare.com/ajax/libs/leaflet/1.9.4/images/marker-shadow.png',
         });
 
-        // Crear el mapa
         this.map = L.map('auction-map').setView(this.defaultLatLng, 13);
 
-        // Agregar la capa de OpenStreetMap
         L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png', {
             attribution: '© OpenStreetMap contributors'
         }).addTo(this.map);
 
-        console.log('Mapa Leaflet inicializado correctamente');
-
-        // Si ya hay una ubicación, buscarla
         if (this.auction.ubicacion && this.auction.ubicacion.trim()) {
             setTimeout(() => {
                 this.searchLocation(this.auction.ubicacion);
             }, 100);
         }
-    }    private async searchLocation(address: string) {
-        console.log('Buscando ubicación:', address);
-        
+    }
+
+    private async searchLocation(address: string) {
         try {
-            // Detectar si se especifica un país en la dirección
             const addressLower = address.toLowerCase();
             let searchUrl = '';
             
-            // Lista de países de América del Sur para detectar
             const southAmericanCountries = [
                 'uruguay', 'brasil', 'brazil', 'chile', 'bolivia', 'paraguay', 
                 'colombia', 'venezuela', 'ecuador', 'peru', 'perú', 'guyana', 'suriname'
@@ -156,13 +159,9 @@ export class TableAuctionComponent implements OnInit, AfterViewInit, OnDestroy {
             );
             
             if (detectedCountry) {
-                // Si se detecta un país específico, buscar sin restricción de país
                 searchUrl = `https://nominatim.openstreetmap.org/search?format=json&q=${encodeURIComponent(address)}&limit=3&addressdetails=1`;
-                console.log(`País detectado: ${detectedCountry}, buscando sin restricción geográfica`);
             } else {
-                // Si no se especifica país, priorizar Argentina
                 searchUrl = `https://nominatim.openstreetmap.org/search?format=json&q=${encodeURIComponent(address)}&countrycodes=ar&limit=3&addressdetails=1`;
-                console.log('No se detectó país específico, priorizando Argentina');
             }
             
             const response = await fetch(searchUrl);
@@ -172,10 +171,8 @@ export class TableAuctionComponent implements OnInit, AfterViewInit, OnDestroy {
             }
             
             const results: any[] = await response.json();
-            console.log('Resultado de geocoding:', results);
             
             if (results && results.length > 0) {
-                // Si se detectó un país, filtrar resultados por ese país
                 let bestResult = results[0];
                 
                 if (detectedCountry && results.length > 1) {
@@ -189,83 +186,59 @@ export class TableAuctionComponent implements OnInit, AfterViewInit, OnDestroy {
                     
                     if (countryFilteredResult) {
                         bestResult = countryFilteredResult;
-                        console.log('Resultado filtrado por país:', bestResult);
                     }
                 }
                 
                 const lat = parseFloat(bestResult.lat);
                 const lng = parseFloat(bestResult.lon);
                 
-                console.log('Nueva ubicación encontrada:', { 
-                    lat, 
-                    lng, 
-                    display_name: bestResult.display_name,
-                    country: bestResult.address?.country 
-                });
-                
-                // Actualizar la vista del mapa
                 if (this.map) {
                     this.map.setView([lat, lng], 15);
                     this.updateMarker(lat, lng, bestResult.display_name);
                 }
             } else {
-                console.log('No se encontraron resultados para la dirección');
-                // Mantener el mapa en Buenos Aires por defecto
                 if (this.map) {
                     this.map.setView(this.defaultLatLng, 13);
-                    // Agregar un marcador temporal indicando que no se encontró la ubicación
                     this.updateMarker(this.defaultLatLng[0], this.defaultLatLng[1], 'Ubicación no encontrada - Buenos Aires (por defecto)');
                 }
             }
         } catch (error) {
-            console.error('Error en geocoding:', error);
-            // En caso de error, mantener el mapa en la ubicación por defecto
             if (this.map) {
                 this.map.setView(this.defaultLatLng, 13);
                 this.updateMarker(this.defaultLatLng[0], this.defaultLatLng[1], 'Error al buscar ubicación - Buenos Aires (por defecto)');
             }
         }
-    }    private updateMarker(lat: number, lng: number, customTitle?: string) {
+    }
+
+    private updateMarker(lat: number, lng: number, customTitle?: string) {
         if (!this.map) {
-            console.log('Mapa no está disponible para agregar marcador');
             return;
         }
 
-        // Limpiar marcador anterior
         if (this.marker) {
             this.map.removeLayer(this.marker);
         }
 
-        // Crear nuevo marcador
         this.marker = L.marker([lat, lng]).addTo(this.map);
         
-        // Agregar popup con la dirección
         const popupText = customTitle || this.auction.ubicacion || 'Ubicación seleccionada';
         this.marker.bindPopup(popupText).openPopup();
-        
-        console.log('Marcador agregado en:', { lat, lng });
     }
 
     ngOnInit() {
         this.loading = true;
-        console.log('[NGONINIT_START] Intentando obtener usuario. Current securityService.actualUser:', this.securityService.actualUser);
         const currentUser = this.securityService.actualUser;
         
         if (currentUser && currentUser.id) {
             this.casaId = currentUser.id;
-            console.log(`[NGONINIT_BEHAVIORSUBJECT_SUCCESS] ID de casa obtenido del BehaviorSubject: ${this.casaId}. User:`, currentUser);
             this.initializeComponent();
         } else {
-            console.log('[NGONINIT_BEHAVIORSUBJECT_FAIL] No hay usuario en BehaviorSubject o no tiene ID. User:', currentUser);
             this.securityService.getActualUser().subscribe({
                 next: (user) => {
-                    console.log('[NGONINIT_API_RESPONSE] Respuesta de getActualUser API:', user);
                     if (user && user.id) {
                         this.casaId = user.id;
-                        console.log(`[NGONINIT_API_SUCCESS] ID de casa obtenido de la API: ${this.casaId}. User:`, user);
                         this.initializeComponent();
                     } else {
-                        console.error('[NGONINIT_API_FAIL] ERROR CRÍTICO: No se pudo obtener el usuario o no tiene ID desde API. User:', user);
                         this.messageService.add({ 
                             severity: 'error', 
                             summary: 'Error de autenticación', 
@@ -277,7 +250,6 @@ export class TableAuctionComponent implements OnInit, AfterViewInit, OnDestroy {
                     }
                 },
                 error: (error) => {
-                    console.error('[NGONINIT_API_ERROR] ERROR CRÍTICO: Error al obtener usuario:', error);
                     this.messageService.add({ 
                         severity: 'error', 
                         summary: 'Error de conexión', 
@@ -292,11 +264,9 @@ export class TableAuctionComponent implements OnInit, AfterViewInit, OnDestroy {
     }
     
     private initializeComponent() {
-        console.log(`[INITIALIZE_COMPONENT] Iniciando con casaId: ${this.casaId}`);
         this.configureTable();
         this.loadAuctionsData();
         this.loadRematadores();
-        this.loading = false; 
     }
     
     configureTable() {
@@ -313,10 +283,8 @@ export class TableAuctionComponent implements OnInit, AfterViewInit, OnDestroy {
 
     loadAuctionsData() {
         this.loading = true;
-        console.log(`[LOAD_AUCTIONS_DATA_START] Cargando subastas para casaId: ${this.casaId}`);
         
         if (!this.casaId) {
-            console.error('[LOAD_AUCTIONS_DATA_ERROR] ERROR CRÍTICO: Intentando cargar subastas sin ID de casa válido');
             this.messageService.add({ 
                 severity: 'error', 
                 summary: 'Error', 
@@ -331,8 +299,6 @@ export class TableAuctionComponent implements OnInit, AfterViewInit, OnDestroy {
             .pipe(finalize(() => this.loading = false))
             .subscribe({
                 next: (data: any) => {
-                    console.log('Respuesta de getAuctionsByHouseId:', data);
-
                     if (data && Array.isArray(data.data)) {
                         this.auctions = data.data;
                     } else if (Array.isArray(data)) {
@@ -342,20 +308,15 @@ export class TableAuctionComponent implements OnInit, AfterViewInit, OnDestroy {
                     } else {
                         this.auctions = [];
                     }
-
-                    console.log('Valor final de this.auctions:', this.auctions);
                 },
-                error: () => {
+                error: (error) => {
                     this.auctions = [];
-                    this.messageService.add({ severity: 'error', summary: 'Error', detail: 'No se pudieron cargar las subastas', life: 3000 });
                 }
             });
     }
     
     loadRematadores() {
-        console.log(`[LOAD_REMATADORES_START] Cargando rematadores para casaId: ${this.casaId}`);
         if (!this.casaId) {
-            console.error('[LOAD_REMATADORES_ERROR] ERROR CRÍTICO: Intentando cargar rematadores sin ID de casa válido');
             this.messageService.add({ 
                 severity: 'error', 
                 summary: 'Error', 
@@ -375,21 +336,17 @@ export class TableAuctionComponent implements OnInit, AfterViewInit, OnDestroy {
                     } else {
                         this.rematadores = [];
                     }
-                    console.log('Rematadores cargados:', this.rematadores);
                 },
                 error: (error) => {
-                    console.error('Error al cargar rematadores:', error);
                     this.rematadores = [];
                 }
             });
     }
-      openNew() {
-        console.log('[OPEN_NEW_START] Abriendo nuevo diálogo de subasta.');
+
+    openNew() {
         const currentUser = this.securityService.actualUser;
-        console.log('[OPEN_NEW] securityService.actualUser al abrir diálogo:', currentUser);
 
         if (!currentUser || !currentUser.id) {
-            console.error('[OPEN_NEW_ERROR] ERROR CRÍTICO: No hay usuario autenticado o sin ID al crear nueva subasta. User:', currentUser);
             this.messageService.add({ 
                 severity: 'error', 
                 summary: 'Error de autenticación', 
@@ -400,10 +357,9 @@ export class TableAuctionComponent implements OnInit, AfterViewInit, OnDestroy {
         }
         
         const casaIdForNewAuction = currentUser.id;
-        console.log(`[OPEN_NEW] ID de casa para nueva subasta (desde currentUser.id): ${casaIdForNewAuction}`);
         
         const today = new Date();
-        this.minDate = this.formatDateForInput(today);
+        this.minDate = this.formatDateForInputLocal(today);
         this.minEndDate = this.minDate; 
         
         this.auction = {
@@ -418,14 +374,15 @@ export class TableAuctionComponent implements OnInit, AfterViewInit, OnDestroy {
             fechaInicio: new Date(),
             fechaCierre: new Date(today.getTime() + 86400000), 
             ubicacion: ''
-        };        this.rematadorEmail = '';
+        };
+        
+        this.rematadorEmail = '';
         this.emailError = '';
         this.dateErrors = { startDate: '', endDate: '' };
         this.submitted = false;
-        this.mapVisible = false; // Reset map visibility
+        this.mapVisible = false;
         this.auctionDialog = true;
         
-        // Inicializar el mapa después de que el diálogo se abra
         setTimeout(() => {
             this.initializeMapIfVisible();
         }, 100);
@@ -443,7 +400,6 @@ export class TableAuctionComponent implements OnInit, AfterViewInit, OnDestroy {
             header: 'Confirmar',
             icon: 'pi pi-exclamation-triangle',
             accept: () => {
-               
                 if (this.selectedAuction) {
                     this.auctions = this.auctions.filter(val => val.id !== this.selectedAuction?.id);
                     this.selectedAuction = null;
@@ -489,14 +445,243 @@ export class TableAuctionComponent implements OnInit, AfterViewInit, OnDestroy {
         this.submitted = false;
     }
     
-    findRematadorByEmail(email: string): number | null {
-        console.log('Buscando email:', email);
-        console.log('Rematadores disponibles:', this.rematadores);
+    editAuction(auction: Subasta) {
+        if (!this.canEditAuction(auction.estado)) {
+            this.messageService.add({
+                severity: 'warn',
+                summary: 'Acción no permitida',
+                detail: `No se puede editar una subasta en estado "${auction.estado}"`,
+                life: 3000
+            });
+            return;
+        }
         
+        const today = new Date();
+        this.editMinDate = this.formatDateForInputLocal(today);
+        this.editMinEndDate = this.editMinDate;
+        
+        this.editingAuction = {
+            id: auction.id,
+            tipoSubasta: auction.tipoSubasta,
+            fechaInicio: this.formatDateForInputLocal(new Date(auction.fechaInicio)),
+            fechaCierre: this.formatDateForInputLocal(new Date(auction.fechaCierre)),
+            ubicacion: auction.ubicacion
+        };
+        
+        this.editSubmitted = false;
+        this.editDateErrors = { startDate: '', endDate: '' };
+        this.editMapVisible = false;
+        this.editAuctionDialog = true;
+        
+        if (this.editingAuction.ubicacion && this.editingAuction.ubicacion.trim()) {
+            this.editMapVisible = true;
+            setTimeout(() => {
+                this.initializeEditMap();
+            }, 100);
+        }
+    }
+
+    hideEditDialog() {
+        this.editAuctionDialog = false;
+        this.editSubmitted = false;
+        this.editMapVisible = false;
+        
+        if (this.editMap) {
+            this.editMap.remove();
+            this.editMap = null;
+        }
+        if (this.editSearchTimeout) {
+            clearTimeout(this.editSearchTimeout);
+        }
+    }
+
+    validateEditDates(): void {
+        const now = new Date();
+        const startDate = new Date(this.editingAuction.fechaInicio);
+        const endDate = new Date(this.editingAuction.fechaCierre);
+        
+        this.editDateErrors = { startDate: '', endDate: '' };
+        
+        if (startDate < now) {
+            this.editDateErrors.startDate = 'La fecha de inicio debe ser posterior a la fecha actual';
+        } else {
+            this.editMinEndDate = this.formatDateForInputLocal(startDate);
+        }
+        
+        if (endDate <= startDate) {
+            this.editDateErrors.endDate = 'La fecha de cierre debe ser posterior a la fecha de inicio';
+        }
+    }
+
+    onEditLocationChange() {
+        if (this.editingAuction.ubicacion && this.editingAuction.ubicacion.trim().length > 2) {
+            this.editMapVisible = true;
+            
+            setTimeout(() => {
+                if (!this.editMap) {
+                    this.initializeEditMap();
+                }
+            }, 100);
+            
+            clearTimeout(this.editSearchTimeout);
+            this.editSearchTimeout = setTimeout(() => {
+                this.searchEditLocation(this.editingAuction.ubicacion);
+            }, 800);
+        } else {
+            this.editMapVisible = false;
+        }
+    }
+
+    private initializeEditMap() {
+        if (this.editMap) {
+            this.editMap.remove();
+        }
+        
+        this.editMap = L.map('edit-auction-map').setView(this.defaultLatLng, 13);
+        
+        L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png', {
+            attribution: '© OpenStreetMap contributors'
+        }).addTo(this.editMap);
+        
+        if (this.editingAuction.ubicacion && this.editingAuction.ubicacion.trim()) {
+            setTimeout(() => {
+                this.searchEditLocation(this.editingAuction.ubicacion);
+            }, 100);
+        }
+    }
+
+    private async searchEditLocation(address: string) {
+        try {
+            const addressLower = address.toLowerCase();
+            let searchUrl = '';
+            
+            const southAmericanCountries = [
+                'uruguay', 'brasil', 'brazil', 'chile', 'bolivia', 'paraguay', 
+                'colombia', 'venezuela', 'ecuador', 'peru', 'perú', 'guyana', 'suriname'
+            ];
+            
+            const detectedCountry = southAmericanCountries.find(country => 
+                addressLower.includes(country)
+            );
+            
+            if (detectedCountry) {
+                searchUrl = `https://nominatim.openstreetmap.org/search?format=json&q=${encodeURIComponent(address)}&limit=3&addressdetails=1`;
+            } else {
+                searchUrl = `https://nominatim.openstreetmap.org/search?format=json&q=${encodeURIComponent(address)}&countrycodes=ar&limit=3&addressdetails=1`;
+            }
+            
+            const response = await fetch(searchUrl);
+            const results: any[] = await response.json();
+            
+            if (results && results.length > 0) {
+                let bestResult = results[0];
+                
+                if (detectedCountry && results.length > 1) {
+                    const countryFilteredResult = results.find((result: any) => {
+                        const country = result.address?.country?.toLowerCase() || '';
+                        return country.includes(detectedCountry);
+                    });
+                    
+                    if (countryFilteredResult) {
+                        bestResult = countryFilteredResult;
+                    }
+                }
+                
+                const lat = parseFloat(bestResult.lat);
+                const lng = parseFloat(bestResult.lon);
+                
+                if (this.editMap) {
+                    this.editMap.setView([lat, lng], 15);
+                    this.updateEditMarker(lat, lng, bestResult.display_name);
+                }
+            } else {
+                if (this.editMap) {
+                    this.editMap.setView(this.defaultLatLng, 13);
+                    this.updateEditMarker(this.defaultLatLng[0], this.defaultLatLng[1], 'Ubicación no encontrada');
+                }
+            }
+        } catch (error) {
+            if (this.editMap) {
+                this.editMap.setView(this.defaultLatLng, 13);
+                this.updateEditMarker(this.defaultLatLng[0], this.defaultLatLng[1], 'Error al buscar ubicación');
+            }
+        }
+    }
+
+    private updateEditMarker(lat: number, lng: number, customTitle?: string) {
+        if (!this.editMap) return;
+        
+        if (this.editMarker) {
+            this.editMap.removeLayer(this.editMarker);
+        }
+        
+        this.editMarker = L.marker([lat, lng]).addTo(this.editMap);
+        const popupText = customTitle || this.editingAuction.ubicacion || 'Ubicación seleccionada';
+        this.editMarker.bindPopup(popupText).openPopup();
+    }
+
+    updateAuction() {
+        this.editSubmitted = true;
+        
+        this.validateEditDates();
+        
+        if (!this.editingAuction.tipoSubasta?.trim() || 
+            !this.editingAuction.ubicacion?.trim() || 
+            !this.editingAuction.fechaInicio || 
+            !this.editingAuction.fechaCierre ||
+            this.editDateErrors.startDate ||
+            this.editDateErrors.endDate) {
+            return;
+        }
+        
+        const updateData = {
+            tipoSubasta: this.editingAuction.tipoSubasta,
+            fechaInicio: this.editingAuction.fechaInicio,
+            fechaCierre: this.editingAuction.fechaCierre,
+            ubicacion: this.editingAuction.ubicacion
+        };
+        
+        this.loading = true;
+        this.auctionHouseService.updateAuction(this.editingAuction.id, updateData)
+            .pipe(finalize(() => this.loading = false))
+            .subscribe({
+                next: (response) => {
+                    const index = this.auctions.findIndex(a => a.id === this.editingAuction.id);
+                    if (index !== -1) {
+                        this.auctions[index] = {
+                            ...this.auctions[index],
+                            tipoSubasta: this.editingAuction.tipoSubasta,
+                            fechaInicio: new Date(this.editingAuction.fechaInicio),
+                            fechaCierre: new Date(this.editingAuction.fechaCierre),
+                            ubicacion: this.editingAuction.ubicacion
+                        };
+                        this.auctions = [...this.auctions];
+                    }
+                    
+                    this.messageService.add({
+                        severity: 'success',
+                        summary: 'Éxito',
+                        detail: 'Subasta actualizada correctamente',
+                        life: 3000
+                    });
+                    
+                    this.hideEditDialog();
+                },
+                error: (error) => {
+                    this.messageService.add({
+                        severity: 'error',
+                        summary: 'Error',
+                        detail: 'No se pudo actualizar la subasta',
+                        life: 3000
+                    });
+                }
+            });
+    }
+
+    findRematadorByEmail(email: string): number | null {
         const rematador = this.rematadores.find(r => r.usuario?.email === email);
         
         if (rematador) {
-            console.log('Rematador encontrado:', rematador);
             return rematador.rematador?.id || null;
         }
         
@@ -504,9 +689,19 @@ export class TableAuctionComponent implements OnInit, AfterViewInit, OnDestroy {
     }
     
     formatDateForInput(date: Date): string {
-        return date.toISOString().slice(0, 16); 
+        const localDate = new Date(date.getTime() - (date.getTimezoneOffset() * 60000));
+        return localDate.toISOString().slice(0, 16);
     }
 
+    formatDateForInputLocal(date: Date): string {
+        const year = date.getFullYear();
+        const month = String(date.getMonth() + 1).padStart(2, '0');
+        const day = String(date.getDate()).padStart(2, '0');
+        const hours = String(date.getHours()).padStart(2, '0');
+        const minutes = String(date.getMinutes()).padStart(2, '0');
+        
+        return `${year}-${month}-${day}T${hours}:${minutes}`;
+    }
 
     validateDates(): void {
         const now = new Date();
@@ -515,14 +710,12 @@ export class TableAuctionComponent implements OnInit, AfterViewInit, OnDestroy {
         
         this.dateErrors = { startDate: '', endDate: '' };
         
- 
         if (startDate < now) {
             this.dateErrors.startDate = 'La fecha de inicio debe ser posterior a la fecha actual';
         } else {
- 
-            this.minEndDate = this.formatDateForInput(startDate);
+            this.minEndDate = this.formatDateForInputLocal(startDate);
         }
- 
+        
         if (endDate <= startDate) {
             this.dateErrors.endDate = 'La fecha de cierre debe ser posterior a la fecha de inicio';
         }
@@ -531,10 +724,6 @@ export class TableAuctionComponent implements OnInit, AfterViewInit, OnDestroy {
     saveAuction() {
         this.submitted = true;
         this.emailError = '';
-        console.log('[SAVE_AUCTION_START] Iniciando guardado de subasta.');
-        console.log('[SAVE_AUCTION_START] this.auction (antes de obtener currentUser):', JSON.parse(JSON.stringify(this.auction)));
-        console.log('[SAVE_AUCTION_START] this.rematadorEmail:', this.rematadorEmail);
-        
 
         this.validateDates();
         
@@ -545,25 +734,19 @@ export class TableAuctionComponent implements OnInit, AfterViewInit, OnDestroy {
             !this.rematadorEmail?.trim() ||
             this.dateErrors.startDate ||
             this.dateErrors.endDate) {
-            console.warn('[SAVE_AUCTION_VALIDATION_FAIL] Faltan campos requeridos o hay errores de validación.');
             return;
         }
         
         const rematadorId = this.findRematadorByEmail(this.rematadorEmail);
-        console.log(`[SAVE_AUCTION] Resultado de findRematadorByEmail: ${rematadorId}`);
         
         if (!rematadorId) {
             this.emailError = 'No se encontró un rematador con ese email';
-            console.warn('[SAVE_AUCTION_REMATADOR_FAIL] No se encontró rematador con email:', this.rematadorEmail);
             return;
         }
         
         const currentUser = this.securityService.actualUser;
-        console.log('[SAVE_AUCTION] securityService.actualUser (obtenido justo antes de usar su ID):', currentUser);
-        
 
         if (!currentUser || !currentUser.id) {
-            console.error('⛔ [SAVE_AUCTION_USER_ID_FAIL] ERROR CRÍTICO: No hay usuario autenticado o no tiene ID. User:', currentUser);
             this.messageService.add({ 
                 severity: 'error', 
                 summary: 'Error de autenticación', 
@@ -575,12 +758,8 @@ export class TableAuctionComponent implements OnInit, AfterViewInit, OnDestroy {
         }
         
         this.auction.rematador_id = rematadorId;
-        console.log(`[SAVE_AUCTION] this.auction.rematador_id asignado: ${this.auction.rematador_id}`);
- 
         const casaIdToSave = currentUser.id;
-        console.log(`🔴 [SAVE_AUCTION_CASA_ID_VERIFIED] ID DE CASA VERIFICADO ANTES DE CREAR SUBASTA (currentUser.id): ${casaIdToSave}`);
         
-       
         const subastaData = {
             casaDeRemates_id: casaIdToSave, 
             rematador_id: this.auction.rematador_id,
@@ -593,20 +772,13 @@ export class TableAuctionComponent implements OnInit, AfterViewInit, OnDestroy {
             mensajes: [] 
         };
         
-        console.log('[SAVE_AUCTION_SUBMIT_DATA] Datos de subasta a crear (ID casa FINAL):', subastaData);
-        
-       
         this.loading = true;
         this.auctionHouseService.createAuction(subastaData)
             .pipe(finalize(() => {
                 this.loading = false;
-                console.log('[SAVE_AUCTION_FINALIZE] Finalizó la llamada a createAuction.');
             }))
             .subscribe({
                 next: (response) => {
-                    console.log('[SAVE_AUCTION_SUCCESS] Respuesta del servidor:', response);
-                    
-                 
                     if (response && response.data) {
                         this.auction.id = response.data.id;
                         this.auctions.push(response.data);
@@ -627,7 +799,6 @@ export class TableAuctionComponent implements OnInit, AfterViewInit, OnDestroy {
                     this.rematadorEmail = '';
                 },
                 error: (error) => {
-                    console.error('Error al crear subasta:', error);
                     this.messageService.add({ 
                         severity: 'error', 
                         summary: 'Error', 
@@ -653,23 +824,33 @@ export class TableAuctionComponent implements OnInit, AfterViewInit, OnDestroy {
         }
     }
 
- 
     onSelectionChange() {
-        console.log('Selección cambiada:', this.selectedAuction);
-        
-
         if (this.selectedAuction && this.selectedAuction.id) {
-            console.log('Emitiendo ID de subasta seleccionada:', this.selectedAuction.id);
             this.auctionSelected.emit(this.selectedAuction.id);
         }
     }
 
     onMapResize() {
-        // Invalidar el tamaño del mapa cuando la ventana cambia de tamaño
         if (this.map) {
             setTimeout(() => {
                 this.map?.invalidateSize();
             }, 100);
         }
+    }
+
+    viewAuction(auction: Subasta) {
+        if (auction.id) {
+            this.router.navigate(['/subasta', auction.id], {
+                state: { 
+                    returnUrl: '/perfil-casa',
+                    returnState: { selectedInfoType: 'auctions' }
+                }
+            });
+        }
+    }
+
+    canEditAuction(estado: string): boolean {
+      const editableStates = ['pendiente', 'pendiente_aprobacion', 'aceptada'];
+      return editableStates.includes(estado?.toLowerCase());
     }
 }

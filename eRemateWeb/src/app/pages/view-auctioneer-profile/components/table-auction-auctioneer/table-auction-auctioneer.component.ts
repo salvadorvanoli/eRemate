@@ -1,6 +1,7 @@
 import { Component, Input, OnInit, OnChanges, SimpleChanges, ViewChild } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { FormsModule } from '@angular/forms';
+import { Router } from '@angular/router';
 import { TableModule } from 'primeng/table';
 import { ButtonModule } from 'primeng/button';
 import { InputTextModule } from 'primeng/inputtext';
@@ -15,7 +16,7 @@ import { AuctioneerService } from '../../../../core/services/auctioneer.service'
 import { SecurityService } from '../../../../core/services/security.service';
 import { Subasta } from '../../../../core/models/subasta';
 import { finalize } from 'rxjs';
-import { Table } from 'primeng/table';  
+import { Table } from 'primeng/table';
 
 @Component({
   selector: 'app-table-auction-auctioneer',
@@ -39,7 +40,7 @@ import { Table } from 'primeng/table';
 })
 export class TableAuctionAuctioneerComponent implements OnInit, OnChanges {
   @Input() viewType: 'schedule' | 'requests' = 'schedule';
-  @ViewChild('dt') dt!: Table; 
+  @ViewChild('dt') dt!: Table;
   
   auctions: Subasta[] = [];
   selectedAuction: Subasta | null = null;
@@ -57,7 +58,8 @@ export class TableAuctionAuctioneerComponent implements OnInit, OnChanges {
     private auctioneerService: AuctioneerService,
     private securityService: SecurityService,
     private confirmationService: ConfirmationService,
-    private messageService: MessageService
+    private messageService: MessageService,
+    private router: Router
   ) {}
 
   ngOnInit() {
@@ -104,7 +106,7 @@ export class TableAuctionAuctioneerComponent implements OnInit, OnChanges {
         { field: 'fechaInicioDisplay', header: 'Fecha Inicio' },
         { field: 'fechaCierreDisplay', header: 'Fecha Cierre' },
         { field: 'ubicacion', header: 'Ubicación' },
-        { field: 'casaDeRemates_id', header: 'Casa de Remates ID' } 
+        { field: 'casaDeRemates_id', header: 'Casa de Remates ID' }
       ];
     }
     
@@ -113,7 +115,6 @@ export class TableAuctionAuctioneerComponent implements OnInit, OnChanges {
   
   loadAuctions() {
     if (!this.rematadorId) {
-      console.error('No se ha establecido el ID del rematador');
       return;
     }
     
@@ -127,19 +128,16 @@ export class TableAuctionAuctioneerComponent implements OnInit, OnChanges {
       finalize(() => this.loading = false)
     ).subscribe({
       next: (response: any) => {
-        console.log(`Datos de ${this.viewType} cargados:`, response);
         const auctionsArray = response.data || [];
         this.auctions = this.formatDates(auctionsArray);
       },
       error: (error) => {
-        console.error(`Error al cargar ${this.viewType}:`, error);
         this.messageService.add({
           severity: 'error',
           summary: 'Error',
           detail: `No se pudieron cargar las ${this.viewType === 'schedule' ? 'subastas agendadas' : 'solicitudes de subastas'}`,
           life: 3000
         });
-       
         this.auctions = [];
       }
     });
@@ -173,9 +171,9 @@ export class TableAuctionAuctioneerComponent implements OnInit, OnChanges {
       fechaCierre: new Date(),
       ubicacion: '',
       estado: 'Pendiente',
-      casaDeRemates_id: 0,                
+      casaDeRemates_id: 0,
       rematador_id: this.rematadorId || 0,
-      mensajes: '',                        
+      mensajes: '',
       urlTransmision: '',
       pujaHabilitada: false
     };
@@ -195,7 +193,6 @@ export class TableAuctionAuctioneerComponent implements OnInit, OnChanges {
   }
   
   onSelectionChange() {
-    console.log('Subasta seleccionada:', this.selectedAuction);
   }
   
   acceptAuction(auction: Subasta) {
@@ -221,7 +218,6 @@ export class TableAuctionAuctioneerComponent implements OnInit, OnChanges {
               this.loadAuctions();
             },
             error: (error) => {
-              console.error('Error al aceptar solicitud:', error);
               this.messageService.add({
                 severity: 'error',
                 summary: 'Error',
@@ -257,7 +253,6 @@ export class TableAuctionAuctioneerComponent implements OnInit, OnChanges {
               this.loadAuctions();
             },
             error: (error) => {
-              console.error('Error al rechazar solicitud:', error);
               this.messageService.add({
                 severity: 'error',
                 summary: 'Error',
@@ -292,7 +287,6 @@ export class TableAuctionAuctioneerComponent implements OnInit, OnChanges {
               this.loadAuctions();
             },
             error: (error) => {
-              console.error('Error al cancelar subasta:', error);
               this.messageService.add({
                 severity: 'error',
                 summary: 'Error',
@@ -318,5 +312,18 @@ export class TableAuctionAuctioneerComponent implements OnInit, OnChanges {
       this.auctionDialog = false;
       this.loadAuctions();
     }, 1000);
+  }
+  
+  viewAuctionDetails(auction: Subasta) {
+    if (auction.id) {
+      this.router.navigate(['/subasta', auction.id]);
+    } else {
+      this.messageService.add({
+        severity: 'warn',
+        summary: 'Advertencia',
+        detail: 'No se puede acceder a los detalles de esta subasta',
+        life: 3000
+      });
+    }
   }
 }

@@ -47,7 +47,7 @@
         </td>
         
         <td style="width: 11%">
-          <div class="flex gap-2 justify-center">
+          <div class="flex gap-1 justify-center">
             <p-button *ngIf="lot.es_ganador" 
                       icon="pi pi-comment" 
                       severity="info" 
@@ -55,6 +55,15 @@
                       [outlined]="true" 
                       (click)="sendMessage(lot)" 
                       pTooltip="Enviar mensaje" />
+            
+         
+            <p-button *ngIf="lot.es_ganador" 
+                      icon="pi pi-star" 
+                      severity="warn" 
+                      [rounded]="true" 
+                      [outlined]="true" 
+                      (click)="showRating(lot)" 
+                      pTooltip="Ver puntuación" />
           </div>
         </td>
       </tr>
@@ -68,4 +77,80 @@
       </tr>
     </ng-template>
   </p-table>
+
+ 
+  <p-dialog 
+    [(visible)]="ratingDialog" 
+    [style]="{width: '450px'}" 
+    [modal]="true"
+    [resizable]="false"
+    [draggable]="false"
+    header="Puntuación del Lote"
+    (onHide)="closeRatingDialog()"
+  >
+    <ng-template pTemplate="content">
+      <div *ngIf="loading" class="flex justify-content-center my-3">
+        <p-progressSpinner strokeWidth="4" [style]="{'width': '30px', 'height': '30px'}" />
+      </div>
+      
+      <div *ngIf="!loading" class="flex flex-column align-items-center gap-3 p-3">
+      
+        <div class="text-center">
+          <p class="m-0 text-600" *ngIf="hasExistingRating">Puntuación actual:</p>
+          <p class="m-0 text-600" *ngIf="!hasExistingRating">Selecciona una puntuación:</p>
+        </div>
+        
+        
+        <div class="flex gap-1" style="font-size: 2rem;">
+          <i *ngFor="let star of [1,2,3,4,5]; let i = index"
+             class="pi"
+             [class.pi-star-fill]="i < rating"
+             [class.pi-star]="i >= rating"
+             [style.color]="i < rating ? '#F59E0B' : '#D1D5DB'"
+             [style.cursor]="hasExistingRating ? 'default' : 'pointer'"
+             (click)="selectRating(i + 1)"
+             [title]="(i + 1) + ' estrella' + (i > 0 ? 's' : '')">
+          </i>
+        </div>
+        
+        <p class="text-center m-0 text-lg font-semibold" *ngIf="rating > 0">
+        </p>
+        
+        <p class="text-center m-0 text-sm text-500" *ngIf="!hasExistingRating && rating === 0">
+        </p>
+      </div>
+    </ng-template>
+    
+    <ng-template pTemplate="footer">
+      <div class="flex justify-content-center gap-2">
+      
+        <p-button 
+          *ngIf="hasExistingRating"
+          label="Aceptar" 
+          icon="pi pi-check" 
+          (onClick)="closeRatingDialog()"
+          [style]="{'background-color': '#6334E3', 'border-color': '#6334E3'}"
+        />
+        
+   
+        <ng-container *ngIf="!hasExistingRating">
+          <p-button 
+            label="Cancelar" 
+            icon="pi pi-times" 
+            (onClick)="closeRatingDialog()"
+            [style]="{'background-color': '#6B7280', 'border-color': '#6B7280'}"
+          />
+          
+          <p-button 
+            label="Guardar" 
+            icon="pi pi-check" 
+            (onClick)="createRating()"
+            [disabled]="rating === 0 || loading"
+            [style]="{'background-color': '#6334E3', 'border-color': '#6334E3'}"
+          />
+        </ng-container>
+      </div>
+    </ng-template>
+  </p-dialog>
+
 </div>

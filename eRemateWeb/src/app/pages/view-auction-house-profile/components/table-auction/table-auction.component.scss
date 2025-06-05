@@ -1,0 +1,250 @@
+.table-scroll-x {
+  width: 100%;
+  overflow-x: auto;
+}
+
+.table-scroll-x .p-table, 
+.table-scroll-x .p-datatable {
+  min-width: 800px; // O el ancho mínimo que quieras para tus columnas
+}
+
+/* ✅ FORZAR que los modales aparezcan en el viewport visible */
+::ng-deep .p-dialog-mask {
+  position: fixed !important;
+  top: 0 !important;
+  left: 0 !important;
+  width: 100vw !important;
+  height: 100vh !important;
+  display: flex !important;
+  align-items: center !important;
+  justify-content: center !important;
+  z-index: 1000 !important;
+}
+
+::ng-deep .p-dialog {
+  margin: 0 !important;
+  position: relative !important;
+  top: auto !important;
+  left: auto !important;
+  transform: none !important;
+  
+  @media screen and (max-width: 768px) {
+    width: 95vw !important;
+    max-width: 95vw !important;
+    max-height: 90vh !important;
+    
+    .p-dialog-header {
+      padding: 1rem !important;
+      
+      .p-dialog-title {
+        font-size: 1.1rem !important;
+      }
+    }
+    
+    .p-dialog-content {
+      padding: 1rem !important;
+      max-height: 60vh !important;
+      overflow-y: auto !important;
+    }
+    
+    .p-dialog-footer {
+      padding: 1rem !important;
+      flex-direction: column !important;
+      gap: 0.5rem !important;
+      
+      .p-button {
+        width: 100% !important;
+        margin: 0 !important;
+      }
+    }
+  }
+  
+  @media screen and (max-width: 480px) {
+    width: 98vw !important;
+    max-width: 98vw !important;
+    max-height: 95vh !important;
+    
+    .p-dialog-content {
+      max-height: 65vh !important;
+      padding: 0.75rem !important;
+    }
+    
+    .p-dialog-header {
+      padding: 0.75rem !important;
+    }
+    
+    .p-dialog-footer {
+      padding: 0.75rem !important;
+    }
+  }
+}
+
+/* Asegurar que el modal nunca se salga del viewport */
+::ng-deep .p-dialog-mask.p-component-overlay {
+  position: fixed !important;
+  top: 0 !important;
+  left: 0 !important;
+  width: 100% !important;
+  height: 100% !important;
+  display: flex !important;
+  align-items: center !important;
+  justify-content: center !important;
+  padding: 1rem !important;
+  box-sizing: border-box !important;
+}
+
+/* Inputs más grandes para móviles */
+@media screen and (max-width: 768px) {
+  ::ng-deep .p-dialog .p-inputtext,
+  ::ng-deep .p-dialog .p-inputnumber,
+  ::ng-deep .p-dialog .p-inputtextarea {
+    font-size: 1rem !important;
+    padding: 0.75rem !important;
+    min-height: 44px !important;
+  }
+  
+  ::ng-deep .p-dialog .field {
+    margin-bottom: 1.25rem !important;
+  }
+  
+  ::ng-deep .p-dialog label {
+    font-size: 0.9rem !important;
+    margin-bottom: 0.5rem !important;
+  }
+  
+  ::ng-deep .p-dialog .p-button {
+    min-height: 44px !important;
+    font-size: 1rem !important;
+  }
+}
+
+/* Estilos específicos para el mapa en modales móviles */
+@media screen and (max-width: 768px) {
+  ::ng-deep .p-dialog .map-container {
+    width: 100% !important;
+    display: flex !important;
+    justify-content: center !important;
+  }
+  
+  ::ng-deep .p-dialog #auction-map,
+  ::ng-deep .p-dialog #edit-auction-map {
+    width: 280px !important;
+    height: 200px !important;
+  }
+}
+
+@media screen and (max-width: 480px) {
+  ::ng-deep .p-dialog #auction-map,
+  ::ng-deep .p-dialog #edit-auction-map {
+    width: 250px !important;
+    height: 180px !important;
+  }
+}
+
+/* Asegurar que p-confirmDialog también sea responsive */
+::ng-deep .p-confirm-dialog {
+  @media screen and (max-width: 768px) {
+    width: 95vw !important;
+    max-width: 95vw !important;
+    
+    .p-dialog-content {
+      padding: 1rem !important;
+    }
+    
+    .p-dialog-footer {
+      flex-direction: column !important;
+      gap: 0.5rem !important;
+      
+      .p-button {
+        width: 100% !important;
+      }
+    }
+  }
+  
+  @media screen and (max-width: 480px) {
+    width: 98vw !important;
+    max-width: 98vw !important;
+  }
+}
+
+/* Estilos responsivos para la tabla principal */
+@media screen and (max-width: 768px) {
+  /* Estilos para diálogos generales */
+  ::ng-deep .p-dialog {
+    .p-dialog-content {
+      padding: 1rem !important;
+      max-height: 70vh !important;
+      overflow-y: auto !important;
+    }
+    
+    .p-dialog-footer {
+      padding: 1rem !important;
+    }
+  }
+  
+  /* Manejar desbordamiento de texto */
+  ::ng-deep td span {
+    white-space: normal;
+    word-break: break-word;
+  }
+  
+  /* Estilos para tabla principal con p-datatable */
+  ::ng-deep .p-datatable.p-datatable-responsive .p-datatable-tbody > tr > td {
+    border: none !important;
+    border-bottom: 1px solid #f0f0f0 !important;
+    text-align: left !important;
+    display: flex !important;
+    align-items: center !important;
+    justify-content: space-between !important;
+    padding: 0.75rem 1rem !important;
+    
+    &:last-child {
+      border-bottom: none !important;
+    }
+    
+    .p-column-title {
+      font-weight: 600 !important;
+      color: #6334E3 !important;
+      min-width: 30% !important;
+      text-align: left !important;
+    }
+  }
+  
+  ::ng-deep .p-datatable.p-datatable-responsive .p-datatable-tbody > tr {
+    margin-bottom: 1rem !important;
+    border: 1px solid #e2e8f0 !important;
+    border-radius: 0.375rem !important;
+    background-color: #ffffff !important;
+    box-shadow: 0 1px 3px rgba(0, 0, 0, 0.1) !important;
+  }
+  
+  /* Ocultar cabeceras de tabla */
+  ::ng-deep .p-datatable.p-datatable-responsive .p-datatable-thead {
+    display: none !important;
+  }
+  
+  /* Manejo de botones en dispositivos pequeños */
+  .flex.gap-2.justify-center {
+    justify-content: flex-end !important;
+  }
+}
+
+/* Estilos específicos para móviles muy pequeños */
+@media screen and (max-width: 480px) {
+  ::ng-deep .p-button {
+    font-size: 0.875rem !important;
+    
+    &.p-button-icon-only {
+      width: 2.25rem !important;
+      height: 2.25rem !important;
+    }
+  }
+  
+  /* Espaciado adicional para controles de formulario */
+  ::ng-deep .p-inputtext,
+  ::ng-deep .p-inputnumber,
+  ::ng-deep .p-inputtextarea {
+    font-size: 0.875rem !important;
+    padding: 0.5rem !important;
+  }
+}

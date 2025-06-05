@@ -1,4 +1,4 @@
-import { Component, computed, EventEmitter, Input, Output, signal } from '@angular/core';
+import { Component, computed, EventEmitter, Input, OnChanges, SimpleChanges, Output, signal } from '@angular/core';
 import { FormsModule, ReactiveFormsModule  } from '@angular/forms';
 import { Message } from 'primeng/message';
 import { FileUploadModule } from 'primeng/fileupload';
@@ -26,7 +26,7 @@ import { ImageService, ImageUploadResponse } from '../../../../core/services/ima
   templateUrl: './image-upload-input.component.html',
   styleUrl: './image-upload-input.component.scss'
 })
-export class ImageUploadInputComponent {
+export class ImageUploadInputComponent implements OnChanges {
   selectedFiles = signal<File[]>([]);
   localImages = signal<any[]>([]);
   isProcessing = signal(false);
@@ -39,11 +39,14 @@ export class ImageUploadInputComponent {
   @Input() required: boolean = false;
   @Input() errorMessage: string = "Debe seleccionar al menos una imagen";
   @Input() formSubmitted = signal(false);
+  @Input() resetTrigger: boolean = false;
 
   @Output() imagesValue = new EventEmitter<File[]>();
   @Output() isInputInvalid = new EventEmitter<boolean>();
 
-  constructor(private imageService: ImageService) {}  showErrorMessage = computed(() => {
+  constructor(private imageService: ImageService) {}
+
+  showErrorMessage = computed(() => {
     return this.validateImages() && this.formSubmitted() && !this.isProcessing();
   });
   
@@ -145,5 +148,13 @@ export class ImageUploadInputComponent {
     
     this.imagesValue.emit([]);
     this.validateImages();
+  }
+
+  ngOnChanges(changes: SimpleChanges) {
+    if (changes['resetTrigger'] && changes['resetTrigger'].currentValue) {
+      this.selectedFiles.set([]);
+      this.localImages.set([]);
+      this.isProcessing.set(false);
+    }
   }
 }

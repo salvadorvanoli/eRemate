@@ -90,29 +90,23 @@ export class TableComponent implements OnInit {
         this.configureTable();
         this.loading = true;
         
-        // Primero intentar obtener el usuario del BehaviorSubject
         const currentUser = this.securityService.actualUser;
         
-        if (currentUser) { // YA ESTÁ CORRECTO, SIN VERIFICACIÓN DE TIPO
+        if (currentUser) {
             this.casaId = currentUser.id.toString();
-            console.log('ID de casa obtenido del BehaviorSubject:', this.casaId);
             this.loadRematadoresData(this.casaId);
         } else {
-            // Si no, intentar obtenerlo de la API
             this.securityService.getActualUser().subscribe({
                 next: (user) => {
-                    if (user) { // ELIMINADA VERIFICACIÓN DE TIPO
+                    if (user) {
                         this.casaId = user.id.toString();
-                        console.log('ID de casa obtenido de la API:', this.casaId);
                     } else {
-                        console.warn('No se pudo obtener el usuario');
-                        this.casaId = "1"; // Fallback para desarrollo
+                        this.casaId = "1";
                     }
                     this.loadRematadoresData(this.casaId);
                 },
                 error: (error) => {
-                    console.error('Error al obtener usuario:', error);
-                    this.casaId = "1"; // Fallback para desarrollo
+                    this.casaId = "1";
                     this.loadRematadoresData(this.casaId);
                 }
             });
@@ -144,27 +138,20 @@ export class TableComponent implements OnInit {
             .pipe(finalize(() => this.loading = false))
             .subscribe({
                 next: (response: any) => {
-                    console.log('Respuesta completa:', response);
-                    
                     if (response && response.success && Array.isArray(response.data)) {
-                        // Aplanar la estructura anidada
                         this.products = response.data.map((item: RematadorResponse) => {
                             return {
-                                // Del objeto rematador
                                 id: item.rematador?.id,
                                 nombre: item.rematador?.nombre,
                                 apellido: item.rematador?.apellido,
                                 numeroMatricula: item.rematador?.numeroMatricula,
                                 direccionFiscal: item.rematador?.direccionFiscal,
                                 imagen: item.rematador?.imagen,
-                                
-                                // Del objeto usuario
                                 email: item.usuario?.email,
                                 telefono: item.usuario?.telefono,
                                 tipo: item.usuario?.tipo
                             };
                         });
-                        console.log('Datos procesados:', this.products);
                     }
                     else if (response && response.success && response.data && typeof response.data === 'object') {
                         if (response.data.id) {
@@ -177,26 +164,41 @@ export class TableComponent implements OnInit {
                     else if (Array.isArray(response)) {
                         this.products = response;
                     } 
-                    else {
-                        console.error('La respuesta de la API no tiene el formato esperado:', response);
+                    else if (response && response.success === false) {
                         this.products = []; 
                         this.messageService.add({
                             severity: 'error',
                             summary: 'Error',
-                            detail: 'Formato de datos incorrecto',
+                            detail: response.message || 'Error al cargar rematadores',
                             life: 3000
                         });
                     }
+                    else {
+                        this.products = [];
+                    }
                 },
                 error: (error) => {
-                    console.error('Error al cargar rematadores:', error);
+                    let errorMessage = 'No se pudieron cargar los rematadores';
+                    
+                    if (error.status === 404) {
+                        this.products = [];
+                        return;
+                    }
+                    
+                    if (error.status >= 500) {
+                        errorMessage = 'Error del servidor al cargar rematadores';
+                    } else if (error.status === 0) {
+                        errorMessage = 'Error de conexión';
+                    }
+                    
                     this.messageService.add({ 
                         severity: 'error', 
                         summary: 'Error', 
-                        detail: 'No se pudieron cargar los rematadores', 
+                        detail: errorMessage, 
                         life: 3000 
                     });
-                
+                    
+                    this.products = [];
                 }
             });
     }
@@ -391,8 +393,6 @@ export class TableComponent implements OnInit {
                     this.loadRematadoresData(this.casaId!);
                 },
                 error: (error) => {
-                    console.error('Error al agregar rematador:', error);
-
                     this.messageService.add({
                         severity: 'error',
                         summary: 'Error',
@@ -402,7 +402,6 @@ export class TableComponent implements OnInit {
                 }
             });
     } catch (error) {
-        console.error('Error inesperado:', error);
         this.loading = false;
         this.messageService.add({
             severity: 'error',
@@ -413,46 +412,50 @@ export class TableComponent implements OnInit {
     }
 }
 
-    removeRematador(rematador: any) {
-        if (!this.casaId) {
-            this.messageService.add({
-                severity: 'error',
-                summary: 'Error',
-                detail: 'No se puede identificar la casa de remates',
-                life: 3000
-            });
-            return;
-        }
-
-        this.confirmationService.confirm({
-            message: `¿Está seguro de que desea eliminar a ${rematador.nombre} ${rematador.apellido}?`,
-            header: 'Confirmar eliminación',
-            icon: 'pi pi-exclamation-triangle',
-            accept: () => {
-                this.loading = true;
-                this.auctionHouseService.removeAuctioneerFromHouse(this.casaId!, rematador.id)
-                    .pipe(finalize(() => this.loading = false))
-                    .subscribe({
-                        next: (response) => {
-                            this.messageService.add({
-                                severity: 'success',
-                                summary: 'Éxito',
-                                detail: `Rematador eliminado correctamente`,
-                                life: 3000
-                            });
-                            this.loadRematadoresData(this.casaId!);
-                        },
-                        error: (error) => {
-                            console.error('Error al eliminar rematador:', error);
-                            this.messageService.add({
-                                severity: 'error',
-                                summary: 'Error',
-                                detail: 'No se pudo eliminar el rematador',
-                                life: 3000
-                            });
-                        }
-                    });
-            }
+removeRematador(rematador: any) {
+    if (!this.casaId) {
+        this.messageService.add({
+            severity: 'error',
+            summary: 'Error',
+            detail: 'No se puede identificar la casa de remates',
+            life: 3000
         });
+        return;
     }
+
+    this.confirmationService.confirm({
+        message: `¿Está seguro de que desea eliminar a ${rematador.nombre} ${rematador.apellido}?`,
+        header: 'Confirmar eliminación',
+        icon: 'pi pi-exclamation-triangle',
+        accept: () => {
+            this.loading = true;
+            this.auctionHouseService.removeAuctioneerFromHouse(this.casaId!, rematador.id)
+                .pipe(finalize(() => this.loading = false))
+                .subscribe({
+                    next: (response) => {
+                        this.products = this.products.filter(item => item.id !== rematador.id);
+                        
+                        this.messageService.add({
+                            severity: 'success',
+                            summary: 'Éxito',
+                            detail: `Rematador eliminado correctamente`,
+                            life: 3000
+                        });
+                        
+                        setTimeout(() => {
+                            this.loadRematadoresData(this.casaId!);
+                        }, 500);
+                    },
+                    error: (error) => {
+                        this.messageService.add({
+                            severity: 'error',
+                            summary: 'Error',
+                            detail: 'No se pudo eliminar el rematador',
+                            life: 3000
+                        });
+                    }
+                });
+        }
+    });
+}
 }

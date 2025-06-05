@@ -19,13 +19,29 @@ export class RegisteredUsersService extends BaseHttpService<UsuarioRegistrado, U
 
   getBiddedLotsByUserId(userId: string | number): Observable<any> {
     const url = `${this.baseUrl}/registered-users/${userId}/bidded-lots`;
-    console.log('🔍 Obteniendo lotes con pujas del usuario:', url);
+    
     return this.http.get<Lote[]>(url).pipe(
-      tap(response => {
-        console.log('✅ Lotes con pujas obtenidos:', response);
-      }),
       catchError(error => {
-        console.error('❌ Error al obtener lotes con pujas:', error);
+        return throwError(() => error);
+      })
+    );
+  }
+
+  createRating(ratingData: any): Observable<any> {
+    const url = `${this.baseUrl}/ratings`;
+    
+    return this.http.post<any>(url, ratingData).pipe(
+      catchError(error => {
+        return throwError(() => error);
+      })
+    );
+  }
+
+  getRatingByLot(loteId: string | number): Observable<any> {
+    const url = `${this.baseUrl}/ratings/by-lot/${loteId}`;
+    
+    return this.http.get<any>(url).pipe(
+      catchError(error => {
         return throwError(() => error);
       })
     );

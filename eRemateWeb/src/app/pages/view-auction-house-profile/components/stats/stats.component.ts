@@ -1,204 +1,382 @@
 import { Component, OnInit } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { ChartModule } from 'primeng/chart';
+import { ProgressSpinnerModule } from 'primeng/progressspinner';
+import { AuctionHouseService } from '../../../../core/services/auction-house.service';
+import { SecurityService } from '../../../../core/services/security.service';
+import { UsuarioCasaDeRemates } from '../../../../core/models/usuario';
+import { finalize } from 'rxjs/operators';
 
 @Component({
   selector: 'app-stats',
   standalone: true,
   imports: [
     CommonModule,
-    ChartModule
+    ChartModule,
+    ProgressSpinnerModule
   ],
   templateUrl: './stats.component.html',
   styleUrl: './stats.component.scss'
 })
 export class StatsComponent implements OnInit {
-  // Datos de ventas mensuales
   salesData: any;
-  
-  // Datos de categorías más vendidas
   categoryData: any;
-  
-  // Datos de pujas por subasta
   bidsData: any;
-  
-  // Datos de compradores frecuentes
-  buyersData: any;
-  
-  // Opciones para los gráficos
   barOptions: any;
   pieOptions: any;
   lineOptions: any;
-  doughnutOptions: any;
+  loading = false;
+  private emptyCategoriesData = false;
+  private emptyBidsData = false;
+
+  constructor(
+    private auctionHouseService: AuctionHouseService,
+    private securityService: SecurityService
+  ) {}
 
   ngOnInit() {
-    this.initChartData();
     this.initChartOptions();
+    this.loadStatsFromCurrentUser();
   }
 
-  initChartData() {
-    // Datos de ventas mensuales
+  loadStatsFromCurrentUser() {
+    const currentUser = this.securityService.actualUser;
+    
+    if (currentUser && currentUser.id) {
+      this.loadAllStatistics(currentUser.id.toString());
+    } else {
+      this.initChartData();
+    }
+  }
+
+  loadAllStatistics(auctionHouseId: string) {
+    this.loading = true;
+    
+    this.auctionHouseService.getSalesStatistics(auctionHouseId)
+      .subscribe({
+        next: (response) => {
+          this.mapSalesDataToChart(response.data);
+        },
+        error: (error) => {
+          this.initDummySalesData();
+        }
+      });
+
+    this.auctionHouseService.getCategoryStatistics(auctionHouseId)
+      .subscribe({
+        next: (response) => {
+          this.mapCategoryDataToChart(response.data);
+        },
+        error: (error) => {
+          this.initDummyCategoryData();
+        }
+      });
+
+    this.auctionHouseService.getBidStatistics(auctionHouseId)
+      .pipe(finalize(() => this.loading = false))
+      .subscribe({
+        next: (response) => {
+          this.mapBidDataToChart(response.data);
+        },
+        error: (error) => {
+          this.emptyBidsData = true;
+          this.bidsData = null;
+        }
+      });
+      
+    setTimeout(() => {
+      window.dispatchEvent(new Event('resize'));
+    }, 500);
+  }
+
+  mapSalesDataToChart(data: any) {
     this.salesData = {
-      labels: ['Enero', 'Febrero', 'Marzo', 'Abril', 'Mayo', 'Junio'],
+      labels: data.months.map((month: any) => month.month),
       datasets: [
         {
-          label: 'Ventas 2025',
-          backgroundColor: '#42A5F5',
-          data: [65, 59, 80, 81, 56, 55]
-        },
-        {
-          label: 'Ventas 2024',
-          backgroundColor: '#FFA726',
-          data: [28, 48, 40, 19, 86, 27]
+          label: `Subastas ${data.year}`,
+          backgroundColor: 'rgba(99, 52, 227, 0.8)',
+          borderColor: '#6334E3',
+          borderWidth: 2,
+          borderRadius: 6,
+          data: data.months.map((month: any) => month.count)
         }
       ]
     };
+  }
 
-    // Datos de categorías más vendidas
+  isEmptyCategories(): boolean {
+    return this.emptyCategoriesData;
+  }
+
+  isEmptyBids(): boolean {
+    return this.emptyBidsData;
+  }
+
+  mapCategoryDataToChart(data: any) {
+    if (data.categorias && data.categorias.length > 0) {
+      this.emptyCategoriesData = false;
+      
+      this.categoryData = {
+        labels: data.categorias.map((cat: any) => cat.categoria),
+        datasets: [
+          {
+            data: data.categorias.map((cat: any) => cat.cantidad),
+            backgroundColor: [
+              '#6334E3',
+              '#9C27B0', 
+              '#E91E63',
+              '#FF5722',
+              '#FF9800',
+              '#FFC107',
+              '#4CAF50',
+              '#2196F3'
+            ],
+            borderWidth: 2,
+            borderColor: '#ffffff',
+            hoverBorderWidth: 3
+          }
+        ]
+      };
+    } else {
+      this.emptyCategoriesData = true;
+      this.categoryData = {
+        labels: ['Sin datos'],
+        datasets: [
+          {
+            data: [1],
+            backgroundColor: ['#f8f9fa'],
+            borderColor: ['#dee2e6'],
+            borderWidth: 2
+          }
+        ]
+      };
+    }
+  }
+
+  mapBidDataToChart(data: any) {
+    if (data && Array.isArray(data) && data.length > 0) {
+      this.emptyBidsData = false;
+      this.bidsData = {
+        labels: data.map((subasta: any, index: number) => `Subasta ${index + 1}`),
+        datasets: [
+          {
+            label: 'Número de pujas',
+            data: data.map((subasta: any) => subasta.total_pujas),
+            fill: true,
+            backgroundColor: 'rgba(99, 52, 227, 0.1)',
+            borderColor: '#6334E3',
+            borderWidth: 3,
+            pointBackgroundColor: '#6334E3',
+            pointBorderColor: '#ffffff',
+            pointBorderWidth: 2,
+            pointRadius: 6,
+            pointHoverRadius: 8,
+            tension: 0.4
+          }
+        ]
+      };
+    } else {
+      this.emptyBidsData = true;
+      this.bidsData = null;
+    }
+  }
+
+  initDummySalesData() {
+    this.salesData = {
+      labels: ['Ene', 'Feb', 'Mar', 'Abr', 'May', 'Jun'],
+      datasets: [
+        {
+          label: 'Subastas 2025',
+          backgroundColor: 'rgba(99, 52, 227, 0.8)',
+          borderColor: '#6334E3',
+          borderWidth: 2,
+          borderRadius: 6,
+          data: [12, 8, 15, 10, 20, 18]
+        }
+      ]
+    };
+  }
+
+  initDummyCategoryData() {
+    this.emptyCategoriesData = false;
     this.categoryData = {
       labels: ['Antigüedades', 'Arte', 'Vehículos', 'Inmuebles', 'Joyas'],
       datasets: [
         {
-          data: [300, 250, 200, 150, 100],
+          data: [30, 25, 20, 15, 10],
           backgroundColor: [
-            '#FF6384',
-            '#36A2EB',
-            '#FFCE56',
-            '#4BC0C0',
-            '#9966FF'
-          ]
-        }
-      ]
-    };
-
-    // Datos de pujas por subasta
-    this.bidsData = {
-      labels: ['Subasta 1', 'Subasta 2', 'Subasta 3', 'Subasta 4', 'Subasta 5', 'Subasta 6'],
-      datasets: [
-        {
-          label: 'Número de pujas',
-          data: [28, 48, 40, 65, 59, 76],
-          fill: false,
-          borderColor: '#4BC0C0',
-          tension: 0.4
-        }
-      ]
-    };
-
-    // Datos de compradores frecuentes
-    this.buyersData = {
-      labels: ['Nuevos', 'Ocasionales', 'Frecuentes', 'Premium'],
-      datasets: [
-        {
-          data: [30, 40, 20, 10],
-          backgroundColor: [
-            '#9CCC65',
-            '#FFCA28',
-            '#26C6DA',
-            '#EC407A'
-          ]
+            '#6334E3',
+            '#9C27B0',
+            '#E91E63',
+            '#FF5722',
+            '#FF9800'
+          ],
+          borderWidth: 2,
+          borderColor: '#ffffff',
+          hoverBorderWidth: 3
         }
       ]
     };
   }
 
+  initChartData() {
+    this.initDummySalesData();
+    this.initDummyCategoryData();
+    this.emptyBidsData = true;
+    this.bidsData = null;
+  }
+
   initChartOptions() {
-    // Opciones comunes
-    const commonOptions = {
+    const commonGridColor = 'rgba(99, 52, 227, 0.1)';
+    const commonTextColor = '#495057';
+
+    this.barOptions = {
+      responsive: true,
+      maintainAspectRatio: false,
       plugins: {
         legend: {
-          labels: {
-            color: '#495057'
-          }
+          display: false
+        },
+        tooltip: {
+          backgroundColor: 'rgba(0,0,0,0.8)',
+          titleColor: '#ffffff',
+          bodyColor: '#ffffff',
+          borderColor: '#6334E3',
+          borderWidth: 1,
+          cornerRadius: 8,
+          displayColors: false
         }
       },
       scales: {
         x: {
           ticks: {
-            color: '#495057'
+            color: commonTextColor,
+            font: {
+              size: 12,
+              weight: '500'
+            }
           },
           grid: {
-            color: '#ebedef'
+            color: commonGridColor,
+            drawBorder: false
           }
         },
         y: {
+          beginAtZero: true,
           ticks: {
-            color: '#495057'
+            color: commonTextColor,
+            stepSize: 1,
+            precision: 0,
+            font: {
+              size: 12,
+              weight: '500'
+            }
           },
           grid: {
-            color: '#ebedef'
+            color: commonGridColor,
+            drawBorder: false
           }
         }
       },
       animation: {
-        animateScale: true,
-        animateRotate: true
-      }
-    };
-
-    this.barOptions = {
-      ...commonOptions,
-      plugins: {
-        ...commonOptions.plugins,
-        title: {
-          display: true,
-          text: 'Comparación de ventas mensuales',
-          font: {
-            size: 16
-          }
-        }
+        duration: 1000,
+        easing: 'easeInOutQuart'
       }
     };
 
     this.pieOptions = {
-      plugins: {
-        legend: {
-          position: 'right',
-          labels: {
-            color: '#495057'
-          }
-        },
-        title: {
-          display: true,
-          text: 'Distribución por categoría',
-          font: {
-            size: 16
-          }
-        }
-      }
-    };
-
-    this.lineOptions = {
-      ...commonOptions,
-      plugins: {
-        ...commonOptions.plugins,
-        title: {
-          display: true,
-          text: 'Tendencia de pujas',
-          font: {
-            size: 16
-          }
-        }
-      }
-    };
-
-    this.doughnutOptions = {
+      responsive: true,
+      maintainAspectRatio: false,
       plugins: {
         legend: {
           position: 'bottom',
           labels: {
-            color: '#495057'
+            color: commonTextColor,
+            usePointStyle: true,
+            pointStyle: 'circle',
+            padding: 15,
+            font: {
+              size: 12,
+              weight: '500'
+            }
           }
         },
-        title: {
-          display: true,
-          text: 'Segmentación de compradores',
-          font: {
-            size: 16
+        tooltip: {
+          backgroundColor: 'rgba(0,0,0,0.8)',
+          titleColor: '#ffffff',
+          bodyColor: '#ffffff',
+          borderColor: '#6334E3',
+          borderWidth: 1,
+          cornerRadius: 8,
+          callbacks: {
+            label: function(context: any) {
+              const total = context.dataset.data.reduce((a: number, b: number) => a + b, 0);
+              const percentage = ((context.parsed / total) * 100).toFixed(1);
+              return `${context.label}: ${context.parsed} (${percentage}%)`;
+            }
           }
         }
       },
-      cutout: '60%'
+      animation: {
+        animateRotate: true,
+        animateScale: true,
+        duration: 1000
+      }
+    };
+
+    this.lineOptions = {
+      responsive: true,
+      maintainAspectRatio: false,
+      plugins: {
+        legend: {
+          display: false
+        },
+        tooltip: {
+          backgroundColor: 'rgba(0,0,0,0.8)',
+          titleColor: '#ffffff',
+          bodyColor: '#ffffff',
+          borderColor: '#6334E3',
+          borderWidth: 1,
+          cornerRadius: 8,
+          displayColors: false
+        }
+      },
+      scales: {
+        x: {
+          ticks: {
+            color: commonTextColor,
+            font: {
+              size: 12,
+              weight: '500'
+            }
+          },
+          grid: {
+            color: commonGridColor,
+            drawBorder: false
+          }
+        },
+        y: {
+          beginAtZero: true,
+          ticks: {
+            color: commonTextColor,
+            stepSize: 1,
+            precision: 0,
+            font: {
+              size: 12,
+              weight: '500'
+            }
+          },
+          grid: {
+            color: commonGridColor,
+            drawBorder: false
+          }
+        }
+      },
+      animation: {
+        duration: 1000,
+        easing: 'easeInOutQuart'
+      }
     };
   }
 }

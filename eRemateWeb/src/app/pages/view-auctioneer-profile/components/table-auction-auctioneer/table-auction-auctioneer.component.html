@@ -1,125 +1,150 @@
-<div class="table-container" style="width: 1040px; margin: 0 auto; margin-bottom: 40px;">
+<div class="table-container" style="width: 100%; margin: 0 auto; margin-bottom: 40px;">
   <div *ngIf="loading" class="flex justify-content-center my-3">
     <p-progressSpinner strokeWidth="4" [style]="{'width': '50px', 'height': '50px'}" />
   </div>
 
-  <p-table
-    #dt
-    [value]="auctions"
-    [rows]="5"
-    [columns]="cols"
-    [paginator]="auctions.length > 0"
-    [globalFilterFields]="globalFilterFields"
-    [tableStyle]="{ width: '100%', marginBottom: '1rem' }"
-    [(selection)]="selectedAuction"
-    selectionMode="single"
-    [rowHover]="true"
-    dataKey="id"
-    currentPageReportTemplate="Mostrando {first} a {last} de {totalRecords} elementos"
-    [showCurrentPageReport]="auctions.length > 0"
-    [loading]="loading"
-    (selectionChange)="onSelectionChange()"
-  >
-    <ng-template pTemplate="caption">
-      <div class="flex items-center" style="gap: 10px;">
-        <!-- Barra de búsqueda -->
-        <p-iconfield>
-            <p-inputicon styleClass="pi pi-search" />
-            <input pInputText type="text" (input)="onFilterGlobal($event)" placeholder="Buscar..." />
-        </p-iconfield>
-        
-        <!-- Botón para agregar subasta (solo visible en la agenda) -->
-        <p-button 
-            *ngIf="viewType === 'schedule'"
-            label="Agregar Subasta" 
-            icon="pi pi-plus" 
-            class="mr-2" 
-            (onClick)="openNew()" 
-            [style]="{'background-color': '#6334E3', 'border-color': '#6334E3'}" 
-        />
-      </div>
-    </ng-template>
-    
-    <ng-template pTemplate="header">
-      <tr style="background-color: rgba(0, 0, 0, 0.04);">
-        <th *ngFor="let col of cols" [style.width]="'calc(84% / ' + cols.length + ')'" style="background-color: rgba(0, 0, 0, 0.04);">
-          {{ col.header }}
-        </th>
-        <th style="width: 16%; background-color: rgba(0, 0, 0, 0.04);">Acciones</th>
-      </tr>
-    </ng-template>
-    
-    <ng-template pTemplate="body" let-auction>
-      <tr [pSelectableRow]="auction">
-        <td [style.width]="'calc(84% / ' + cols.length + ')'" *ngFor="let col of cols">
-          <ng-container [ngSwitch]="col.field">
-            <ng-container *ngSwitchCase="'fechaInicioDisplay'">
-              {{ auction.fechaInicioDisplay }}
+  <!-- ✅ AGREGAR el contenedor de scroll horizontal -->
+  <div class="table-scroll-x">
+    <p-table
+      #dt
+      [value]="auctions"
+      [rows]="5"
+      [columns]="cols"
+      [paginator]="auctions.length > 0"
+      [globalFilterFields]="globalFilterFields"
+      [tableStyle]="{ width: '100%', marginBottom: '1rem' }"
+      [(selection)]="selectedAuction"
+      selectionMode="single"
+      [rowHover]="true"
+      dataKey="id"
+      currentPageReportTemplate="Mostrando {first} a {last} de {totalRecords} elementos"
+      [showCurrentPageReport]="auctions.length > 0"
+      [loading]="loading"
+      (selectionChange)="onSelectionChange()"
+    >
+      <ng-template pTemplate="caption">
+        <div class="flex items-center" style="gap: 10px;">
+          <!-- Barra de búsqueda -->
+          <p-iconfield>
+              <p-inputicon styleClass="pi pi-search" />
+              <input pInputText type="text" (input)="onFilterGlobal($event)" placeholder="Buscar..." />
+          </p-iconfield>
+        </div>
+      </ng-template>
+      
+      <ng-template pTemplate="header">
+        <tr style="background-color: rgba(0, 0, 0, 0.04);">
+          <th *ngFor="let col of cols" [style.width]="'calc(84% / ' + cols.length + ')'" 
+              style="background-color: rgba(0, 0, 0, 0.04); text-align: center;">
+            {{ col.header }}
+          </th>
+          <th style="width: 16%; background-color: rgba(0, 0, 0, 0.04); text-align: center;">Acciones</th>
+        </tr>
+      </ng-template>
+      
+      <ng-template pTemplate="body" let-auction>
+        <tr [pSelectableRow]="auction">
+          <td [style.width]="'calc(84% / ' + cols.length + ')'" *ngFor="let col of cols" style="text-align: center;">
+            <ng-container [ngSwitch]="col.field">
+              <ng-container *ngSwitchCase="'fechaInicioDisplay'">
+                <!-- ✅ AGREGAR título de columna para móviles -->
+                <span class="p-column-title">{{ col.header }}: </span>
+                {{ auction.fechaInicioDisplay }}
+              </ng-container>
+              <ng-container *ngSwitchCase="'fechaCierreDisplay'">
+                <span class="p-column-title">{{ col.header }}: </span>
+                {{ auction.fechaCierreDisplay }}
+              </ng-container>
+              <ng-container *ngSwitchDefault>
+                <span class="p-column-title">{{ col.header }}: </span>
+                {{ auction[col.field] }}
+              </ng-container>
             </ng-container>
-            <ng-container *ngSwitchCase="'fechaCierreDisplay'">
-              {{ auction.fechaCierreDisplay }}
-            </ng-container>
-            <ng-container *ngSwitchDefault>
-              {{ auction[col.field] }}
-            </ng-container>
-          </ng-container>
-        </td>
-        
-        <!-- Acciones diferentes según el tipo de vista -->
-        <td style="width: 16%">
-          <div class="flex gap-2 justify-center">
-            <!-- Botones para la agenda de subastas -->
-            <div *ngIf="viewType === 'schedule'">
-              <p-button icon="pi pi-eye" severity="info" [rounded]="true" [outlined]="true" pTooltip="Ver detalles" />
-              <p-button icon="pi pi-trash" severity="danger" [rounded]="true" [outlined]="true" (click)="cancelAuction(auction)" pTooltip="Cancelar subasta" />
+          </td>
+          
+          <!-- Acciones diferentes según el tipo de vista -->
+          <td style="width: 16%; text-align: center;">
+            <span class="p-column-title">Acciones: </span>
+            <div class="flex gap-2 justify-center">
+              <!-- Botones para la agenda de subastas -->
+              <div *ngIf="viewType === 'schedule'" class="flex gap-1">
+                <!-- ✅ CAMBIAR ESTA LÍNEA -->
+                <p-button 
+                  icon="pi pi-eye" 
+                  severity="info" 
+                  [rounded]="true" 
+                  [outlined]="true" 
+                  (click)="viewAuctionDetails(auction)"
+                  pTooltip="Ver detalles" 
+                />
+                <p-button 
+                  icon="pi pi-trash" 
+                  severity="danger" 
+                  [rounded]="true" 
+                  [outlined]="true" 
+                  (click)="cancelAuction(auction)" 
+                  pTooltip="Cancelar subasta" 
+                />
+              </div>
+              
+              <!-- Botones para las solicitudes de subastas -->
+              <div *ngIf="viewType === 'requests'" class="flex gap-1">
+                <p-button icon="pi pi-check" severity="success" [rounded]="true" [outlined]="true" (click)="acceptAuction(auction)" pTooltip="Aceptar solicitud" />
+                <p-button icon="pi pi-times" severity="danger" [rounded]="true" [outlined]="true" (click)="rejectAuction(auction)" pTooltip="Rechazar solicitud" />
+              </div>
             </div>
-            
-            <!-- Botones para las solicitudes de subastas -->
-            <div *ngIf="viewType === 'requests'">
-              <p-button icon="pi pi-check" severity="success" [rounded]="true" [outlined]="true" (click)="acceptAuction(auction)" pTooltip="Aceptar solicitud" />
-              <p-button icon="pi pi-times" severity="danger" [rounded]="true" [outlined]="true" (click)="rejectAuction(auction)" pTooltip="Rechazar solicitud" />
-            </div>
-          </div>
-        </td>
-      </tr>
-    </ng-template>
-    
-    <ng-template pTemplate="emptymessage">
-      <tr>
-        <td colspan="8" class="text-center p-4">
-          <span *ngIf="viewType === 'schedule'">No hay subastas en su agenda</span>
-          <span *ngIf="viewType === 'requests'">No hay solicitudes de subastas pendientes</span>
-        </td>
-      </tr>
-    </ng-template>
-  </p-table>
+          </td>
+        </tr>
+      </ng-template>
+      
+      <ng-template pTemplate="emptymessage">
+        <tr>
+          <td [attr.colspan]="cols.length + 1" class="text-center p-4">
+            <span *ngIf="viewType === 'schedule'">No hay subastas en su agenda</span>
+            <span *ngIf="viewType === 'requests'">No hay solicitudes de subastas pendientes</span>
+          </td>
+        </tr>
+      </ng-template>
+    </p-table>
+  </div>
 
-  <p-dialog [(visible)]="auctionDialog" [style]="{ width: '500px' }" header="Detalles de la Subasta" [modal]="true">
+  <!-- ✅ ACTUALIZAR modal para ser responsive -->
+  <p-dialog 
+    [(visible)]="auctionDialog" 
+    [style]="{width: '95vw'}" 
+    [contentStyle]="{overflow: 'auto', 'max-height': '80vh'}"
+    [breakpoints]="{'960px': '95vw', '640px': '100vw'}" 
+    [maximizable]="true"
+    [draggable]="false" 
+    [resizable]="false"
+    header="Detalles de la Subasta" 
+    [modal]="true"
+  >
     <ng-template pTemplate="content">
-      <div class="flex flex-col gap-4">
-        <div>
-          <label for="tipoSubasta" class="block font-bold mb-2">Tipo de Subasta</label>
-          <input type="text" pInputText id="tipoSubasta" [(ngModel)]="auction.tipoSubasta" required autofocus />
+      <div class="flex flex-col gap-4 p-fluid">
+        <div class="field">
+          <label for="tipoSubasta" class="block font-bold mb-2">Tipo de Subasta <span class="text-red-500">*</span></label>
+          <input type="text" pInputText id="tipoSubasta" [(ngModel)]="auction.tipoSubasta" required autofocus class="w-full" />
           <small class="text-red-500" *ngIf="submitted && !auction.tipoSubasta?.trim()">El tipo de subasta es requerido.</small>
         </div>
-        <div>
-          <label for="fechaInicio" class="block font-bold mb-2">Fecha de Inicio</label>
-          <input type="datetime-local" pInputText id="fechaInicio" [(ngModel)]="auction.fechaInicio" required />
+        <div class="field">
+          <label for="fechaInicio" class="block font-bold mb-2">Fecha de Inicio <span class="text-red-500">*</span></label>
+          <input type="datetime-local" pInputText id="fechaInicio" [(ngModel)]="auction.fechaInicio" required class="w-full" />
           <small class="text-red-500" *ngIf="submitted && !auction.fechaInicio">La fecha de inicio es requerida.</small>
         </div>
-        <div>
-          <label for="fechaCierre" class="block font-bold mb-2">Fecha de Cierre</label>
-          <input type="datetime-local" pInputText id="fechaCierre" [(ngModel)]="auction.fechaCierre" required />
+        <div class="field">
+          <label for="fechaCierre" class="block font-bold mb-2">Fecha de Cierre <span class="text-red-500">*</span></label>
+          <input type="datetime-local" pInputText id="fechaCierre" [(ngModel)]="auction.fechaCierre" required class="w-full" />
           <small class="text-red-500" *ngIf="submitted && !auction.fechaCierre">La fecha de cierre es requerida.</small>
         </div>
-        <div>
-          <label for="ubicacion" class="block font-bold mb-2">Ubicación</label>
-          <input type="text" pInputText id="ubicacion" [(ngModel)]="auction.ubicacion" required />
+        <div class="field">
+          <label for="ubicacion" class="block font-bold mb-2">Ubicación <span class="text-red-500">*</span></label>
+          <input type="text" pInputText id="ubicacion" [(ngModel)]="auction.ubicacion" required class="w-full" />
           <small class="text-red-500" *ngIf="submitted && !auction.ubicacion?.trim()">La ubicación es requerida.</small>
         </div>
-        <div>
-          <label for="rematadorEmail" class="block font-bold mb-2">Email del Rematador</label>
-          <input type="email" pInputText id="rematadorEmail" [(ngModel)]="rematadorEmail" required />
+        <div class="field">
+          <label for="rematadorEmail" class="block font-bold mb-2">Email del Rematador <span class="text-red-500">*</span></label>
+          <input type="email" pInputText id="rematadorEmail" [(ngModel)]="rematadorEmail" required class="w-full" />
           <small class="text-red-500" *ngIf="submitted && !rematadorEmail?.trim()">El email del rematador es requerido.</small>
           <small class="text-red-500" *ngIf="submitted && emailError">{{emailError}}</small>
         </div>
@@ -127,22 +152,25 @@
     </ng-template>
 
     <ng-template pTemplate="footer">
-      <div class="flex justify-content-end gap-2">
+      <div class="flex flex-column sm:flex-row justify-content-end gap-2">
         <p-button 
             label="Cancelar" 
             icon="pi pi-times" 
             (onClick)="hideDialog()" 
+            class="w-full sm:w-auto mb-2 sm:mb-0"
             [style]="{'background-color': '#000000', 'border-color': '#000000', 'color': '#FFFFFF'}" 
         />
         <p-button 
             label="Guardar" 
             icon="pi pi-check" 
             (onClick)="saveAuction()" 
+            class="w-full sm:w-auto"
             [style]="{'background-color': '#6334E3', 'border-color': '#6334E3'}" 
         />
       </div>
     </ng-template>
   </p-dialog>
 
-  <p-confirmDialog [style]="{ width: '450px' }" />
+  <!-- ✅ ACTUALIZAR confirmDialog para ser responsive -->
+  <p-confirmDialog [style]="{width: '95vw', maxWidth: '450px'}" />
 </div>

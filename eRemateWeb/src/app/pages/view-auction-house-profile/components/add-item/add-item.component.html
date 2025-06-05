@@ -1,13 +1,44 @@
 <div class="p-fluid">
   <div class="field">
     <label for="nombre" class="block font-bold mb-2">Nombre <span class="text-red-500">*</span></label>
-    <input type="text" pInputText id="nombre" [(ngModel)]="articulo.nombre" required class="w-full" />
+    <input type="text" pInputText id="nombre" [(ngModel)]="articulo.nombre" class="w-full" />
     <small class="text-red-500" *ngIf="submitted && !articulo.nombre?.trim()">El nombre del artículo es obligatorio.</small>
+  </div>
+
+  <!-- ✅ Agregar dropdown de categorías después del nombre -->
+  <div class="field mt-3">
+    <label for="categoria" class="block font-bold mb-2">Categoría <span class="text-red-500">*</span></label>
+    <p-dropdown 
+      id="categoria"
+      [options]="categorias" 
+      [(ngModel)]="selectedCategoria" 
+      optionLabel="nombre" 
+      placeholder="Seleccione una categoría"
+      [filter]="true"
+      filterBy="nombre"
+      [showClear]="true"
+      class="w-full"
+      [disabled]="loadingCategorias || categorias.length === 0"
+      [loading]="loadingCategorias"
+    >
+      <ng-template pTemplate="selectedItem">
+        <div *ngIf="selectedCategoria" class="flex align-items-center">
+          <div>{{selectedCategoria.nombre}}</div>
+        </div>
+      </ng-template>
+      <ng-template pTemplate="item" let-categoria>
+        <div class="flex align-items-center">
+          <div>{{categoria.nombre}}</div>
+        </div>
+      </ng-template>
+    </p-dropdown>
+    <small class="text-red-500" *ngIf="submitted && !selectedCategoria">Debe seleccionar una categoría.</small>
+    <small class="text-gray-600 mt-1 block" *ngIf="categorias.length === 0 && !loadingCategorias">No hay categorías disponibles.</small>
   </div>
   
   <div class="field mt-3">
     <label for="estado" class="block font-bold mb-2">Estado <span class="text-red-500">*</span></label>
-    <input type="text" pInputText id="estado" [(ngModel)]="articulo.estado" required class="w-full" 
+    <input type="text" pInputText id="estado" [(ngModel)]="articulo.estado" class="w-full" 
       placeholder="Ej: Nuevo, Usado, Refaccionado, etc." />
     <small class="text-red-500" *ngIf="submitted && !articulo.estado?.trim()">El estado del artículo es obligatorio.</small>
   </div>
@@ -15,18 +46,49 @@
   <div class="field mt-3">
     <label for="especificacionesTecnicas" class="block font-bold mb-2">Especificaciones Técnicas <span class="text-red-500">*</span></label>
     <textarea pInputTextarea id="especificacionesTecnicas" [(ngModel)]="articulo.especificacionesTecnicas" 
-      rows="3" required class="w-full" placeholder="Detalle las características técnicas del artículo..."></textarea>
+      rows="3" class="w-full" placeholder="Detalle las características técnicas del artículo..."></textarea>
     <small class="text-red-500" *ngIf="submitted && !articulo.especificacionesTecnicas?.trim()">Las especificaciones técnicas son obligatorias.</small>
-  </div>  <div class="field mt-4">
-    <label class="block font-bold mb-2">Imagen (Opcional)</label>
-    <app-image-upload-input
-      [maxFiles]="5"
-      [maxFileSize]="5242880"
-      [acceptedTypes]="'image/*'"
-      [formSubmitted]="formSubmitted"
-      (imagesValue)="onImagesSelected($event)"
-      (isInputInvalid)="onImageValidationChange($event)">
-    </app-image-upload-input>
+  </div>
+
+  <div class="field mt-4">
+    <label class="block font-bold mb-2">Imágenes <span class="text-red-500">*</span></label> <!-- ✅ Agregar asterisco -->
+    
+    <!-- ✅ Mostrar imágenes existentes -->
+    <div *ngIf="articulo.imagenes && articulo.imagenes.length > 0" class="mb-3">
+      <p class="text-sm text-gray-600 mb-2">Imágenes actuales:</p>
+      <div class="flex flex-wrap gap-2">
+        <div *ngFor="let imagen of articulo.imagenes; let i = index" class="relative">
+          <img [src]="imagen" alt="Imagen {{i+1}}" class="w-20 h-20 object-cover rounded border">
+          <button type="button" 
+                  class="absolute -top-2 -right-2 bg-red-500 text-white rounded-full w-6 h-6 flex items-center justify-center text-xs"
+                  (click)="removeExistingImage(i)"
+                  title="Eliminar imagen">
+            ×
+          </button>
+        </div>
+      </div>
+    </div>
+    
+    <!-- ✅ Componente para agregar nuevas imágenes -->
+    <div>
+      <p class="text-sm text-gray-600 mb-2">
+        {{(articulo.imagenes && articulo.imagenes.length > 0) ? 'Agregar más imágenes:' : 'Agregar imágenes (requerido):'}}
+      </p>
+      <app-image-upload-input
+        [maxFiles]="5"
+        [maxFileSize]="5242880"
+        [acceptedTypes]="'image/*'"
+        [formSubmitted]="formSubmitted"
+        [resetTrigger]="resetImagesTrigger"
+        (imagesValue)="onImagesSelected($event)"
+        (isInputInvalid)="onImageValidationChange($event)">
+      </app-image-upload-input>
+    </div>
+    
+    <!-- ✅ Mostrar error si no hay imágenes -->
+    <small class="text-red-500" *ngIf="submitted && (!articulo.imagenes || articulo.imagenes.length === 0) && selectedImages().length === 0">
+      Debe agregar al menos una imagen.
+    </small>
   </div>
 
   <div class="flex justify-end mt-4 gap-2">

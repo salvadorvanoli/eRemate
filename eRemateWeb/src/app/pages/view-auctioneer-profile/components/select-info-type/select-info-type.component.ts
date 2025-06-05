@@ -9,7 +9,7 @@ interface InfoTypeOption {
 }
 
 @Component({
-  selector: 'app-select-info-type',
+  selector: 'app-select-info-type-auctioneer',
   standalone: true,
   imports: [CommonModule, FormsModule, DropdownModule],
   templateUrl: './select-info-type.component.html',
