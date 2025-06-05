@@ -7,9 +7,16 @@ use App\Models\PaymentRequest;
 use App\Models\Chat;
 use Illuminate\Support\Facades\Validator;
 use Illuminate\Support\Facades\Auth;
+use App\Services\PaymentRequest\PaymentRequestService;
 
 class PaymentRequestController extends Controller
 {
+    protected $paymentRequestService;
+
+    public function __construct(PaymentRequestService $paymentRequestService)
+    {
+        $this->paymentRequestService = $paymentRequestService;
+    }
     public function index()
     {
         $paymentRequests = PaymentRequest::all();
@@ -44,7 +51,7 @@ class PaymentRequestController extends Controller
                     'error' => 'El chat no existe'
                 ], 404);
             }
-              // Verificar que el usuario autenticado tenga permisos para crear solicitudes en este chat
+
             $usuarioAutenticado = Auth::user();
             
             \Log::info('Creando solicitud de pago - Usuario autenticado: ' . $usuarioAutenticado->id . 
@@ -52,7 +59,6 @@ class PaymentRequestController extends Controller
                       ', Chat usuario_registrado_id: ' . $chat->usuarioRegistrado_id . 
                       ', Chat casa_de_remate_id: ' . $chat->casa_de_remate_id);
             
-            // Solo las casas de remate pueden crear solicitudes de pago
             if (!$usuarioAutenticado || $usuarioAutenticado->tipo !== 'casa' || 
                 $usuarioAutenticado->id != $chat->casa_de_remate_id) {
                 return response()->json([
@@ -61,8 +67,7 @@ class PaymentRequestController extends Controller
                 ], 403);
             }
             
-            // Crear la solicitud de pago
-            $paymentRequest = PaymentRequest::create([
+            $paymentRequest = $this->paymentRequestService->createPaymentRequest([
                 'monto' => $request->input('monto'),
                 'metodo_entrega' => $request->input('metodo_entrega'),
                 'chat_id' => $request->input('chat_id'),
@@ -131,17 +136,7 @@ class PaymentRequestController extends Controller
                 ], 422);
             }
             
-            $paymentRequest = PaymentRequest::find($id);
-            
-            if (!$paymentRequest) {
-                return response()->json([
-                    'success' => false,
-                    'error' => 'Solicitud de pago no encontrada'
-                ], 404);
-            }
-            
-            $paymentRequest->estado = $request->input('estado');
-            $paymentRequest->save();
+            $paymentRequest = $this->paymentRequestService->updatePaymentRequestStatus($id, $request->input('estado'));
             
             return response()->json([
                 'success' => true,

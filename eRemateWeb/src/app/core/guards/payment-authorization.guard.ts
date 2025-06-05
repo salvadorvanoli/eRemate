@@ -24,14 +24,12 @@ export class PaymentAuthorizationGuard implements CanActivate {
     return this.securityService.getActualUser().pipe(
       switchMap(user => {
         if (!user) {
-          console.log('Payment Auth Guard: Usuario no autenticado');
           this.router.navigate(['/inicio-sesion'], { 
             queryParams: { returnUrl: state.url }
           });
           return of(false);
         }
 
-        // Solo usuarios registrados pueden realizar pagos
         if (user.tipo !== 'registrado') {
           console.warn('Payment Auth Guard: Solo usuarios registrados pueden realizar pagos', {
             userId: user.id,
@@ -41,7 +39,6 @@ export class PaymentAuthorizationGuard implements CanActivate {
           return of(false);
         }
 
-        // Si hay chat_id en los query params, verificar permisos
         const chatId = route.queryParams['chat_id'];
         if (chatId) {
           return this.chatService.getChatById(chatId).pipe(
@@ -52,7 +49,6 @@ export class PaymentAuthorizationGuard implements CanActivate {
                 return false;
               }
 
-              // Verificar que el usuario registrado pertenece a este chat
               if (chat.usuarioRegistrado_id !== user.id) {
                 console.warn('Payment Auth Guard: Usuario no autorizado para pagar en este chat', {
                   chatId,
@@ -63,10 +59,6 @@ export class PaymentAuthorizationGuard implements CanActivate {
                 return false;
               }
 
-              console.log('Payment Auth Guard: Autorización de pago aprobada', {
-                chatId,
-                userId: user.id
-              });
               return true;
             }),
             catchError(error => {
@@ -77,8 +69,6 @@ export class PaymentAuthorizationGuard implements CanActivate {
           );
         }
 
-        // Si no hay chat_id, permitir acceso (para otros tipos de pago)
-        console.log('Payment Auth Guard: Acceso autorizado sin chat específico');
         return of(true);
       }),
       catchError(error => {
