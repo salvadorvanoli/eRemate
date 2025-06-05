@@ -1,4 +1,4 @@
-import { HttpClient } from '@angular/common/http';
+import { HttpClient, HttpHeaders } from '@angular/common/http';
 import { Injectable } from '@angular/core';
 import { Observable } from 'rxjs';
 import { BaseHttpService } from './base-http.service';
@@ -15,13 +15,21 @@ export class ItemService extends BaseHttpService<Articulo, Articulo> {
     super(http, '/item');
   }
 
+  private getAuthHeaders(): HttpHeaders {
+    const token = localStorage.getItem('token');
+    return new HttpHeaders({
+      'Authorization': `Bearer ${token}`,
+      'Content-Type': 'application/json'
+    });
+  }
 
-   getAllCategories(): Observable<any[]> {
+  getAllCategories(): Observable<any[]> {
     const url = `${this.baseUrl}${this.end}/categories/all`;
-    return this.http.get<any[]>(url);
+    return this.http.get<any[]>(url, {
+      headers: this.getAuthHeaders()
+    });
   }
   
-
   getAllOrdered(): Observable<CatalogElement[]> {
     return this.http.get<CatalogElement[]>(`${this.baseUrl}/item/ordered`);
   }
@@ -33,5 +41,4 @@ export class ItemService extends BaseHttpService<Articulo, Articulo> {
   getCategories(): Observable<Categoria[]> {
     return this.http.get<Categoria[]>(`${this.baseUrl}/item/categories`);
   }
-
 }
