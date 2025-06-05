@@ -10,6 +10,7 @@ use App\Models\Rematador;
 use App\Enums\EstadoSubasta;
 use App\Models\UsuarioRegistrado;
 use App\Models\Lote;
+use App\Models\Chat;
 use App\Events\NuevaPujaEvent;
 use App\Jobs\ProcesarPujasAutomaticas;
 use App\Notifications\ComienzoSubastaNotification;
@@ -585,9 +586,20 @@ class SubastaService implements SubastaServiceInterface
             ], 422);
         }
 
+        $ganadorId = $loteActual->pujas()->latest()->first()->usuarioRegistrado_id;
+        
         $loteActual->update([
-            'ganador_id' => $loteActual->pujas()->latest()->first()->usuarioRegistrado_id
+            'ganador_id' => $ganadorId
         ]);
+
+        // Crea el chat para finalizar la transacción
+        Chat::updateOrCreate(
+            ['id' => $loteActual->id],
+            [
+                'usuarioRegistrado_id' => $ganadorId,
+                'casa_de_remate_id' => $subasta->casaDeRemates_id
+            ]
+        );
 
         $lotesSinGanador = $subasta->lotes()->where('ganador_id', null)->count();
 
