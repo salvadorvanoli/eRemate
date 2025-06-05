@@ -31,11 +31,13 @@ class CatalogTestDataSeeder extends Seeder
         foreach ($nombresCategorias as $index => $nombre) {
             $categoria = Categoria::create([
                 'nombre' => $nombre,
-                'descripcion' => "Categoría para artículos de {$nombre}",
             ]);
             $categorias[] = $categoria;
         }
 
+        $this->command->info('¡Categorías creadas correctamente!');
+
+        /*
         // Crear 3 casas de remates
         $this->command->info('Creando casas de remates...');
         $casasDeRemates = [];
@@ -201,5 +203,6 @@ class CatalogTestDataSeeder extends Seeder
         }
 
         $this->command->info('¡Datos de prueba cargados correctamente!');
+        */
     }
 }

@@ -92,7 +92,8 @@ class LoteService implements LoteServiceInterface
             'valorBase' => $data['valorBase'],
             'pujaMinima' => $data['pujaMinima'],
             'disponibilidad' => $data['disponibilidad'],
-            'condicionesDeEntrega' => $data['condicionesDeEntrega']
+            'condicionesDeEntrega' => $data['condicionesDeEntrega'],
+            'vendedorExterno' => $data['vendedorExterno'] ?? false 
         ]);
     }
 

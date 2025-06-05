@@ -165,4 +165,84 @@ class CasaDeRematesController extends Controller
         }
     }
 
+    public function estadisticaVentas(Request $request, $id)
+    {
+        try {
+            $year = $request->query('year', now()->year);
+            
+            // Validar que el año sea válido
+            if (!is_numeric($year) || $year < 1900 || $year > now()->year + 10) {
+                return response()->json([
+                    'success' => false,
+                    'message' => 'Año inválido'
+                ], 422);
+            }
+
+            $estadisticas = $this->casaDeRematesService->estadisticaVentas($id, (int)$year);
+
+            if (isset($estadisticas['success']) && $estadisticas['success']) {
+                return response()->json($estadisticas, 200);
+            }
+
+            // Si el service devuelve una respuesta de error (JsonResponse)
+            return $estadisticas;
+
+        } catch (\Exception $e) {
+            return response()->json([
+                'success' => false,
+                'message' => 'Error al obtener estadísticas de ventas: ' . $e->getMessage()
+            ], 500);
+        }
+    }
+
+    public function estadisticasPorCategoria(Request $request, $id)
+    {
+        try {
+            $year = $request->query('year', now()->year);
+            
+            // Validar que el año sea válido
+            if (!is_numeric($year) || $year < 1900 || $year > now()->year + 10) {
+                return response()->json([
+                    'success' => false,
+                    'message' => 'Año inválido'
+                ], 422);
+            }
+
+            $estadisticas = $this->casaDeRematesService->estadisticasPorCategoria($id, (int)$year);
+
+            if (isset($estadisticas['success']) && $estadisticas['success']) {
+                return response()->json($estadisticas, 200);
+            }
+
+            // Si el service devuelve una respuesta de error
+            return response()->json($estadisticas, 500);
+
+        } catch (\Exception $e) {
+            return response()->json([
+                'success' => false,
+                'message' => 'Error al obtener estadísticas por categoría: ' . $e->getMessage()
+            ], 500);
+        }
+    }
+
+    public function estadisticasPujas(Request $request, $id)
+    {
+        try {
+            $estadisticas = $this->casaDeRematesService->estadisticasPujas($id);
+
+            if (isset($estadisticas['success']) && $estadisticas['success']) {
+                return response()->json($estadisticas, 200);
+            }
+
+            // Si el service devuelve una respuesta de error
+            return response()->json($estadisticas, 500);
+
+        } catch (\Exception $e) {
+            return response()->json([
+                'success' => false,
+                'message' => 'Error al obtener estadísticas de pujas: ' . $e->getMessage()
+            ], 500);
+        }
+    }
+
 }

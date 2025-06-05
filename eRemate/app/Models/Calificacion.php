@@ -14,7 +14,7 @@ class Calificacion extends Model
         'id',
         'puntaje',
         'usuarioRegistrado_id',
-        'compra_id'
+        'lote_id'  
     ];
 
     public function usuarioRegistrado()
@@ -22,9 +22,8 @@ class Calificacion extends Model
         return $this->belongsTo(UsuarioRegistrado::class);
     }
 
-    public function compra()
+    public function lote()  
     {
-        return $this->belongsTo(Compra::class);
+        return $this->belongsTo(Lote::class);
     }
-
 }

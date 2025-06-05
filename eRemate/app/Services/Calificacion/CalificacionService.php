@@ -35,8 +35,8 @@ class CalificacionService implements CalificacionServiceInterface
         $calificacion->delete();
     }
 
-    public function obtenerPorCompra($compraId)
+    public function obtenerPorLote($loteId) // Cambiado de obtenerPorCompra a obtenerPorLote
     {
-        return Calificacion::where('compra_id', $compraId)->first();
+        return Calificacion::where('lote_id', $loteId)->first();
     }
 }

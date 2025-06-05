@@ -9,5 +9,5 @@ interface CalificacionServiceInterface
     public function crear(array $datos);
     public function actualizar($id, array $datos);
     public function eliminar($id);
-    public function obtenerPorCompra($compraId);
+    public function obtenerPorLote($loteId); 
 }

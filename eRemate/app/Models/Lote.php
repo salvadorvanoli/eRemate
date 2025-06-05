@@ -20,11 +20,13 @@ class Lote extends Model
         'oferta',
         'fechaUltimaPuja',
         'disponibilidad',
-        'condicionesDeEntrega'
+        'condicionesDeEntrega',
+        'vendedorExterno'
     ];
 
     protected $casts = [
-        'fechaUltimaPuja' => 'datetime'
+        'fechaUltimaPuja' => 'datetime',
+        'vendedorExterno' => 'boolean'
     ];
 
     public function subasta()
@@ -56,5 +58,10 @@ class Lote extends Model
     {
         return $this->belongsToMany(UsuarioRegistrado::class, 'lote_usuario_registrado')
                     ->withTimestamps();
+    }
+
+    public function calificacion()
+    {
+        return $this->hasOne(Calificacion::class);
     }
 }

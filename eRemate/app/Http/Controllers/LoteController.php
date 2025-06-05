@@ -26,7 +26,8 @@ class LoteController extends Controller
                 'valorBase' => 'required|numeric|min:0',
                 'pujaMinima' => 'required|numeric|min:0',
                 'disponibilidad' => 'required|string|max:255',
-                'condicionesDeEntrega' => 'required|string|max:255'
+                'condicionesDeEntrega' => 'required|string|max:255',
+                'vendedorExterno' => 'sometimes|boolean' 
             ]);
 
             if ($validator->fails()) {
@@ -92,7 +93,8 @@ class LoteController extends Controller
                 'valorBase' => 'sometimes|required|numeric|min:0',
                 'pujaMinima' => 'sometimes|required|numeric|min:0',
                 'disponibilidad' => 'sometimes|required|string|max:255',
-                'condicionesDeEntrega' => 'sometimes|required|string|max:255'
+                'condicionesDeEntrega' => 'sometimes|required|string|max:255',
+                'vendedorExterno' => 'sometimes|boolean' // <-- AGREGAR ESTA LÍNEA TAMBIÉN
             ]);
 
             $lote = $this->loteService->actualizarLote($id, $data);

@@ -45,7 +45,7 @@ class CalificacionController extends Controller
             $datos = $request->validate([
                 'puntaje' => 'required|integer|min:1|max:5',
                 'usuarioRegistrado_id' => 'required|exists:usuarios_registrados,id',
-                'compra_id' => 'required|exists:compras,id'
+                'lote_id' => 'required|exists:lotes,id' // Cambiado de compra_id a lote_id
             ]);
 
             $calificacion = $this->calificacionService->crear($datos);
@@ -67,7 +67,7 @@ class CalificacionController extends Controller
             $datos = $request->validate([
                 'puntaje' => 'sometimes|integer|min:1|max:5',
                 'usuarioRegistrado_id' => 'sometimes|exists:usuarios_registrados,id',
-                'compra_id' => 'sometimes|exists:compras,id'
+                'lote_id' => 'sometimes|exists:lotes,id' // Cambiado de compra_id a lote_id
             ]);
 
             $calificacion = $this->calificacionService->actualizar($id, $datos);
@@ -97,10 +97,10 @@ class CalificacionController extends Controller
         }
     }
 
-    // Obtener por compra
-    public function getByCompra($compraId)
+    // Obtener por lote - Cambiado de getByCompra a getByLote
+    public function getByLote($loteId)
     {
-        $calificacion = $this->calificacionService->obtenerPorCompra($compraId);
+        $calificacion = $this->calificacionService->obtenerPorLote($loteId);
         return response()->json($calificacion);
     }
 }

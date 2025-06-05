@@ -171,6 +171,29 @@ class ArticuloController extends Controller
         }
     }
     
+    public function obtenerCategorias()
+    {
+        try {
+            $categorias = $this->articuloService->obtenerCategorias();
+
+            if ($categorias instanceof JsonResponse) {
+                return $categorias;
+            }
+
+            return response()->json([
+                'success' => true,
+                'data' => $categorias,
+                'message' => 'Categorías obtenidas correctamente'
+            ], 200);
+        
+        } catch (\Exception $e) {
+            return response()->json([
+                'success' => false,
+                'message' => 'Error al obtener categorías: ' . $e->getMessage()
+            ], 500);
+        }
+    }
+    
     private function verificarUsuario($usuario, $subasta)
     {
         // Comentamos toda la lógica de verificación para pruebas

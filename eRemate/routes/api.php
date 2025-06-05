@@ -58,7 +58,7 @@ Route::get('ratings/{id}', [CalificacionController::class, 'show']);
 Route::post('ratings', [CalificacionController::class, 'store']);
 Route::put('ratings/{id}', [CalificacionController::class, 'update']);
 Route::delete('ratings/{id}', [CalificacionController::class, 'destroy']);
-Route::get('ratings/by-purchase/{compraId}', [CalificacionController::class, 'getByCompra']);
+Route::get('ratings/by-lot/{loteId}', [CalificacionController::class, 'getByLote']); // Cambiado de by-purchase a by-lot
 
 // Rutas de UsuarioRegistrado
 Route::get('registered-users/{id}/payment-methods', [UsuarioRegistradoController::class, 'getMetodosPago']);
@@ -110,7 +110,9 @@ Route::get('/usuarios/{id}/perfil', [UsuarioController::class, 'obtenerPerfil'])
 Route::prefix('auction-house')->group(function () {
     Route::get('/{id}/auctioneers', [CasaDeRematesController::class, 'obtenerRematadores']);
     Route::get('/{id}/auctions', [CasaDeRematesController::class, 'obtenerSubastas']);
-
+    Route::get('/{id}/sales-statistics', [CasaDeRematesController::class, 'estadisticaVentas']);
+    Route::get('/{id}/category-statistics', [CasaDeRematesController::class, 'estadisticasPorCategoria']);
+    Route::get('/{id}/bid-statistics', [CasaDeRematesController::class, 'estadisticasPujas']); // Nueva ruta
     Route::middleware('auth:sanctum')->group(function () {
         Route::post('/{id}/auctioneers/assign', [CasaDeRematesController::class, 'asignarRematador']);
         Route::post('/{id}/auctioneers/{rematadorId}/remove', [CasaDeRematesController::class, 'desasignarRematador']);
@@ -165,6 +167,7 @@ Route::prefix('lot')->group(function () {
 Route::prefix('item')->group(function () {
     Route::get('/{id}', [ArticuloController::class, 'obtenerArticulo']);
     Route::get('/', [ArticuloController::class, 'obtenerArticulos']);
+    Route::get('/categories/all', [ArticuloController::class, 'obtenerCategorias']); // <-- NUEVA RUTA
 
     Route::middleware('auth:sanctum')->group(function () {
         Route::post('/', [ArticuloController::class, 'crearArticulo']);

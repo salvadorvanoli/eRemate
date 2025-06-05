@@ -3,6 +3,7 @@
 
 namespace App\Services\Articulo;
 use App\Models\Articulo;
+use App\Models\Categoria; 
 use App\Models\CasaDeRemates;
 use App\Models\Usuario;
 use Illuminate\Support\Facades\Auth;
@@ -150,6 +151,20 @@ class ArticuloService implements ArticuloServiceInterface
         }
 
         return $articulos;
+    }
+
+    public function obtenerCategorias()
+    {
+        $categorias = Categoria::all();
+
+        if (!$categorias || $categorias->isEmpty()) {
+            return response()->json([
+                'success' => false,
+                'message' => 'No hay categorías disponibles'
+            ], 404);
+        }
+
+        return $categorias;
     }
 
     /**
