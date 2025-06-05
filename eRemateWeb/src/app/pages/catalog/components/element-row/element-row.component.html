@@ -2,10 +2,10 @@
     class="flex flex-col sm:flex-row sm:items-center p-6 gap-4"
     [ngClass]="{ 'border-t border-surface-200': !first }"
 >
-    <div class="sm:w-60 md:w-40 relative">
+    <div class="sm:w-60 md:w-40 relative">        
         <img
             class="block xl:block mx-auto rounded-border w-full"
-            [src]="element.imagen ? 'https://developers.elementor.com/docs/assets/img/elementor-placeholder-image.png' : 'https://developers.elementor.com/docs/assets/img/elementor-placeholder-image.png'"
+            [src]="getImage(element)"
             [alt]="element.texto2"
         />
         <p-tag
@@ -32,9 +32,6 @@
                 getCountdown(element)
             }}</span>
             <div class="flex flex-row-reverse md:flex-row gap-2">
-                @if (dataType === 'item') {
-                    <p-button icon="pi pi-heart" [outlined]="true" />
-                }
                 <a
                     class="flex-auto md:flex-initial whitespace-nowrap"
                     [routerLink]="['/subasta/', element.subasta_id]"

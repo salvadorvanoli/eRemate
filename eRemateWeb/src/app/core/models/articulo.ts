@@ -7,6 +7,6 @@ export interface Articulo {
     imagenes: string[];
     estado: string;
     especificacionesTecnicas: string;
-    categoria?: CategoriaSimple; // ✅ Agregar categoría
-    categoria_id?: number; // ✅ Agregar ID de categoría para envío
+    categoria?: CategoriaSimple;
+    categoria_id?: number;
 }

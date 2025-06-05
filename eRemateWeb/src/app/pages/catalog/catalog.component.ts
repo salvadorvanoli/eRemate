@@ -44,9 +44,9 @@ export class CatalogComponent {
 
   categories!: { label: string, value: any }[];
   locations!: { label: string, value: string }[];
-
   elements: CatalogElement[] = [];
   countdowns: { [id: number]: string } = {};
+  imagenesAleatorias: { [id: number]: string } = {};
   private timerSub?: Subscription;
   @Input() dataType: 'item' | 'auction' = 'item';
   @Input() searchText: string = '';
@@ -84,9 +84,8 @@ export class CatalogComponent {
             ...item,
             fechaInicio: item.fechaInicio ? new Date(item.fechaInicio) : null,
             fechaCierre: item.fechaCierre ? new Date(item.fechaCierre) : null
-          })) as CatalogElement[];
-
-          this.updateCountdowns();
+          })) as CatalogElement[];          this.updateCountdowns();
+          this.cargarImagenesAleatorias();
         },
         error: (error: any) => {
           console.error('Error al obtener los elementos: ', error);
@@ -117,6 +116,7 @@ export class CatalogComponent {
         })) as CatalogElement[];
         
         this.updateCountdowns();
+        this.cargarImagenesAleatorias();
       },
       error: (error: any) => {
         this.messageService.add({ severity: 'error', summary: 'Error', detail: error.error.message, life: 4000 });
@@ -180,6 +180,40 @@ export class CatalogComponent {
         this.countdowns[element.id] = 'Finalizada';
       }
     });
+  }  
+  
+  private cargarImagenesAleatorias(): void {
+    this.elements.forEach(element => {
+      if (this.dataType === 'auction') {
+
+        this.subastaService.obtenerImagenAleatoria(element.id).subscribe(
+          (response) => {
+            if (response && response.imagen) {
+              this.imagenesAleatorias[element.id] = response.imagen;
+            }
+          },
+          (error) => {
+            console.log(`No se pudo cargar imagen para subasta ${element.id}:`, error);
+            this.imagenesAleatorias[element.id] = '/remate.jpg';
+          }
+        );
+      } else {
+        const elementAsAny = element as any;
+        if (elementAsAny.imagen && elementAsAny.imagen.length > 0) {
+          this.imagenesAleatorias[element.id] = elementAsAny.imagen;
+        } else {
+          this.imagenesAleatorias[element.id] = '/remate.jpg';
+        }
+      }
+    });
+  }
+
+  getImage = (element: CatalogElement): string => {
+    if (!element || !element.id) {
+      return 'https://developers.elementor.com/docs/assets/img/elementor-placeholder-image.png';
+    }
+
+    return this.imagenesAleatorias[element.id] || 'https://developers.elementor.com/docs/assets/img/elementor-placeholder-image.png';
   }
 
   private loadCategories() {

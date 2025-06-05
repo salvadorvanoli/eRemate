@@ -16,13 +16,12 @@ import { Tag } from 'primeng/tag';
   templateUrl: './element-row.component.html',
   styleUrl: './element-row.component.scss'
 })
-export class ElementRowComponent {
-
-  buttonLabel!: string;
+export class ElementRowComponent {  buttonLabel!: string;
   @Input() element!: any;
   @Input() dataType!: 'item' | 'auction';
   @Input() first!: boolean;
   @Input() getCountdown!: (item: any) => string;
+  @Input() getImage!: (item: any) => string;
 
   ngOnInit() {
     this.buttonLabel = this.dataType === 'item' ? 'Ver lote' : 'Ver lotes';
