@@ -270,7 +270,7 @@ class ArticuloController extends Controller
     public function obtenerAllCategorias()
     {
         try {
-            $categorias = $this->articuloService->obtenerCategorias();
+            $categorias = $this->articuloService->obtenerAllCategorias();
 
             if ($categorias instanceof JsonResponse) {
                 return $categorias;

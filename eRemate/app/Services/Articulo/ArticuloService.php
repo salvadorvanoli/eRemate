@@ -5,7 +5,6 @@ namespace App\Services\Articulo;
 use App\Models\Articulo;
 use App\Models\Categoria; 
 use App\Models\CasaDeRemates;
-use App\Models\Categoria;
 use App\Models\Rematador;
 use App\Models\Usuario;
 use App\Models\UsuarioRegistrado;
