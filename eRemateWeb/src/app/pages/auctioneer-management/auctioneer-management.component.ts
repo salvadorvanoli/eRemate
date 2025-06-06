@@ -243,7 +243,7 @@ export class AuctioneerManagementComponent implements OnInit, OnDestroy {
         this.clearMessagesAfterDelay();
       },
       error: (error) => {
-        this.errorMessage = error.message || 'Error al actualizar URL de transmisión';
+        this.errorMessage = error.error.error || error.message || 'Error al actualizar URL de transmisión';
       }
     });
   }
@@ -259,7 +259,7 @@ export class AuctioneerManagementComponent implements OnInit, OnDestroy {
         this.iniciandoSubasta = false;
       },
       error: (error) => {
-        this.errorMessage = error.message || 'Error al iniciar la subasta';
+        this.errorMessage = error.error.error || error.message || 'Error al iniciar la subasta';
         this.iniciandoSubasta = false;
       }
     });
@@ -279,7 +279,7 @@ export class AuctioneerManagementComponent implements OnInit, OnDestroy {
         this.cerrandoSubasta = false;
       },
       error: (error) => {
-        this.errorMessage = error.message || 'Error al cerrar la subasta';
+        this.errorMessage = error.error.error || error.message || 'Error al cerrar la subasta';
         this.cerrandoSubasta = false;
       }
     });
