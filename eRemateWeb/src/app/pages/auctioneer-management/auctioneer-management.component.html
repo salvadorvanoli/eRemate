@@ -4,7 +4,8 @@
     <h1 class="page-title">Gestión de Subasta - Rematador</h1>
     @if (subasta) {
       <div class="auction-info">
-        <h2>{{ subasta.tipoSubasta }} - {{ subasta.ubicacion }}</h2>        <div class="auction-status">
+        <h2>{{ subasta.tipoSubasta }} - {{ subasta.ubicacion }}</h2>        
+        <div class="auction-status">
           <span class="status-badge" [class]="'status-' + subasta.estado.toLowerCase()">
             {{ subasta.estado }}
           </span>
@@ -18,7 +19,7 @@
       <p>Cargando datos de la subasta...</p>
     </div>
   } @else {
-    
+
     <!-- Messages -->
     @if (successMessage) {
       <div class="message success-message">
@@ -230,7 +231,8 @@
               </div>
             </div>
           }
-        </div>      </div>
+        </div>      
+    </div>
     }
   }
 
