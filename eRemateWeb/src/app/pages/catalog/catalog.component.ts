@@ -10,9 +10,11 @@ import { SearchBarComponent } from '../../shared/components/inputs/search-bar/se
 import { ElementRowComponent } from "./components/element-row/element-row.component";
 import { FormSelectInputComponent } from '../../shared/components/inputs/form-select-input/form-select-input.component';
 import { FormCheckboxComponent } from "../../shared/components/inputs/form-checkbox/form-checkbox.component";
+import { DatePickerComponent } from "../../shared/components/inputs/date-picker/date-picker.component";
+import { PrimaryButtonComponent } from "../../shared/components/buttons/primary-button/primary-button.component";
+import { ViewChild } from '@angular/core';
 import { ItemService } from '../../core/services/item.service';
 import { SubastaService } from '../../core/services/subasta.service';
-import { DatePickerComponent } from "../../shared/components/inputs/date-picker/date-picker.component";
 import { CatalogElement } from '../../core/models/catalog-element';
 
 @Component({
@@ -26,9 +28,10 @@ import { CatalogElement } from '../../core/models/catalog-element';
     FormsModule,
     FormSelectInputComponent,
     SearchBarComponent,
+    DatePickerComponent,
+    PrimaryButtonComponent,
     ElementRowComponent,
-    FormCheckboxComponent,
-    DatePickerComponent
+    FormCheckboxComponent
   ],
   providers: [
     MessageService
@@ -37,6 +40,12 @@ import { CatalogElement } from '../../core/models/catalog-element';
   styleUrl: './catalog.component.scss'
 })
 export class CatalogComponent {
+
+  @ViewChild('searchBar') searchBar!: SearchBarComponent;
+  @ViewChild('categorySelect') categorySelect!: FormSelectInputComponent;
+  @ViewChild('locationSelect') locationSelect!: FormSelectInputComponent;
+  @ViewChild('datePicker') datePicker!: DatePickerComponent;
+  @ViewChild('closedCheckbox') closedCheckbox!: FormCheckboxComponent;
   
   rows: number = 10;
   first: number = 0;
@@ -124,29 +133,38 @@ export class CatalogComponent {
     });
   }
 
+  applyFilters() {
+    this.filterElements();
+  }
+
+  resetFilters() {
+    this.resetAttributes();
+    
+    setTimeout(() => {
+      this.resetChildComponents();
+      
+      this.getElements();
+    });
+  }
+
   onSearchTextChange(searchText: string) {
     this.searchText = searchText;
-    this.filterElements();
   }
 
   onClosedCheck(closed: boolean) {
     this.closedSelected = closed;
-    this.filterElements();
   }
 
-  onCategorySelection(category: number) {
+  onCategorySelection(category: number | null) {
     this.selectedCategory = category;
-    this.filterElements();
   }
 
-  onLocationSelection(location: string) {
+  onLocationSelection(location: string | null) {
     this.selectedLocation = location;
-    this.filterElements();
   }
 
   onLimitCloseDateSelection(date: string | null) {
     this.selectedLimitCloseDate = date;
-    this.filterElements();
   }
   
   getCountdown = (element: CatalogElement): string => {
@@ -256,6 +274,22 @@ export class CatalogComponent {
         console.error('Error al obtener las ubicaciones:', error);
       }
     );
+  }
+
+  private resetAttributes() {
+    this.searchText = '';
+    this.closedSelected = false;
+    this.selectedCategory = null;
+    this.selectedLocation = null;
+    this.selectedLimitCloseDate = null;
+  }
+
+  private resetChildComponents() {
+    if (this.searchBar) this.searchBar.reset();
+    if (this.categorySelect) this.categorySelect.reset();
+    if (this.locationSelect) this.locationSelect.reset();
+    if (this.datePicker) this.datePicker.reset();
+    if (this.closedCheckbox) this.closedCheckbox.reset();
   }
 
 }

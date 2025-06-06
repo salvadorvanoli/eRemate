@@ -1,4 +1,4 @@
-import { Component, EventEmitter, Input, Output } from '@angular/core';
+import { Component, EventEmitter, Input, Output, SimpleChanges } from '@angular/core';
 import { FormsModule } from '@angular/forms';
 import { DatePicker } from 'primeng/datepicker';
 import { FloatLabel } from 'primeng/floatlabel';
@@ -16,7 +16,7 @@ import { FloatLabel } from 'primeng/floatlabel';
 })
 export class DatePickerComponent {
 
-  dateTime: string | undefined;
+  dateTime: Date | null = null;
 
   @Input() label: string = '';
   @Input() classes: string = '';
@@ -28,8 +28,13 @@ export class DatePickerComponent {
       const formattedDate = this.formatDate(date);
       this.dateTimeChange.emit(formattedDate);
     } else {
-      this.dateTimeChange.emit(null);
+      this.dateTimeChange.emit(undefined);
     }
+  }
+
+  reset() {
+    this.dateTime = null;
+    this.dateTimeChange.emit(null);
   }
 
   private formatDate(date: Date): string {
@@ -42,5 +47,4 @@ export class DatePickerComponent {
 
     return `${year}-${month}-${day} ${hours}:${minutes}:${seconds}`;
   }
-
 }
