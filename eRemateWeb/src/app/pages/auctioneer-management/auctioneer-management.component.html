@@ -1,0 +1,307 @@
+<div class="auctioneer-management-container">
+  <!-- Header -->
+  <div class="header-section">
+    <h1 class="page-title">Gestión de Subasta - Rematador</h1>
+    @if (subasta) {
+      <div class="auction-info">
+        <h2>{{ subasta.tipoSubasta }} - {{ subasta.ubicacion }}</h2>        <div class="auction-status">
+          <span class="status-badge" [class]="'status-' + subasta.estado.toLowerCase()">
+            {{ subasta.estado }}
+          </span>
+        </div>
+      </div>
+    }
+  </div>
+
+  @if (loading) {
+    <div class="loading-container">
+      <p>Cargando datos de la subasta...</p>
+    </div>
+  } @else {
+    
+    <!-- Messages -->
+    @if (successMessage) {
+      <div class="message success-message">
+        <i class="pi pi-check-circle"></i>
+        {{ successMessage }}
+      </div>
+    }
+    @if (errorMessage) {
+      <div class="message error-message">
+        <i class="pi pi-exclamation-triangle"></i>
+        {{ errorMessage }}
+        <button class="close-message" (click)="clearMessages()">×</button>
+      </div>
+    }
+
+    <!-- URL Form -->
+    <form novalidate action="" method="post" class="card stream-url-section">
+      <h3>URL de Transmisión en Vivo</h3>
+      <div class="stream-form">        
+        <app-form-text-input
+          placeholder="URL de la subasta en YouTube Live"
+          [textPattern]="streamUrlPattern"
+          errorMessage="Ingrese una URL válida de YouTube Live"
+          [formSubmitted]="formSubmitted"
+          (textValue)="url = $event"
+          (isInputInvalid)="isUrlInvalid = $event">
+        </app-form-text-input>
+        
+        <app-primary-button
+          label="Actualizar URL"
+          icon="pi pi-globe"
+          (click)="actualizarUrlTransmision()">
+        </app-primary-button>
+      </div>
+        @if (subasta && subasta.urlTransmision) {
+        <div class="current-url">
+          <strong>URL actual:</strong> 
+          <a [href]="subasta.urlTransmision" target="_blank" class="url-link">
+            {{ subasta.urlTransmision }}
+          </a>
+        </div>
+      }
+    </form>
+
+    <!-- Información de la subasta -->
+    <div class="card auction-data-section">
+      <h3>Datos de la Subasta</h3>
+      
+      @if (loteActual) {
+        <div class="current-lot">
+          <h4>Lote Actual</h4>
+          <div class="lot-details">
+            <div class="detail-row">
+              <span class="label">Nombre:</span>
+              <span class="value">{{ loteActual.nombre }}</span>
+            </div>
+            <div class="detail-row">
+              <span class="label">Descripción:</span>
+              <span class="value">{{ loteActual.descripcion }}</span>
+            </div>
+            <div class="detail-row">
+              <span class="label">Valor Base:</span>
+              <span class="value currency">{{ formatearMonto(loteActual.valorBase) }}</span>
+            </div>
+            <div class="detail-row">
+              <span class="label">Puja Mínima:</span>
+              <span class="value currency">{{ formatearMonto(loteActual.pujaMinima) }}</span>
+            </div>
+            <div class="detail-row">
+              <span class="label">Disponibilidad:</span>
+              <span class="value">{{ loteActual.disponibilidad }}</span>
+            </div>            <div class="detail-row">
+              <span class="label">Condiciones de Entrega:</span>
+              <span class="value">{{ loteActual.condicionesDeEntrega }}</span>
+            </div>            <div class="detail-row">
+              <span class="label">Última Puja:</span>
+              <span class="value currency highlight">
+                {{ tieneOfertaValida(loteActual) ? formatearMonto(loteActual.oferta) : 'Sin pujas' }}
+              </span>
+            </div>
+            <div class="detail-row">
+              <span class="label">Oferta Actual:</span>
+              <span class="value currency total">
+                {{ formatearMonto((loteActual.oferta || 0) + loteActual.valorBase) }}
+              </span>
+            </div>
+          </div>          <!-- Articles in current lot -->
+          @if (loteActual.articulos && loteActual.articulos.length) {
+            <div class="articles-section">
+              <h5>Artículos en este Lote</h5>              <div class="articles-grid">
+                @for (articulo of loteActual.articulos; track articulo.id) {
+                  <div class="article-card clickable" (click)="verDetallesArticulo(articulo)">
+                    <div class="article-info">
+                      <h6>{{ articulo.nombre }}</h6>
+                      <p class="article-description">{{ articulo.especificacionesTecnicas }}</p>
+                      <div class="article-details">
+                        <span class="detail">Estado: {{ articulo.estado }}</span>
+                        @if (articulo.categoria) {
+                          <span class="detail">Categoría: {{ articulo.categoria.nombre }}</span>
+                        }
+                        @if (articulo.imagenes && articulo.imagenes.length) {
+                          <span class="detail">Imágenes: {{ articulo.imagenes.length }}</span>
+                        }
+                      </div>
+                      <div class="click-hint">
+                        <i class="pi pi-eye"></i>
+                        <span>Click para ver detalles</span>
+                      </div>
+                    </div>
+                  </div>
+                }
+              </div>
+            </div>
+          } @else {
+            <div class="no-articles">
+              <p>No hay artículos cargados para este lote.</p>
+            </div>
+          }
+        </div>
+      } @else if (subastaFinalizada) {
+        <div class="no-current-lot">
+          <i class="pi pi-check-circle success-icon"></i>
+          <h4>Subasta Finalizada</h4>
+          <p>Todos los lotes han sido subastados exitosamente.</p>
+        </div>
+      } @else {
+        <div class="no-current-lot">
+          <i class="pi pi-clock"></i>
+          <h4>No hay lote activo</h4>
+          <p>La subasta no ha iniciado o no hay lotes disponibles.</p>
+        </div>
+      }
+    </div>
+
+    <!-- Panel de control del rematador -->
+    <div class="card control-section">
+      <h3>Control de Subasta</h3>
+      <div class="control-buttons">
+        @if (puedeIniciarSubasta) {
+          <app-primary-button
+            label="Iniciar Subasta"
+            icon="pi pi-play"
+            classes="start-button"
+            [disabled]="iniciandoSubasta"
+            (click)="iniciarSubasta()">
+          </app-primary-button>
+        }
+
+        @if (puedeCerrarSubasta) {
+          <app-primary-button
+            label="Cerrar Lote Actual"
+            icon="pi pi-times"
+            classes="close-button"
+            [disabled]="cerrandoSubasta"
+            (click)="cerrarSubasta()">
+          </app-primary-button>
+        }
+
+        @if (subastaFinalizada) {
+          <div class="auction-finished">
+            <i class="pi pi-flag success-icon"></i>
+            <span>Subasta completamente finalizada</span>
+          </div>
+        }
+      </div>
+
+      @if (subastaIniciada && loteActual) {
+        <div class="auction-status-info">
+          <div class="status-item">
+            <i class="pi pi-clock"></i>
+            <span>Subasta en curso</span>
+          </div>
+          <div class="status-item">
+            <i class="pi pi-box"></i>
+            <span>Lote {{ loteActual.id }} de {{ lotes.length }}</span>
+          </div>
+        </div>
+      }
+    </div>
+
+    <!-- Descripción de los lotes -->
+    @if (lotes.length) {
+      <div class="card lots-summary-section">
+        <h3>Resumen de Lotes ({{ lotes.length }} total)</h3>
+        <div class="lots-grid">
+          @for (lote of lotes; track lote.id) {            
+            <div class="lot-summary-card" 
+                 [class]="getLotClass(lote)">
+              <div class="lot-header">
+                <h6>Lote #{{ lote.id }}</h6>
+                <span class="lot-status">
+                  @if (lote.id === loteActual?.id) {
+                    <i class="pi pi-play-circle"></i> Actual
+                  } @else if (lote.ganador_id) {
+                    <i class="pi pi-check-circle"></i> Completado
+                  } @else {
+                    <i class="pi pi-clock"></i> Pendiente
+                  }
+                </span>
+              </div>
+              <div class="lot-info">
+                <p class="lot-name">{{ lote.nombre }}</p>                
+                <div class="lot-values">
+                  <span class="base-value">Base: {{ formatearMonto(lote.valorBase) }}</span>
+                  @if (tieneOfertaValida(lote)) {
+                    <span class="current-offer">Actual: {{ formatearMonto((lote.oferta || 0) + lote.valorBase) }}</span>
+                  }
+                </div>
+              </div>
+            </div>
+          }
+        </div>      </div>
+    }
+  }
+
+  <!-- Detalles del artículo -->
+  <app-modal 
+    [visible]="showArticleModal" 
+    size="large"
+    (closed)="cerrarModalArticulo()">
+    
+    <div modal-title>
+      Información del Artículo
+    </div>
+    
+    @if (selectedArticle) {
+      <div class="article-modal-content">
+        <div class="article-header">
+          <h3>{{ selectedArticle.nombre }}</h3>
+          @if (selectedArticle.categoria) {
+            <span class="category-badge">{{ selectedArticle.categoria.nombre }}</span>
+          }
+        </div>
+        
+        <div class="article-details-modal">
+          <div class="article-images">
+            @if (parseImages(selectedArticle.imagenes).length) {
+              <div class="images-grid">
+                @for (imagen of parseImages(selectedArticle.imagenes); track $index) {
+                  <div class="image-container">                    
+                    <img [src]="getImageUrl(imagen)" 
+                         [alt]="selectedArticle.nombre"
+                         (error)="onImageError($event)"
+                         class="article-image" />
+                  </div>
+                }
+              </div>
+            } @else {
+              <div class="no-images">
+                <i class="pi pi-image"></i>
+                <p>No hay imágenes disponibles</p>
+              </div>
+            }
+          </div>
+          
+          <div class="article-info-detailed">
+            <div class="info-section">
+              <h4>Estado</h4>
+              <p>{{ selectedArticle.estado }}</p>
+            </div>
+            
+            <div class="info-section">
+              <h4>Especificaciones Técnicas</h4>
+              <p>{{ selectedArticle.especificacionesTecnicas }}</p>
+            </div>
+            
+            @if (selectedArticle.categoria) {
+              <div class="info-section">
+                <h4>Categoría</h4>
+                <p>{{ selectedArticle.categoria.nombre }}</p>
+              </div>
+            }
+          </div>
+        </div>
+        
+        <div class="modal-actions">
+          <button type="button" 
+                  class="p-button align-items-center" 
+                  (click)="cerrarModalArticulo()">
+            Cerrar
+          </button>
+        </div>
+      </div>
+    }
+  </app-modal>
+</div>

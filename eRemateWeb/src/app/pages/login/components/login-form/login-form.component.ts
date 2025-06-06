@@ -78,6 +78,7 @@ export class LoginFormComponent {
   validateForm() {
     return this.isEmailInvalid;
   }
+  
   resetForm() {
     this.emailInput?.reset();
     this.passwordInput?.reset();

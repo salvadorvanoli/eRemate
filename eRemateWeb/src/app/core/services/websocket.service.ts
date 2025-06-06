@@ -18,6 +18,8 @@ export class WebsocketService {
   private nuevoMensajeSubject = new Subject<any>();
   private nuevaSolicitudPagoSubject = new Subject<any>();
   private estadoSolicitudPagoSubject = new Subject<any>();
+  private inicioSubastaSubject = new Subject<any>();
+  private cierreSubastaSubject = new Subject<any>();
   
   constructor() {
     this.initializeEcho();
@@ -43,7 +45,7 @@ export class WebsocketService {
       console.error('Error al inicializar Echo:', error);
     }
   }
-
+  
   subscribeToPujas(subastaId: number): Observable<any> {
     try {
       if (window.Echo) {
@@ -53,6 +55,14 @@ export class WebsocketService {
           .listen('.nueva.puja', (event: any) => {
             console.log('Nueva puja recibida:', event);
             this.nuevaPujaSubject.next(event);
+          })
+          .listen('.subasta.iniciada', (event: any) => {
+            console.log('Subasta iniciada:', event);
+            this.inicioSubastaSubject.next(event);
+          })
+          .listen('.subasta.cerrada', (event: any) => {
+            console.log('Subasta cerrada/lote cerrado:', event);
+            this.cierreSubastaSubject.next(event);
           });
           
         console.log(`Suscrito al canal ${channelName}`);
@@ -150,11 +160,19 @@ export class WebsocketService {
     
     return this.estadoSolicitudPagoSubject.asObservable();
   }
-
   leavePaymentRequestChannel(chatId: number): void {
     if (window.Echo) {
       window.Echo.leaveChannel(`payment-request.${chatId}`);
       console.log(`Desuscrito del canal de solicitudes de pago.${chatId}`);
     }
+  }
+
+  // Métodos específicos para eventos de subasta
+  subscribeToAuctionStart(subastaId: number): Observable<any> {
+    return this.inicioSubastaSubject.asObservable();
+  }
+
+  subscribeToAuctionClose(subastaId: number): Observable<any> {
+    return this.cierreSubastaSubject.asObservable();
   }
 }

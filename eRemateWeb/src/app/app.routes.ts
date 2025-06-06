@@ -12,6 +12,7 @@ import { PaymentComponent } from './pages/payment/payment.component';
 import { PaymentSuccessComponent } from './pages/payment-success/payment-success.component';
 import { NotFoundComponent } from './pages/not-found/not-found.component';
 import { CompleteProfileComponent } from './pages/complete-profile/complete-profile.component';
+import { AuctioneerManagementComponent } from './pages/auctioneer-management/auctioneer-management.component';
 
 import { ViewAuctionHouseProfileComponent } from './pages/view-auction-house-profile/view-auction-house-profile.component';
 import { ViewRegisteredUserProfileComponent } from './pages/view-registered-user-profile/view-registered-user-profile.component';
@@ -22,6 +23,7 @@ import { ChatDetailComponent } from './pages/chat-detail/chat-detail.component';
 
 // Guards
 import { AuthGuard } from './core/guards/auth.guard';
+import { AuctioneerGuard } from './core/guards/auctioneer.guard';
 import { ChatAccessGuard } from './core/guards/chat-access.guard';
 import { PaymentAuthorizationGuard } from './core/guards/payment-authorization.guard';
 
@@ -34,8 +36,11 @@ export const routes: Routes = [
     { path: 'articulos', component: ItemsCatalogComponent },
     { path: 'subastas', component: AuctionsCatalogComponent },
     { path: 'producto/:id', component: ViewProductComponent },
-    { path: 'contacto', component: ContactUsComponent },
-    { path: 'subasta/:id', component: AuctionComponent },
+    { path: 'contacto', component: ContactUsComponent },    { path: 'subasta/:id', component: AuctionComponent },    { 
+        path: 'panel-rematador/:id', 
+        component: AuctioneerManagementComponent,
+        canActivate: [AuctioneerGuard]
+    },
     {
         path: 'chat-detail/:id',
         component: ChatDetailComponent,
