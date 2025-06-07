@@ -101,8 +101,49 @@ export class SubastaService extends BaseHttpService<any, Subasta> {
   getAllFiltered(textoBusqueda: string | null, cerrada: boolean, categoria: number | null, ubicacion: string | null, fechaCierreLimite: string | null): Observable<CatalogElement[]> {
     return this.http.get<CatalogElement[]>(`${this.baseUrl}/auction/filtered?textoBusqueda=${textoBusqueda}&cerrada=${cerrada}&categoria=${categoria}&ubicacion=${ubicacion}&fechaCierreLimite=${fechaCierreLimite}`);
   }
-
   getLocations(): Observable<string[]> {
     return this.http.get<string[]>(`${this.baseUrl}/auction/locations`);
+  }
+
+  // Métodos para el rematador
+  iniciarSubasta(subastaId: number): Observable<any> {
+    return this.http.post<any>(`${this.baseUrl}/auction/${subastaId}/start`, {}, {
+      headers: this.getAuthHeaders()
+    }).pipe(
+      map(response => {
+        if (response.success) {
+          return response.data;
+        }
+        throw new Error(response.message || 'Error al iniciar la subasta');
+      })
+    );
+  }
+
+  cerrarSubasta(subastaId: number): Observable<any> {
+    return this.http.post<any>(`${this.baseUrl}/auction/${subastaId}/end`, {}, {
+      headers: this.getAuthHeaders()
+    }).pipe(
+      map(response => {
+        if (response.success) {
+          return response.data;
+        }
+        throw new Error(response.message || 'Error al cerrar la subasta');
+      })
+    );
+  }
+
+  actualizarUrlTransmision(subastaId: number, urlTransmision: string): Observable<any> {
+    return this.http.put<any>(`${this.baseUrl}/auction/${subastaId}`, {
+      urlTransmision: urlTransmision
+    }, {
+      headers: this.getAuthHeaders()
+    }).pipe(
+      map(response => {
+        if (response.success) {
+          return response.data;
+        }
+        throw new Error(response.message || 'Error al actualizar URL de transmisión');
+      })
+    );
   }
 }

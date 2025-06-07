@@ -12,6 +12,8 @@ use App\Models\UsuarioRegistrado;
 use App\Models\Lote;
 use App\Models\Chat;
 use App\Events\NuevaPujaEvent;
+use App\Events\InicioSubastaEvent;
+use App\Events\CierreSubastaEvent;
 use App\Jobs\ProcesarPujasAutomaticas;
 use App\Notifications\ComienzoSubastaNotification;
 use App\Notifications\NuevaPujaNotification;
@@ -428,10 +430,10 @@ class SubastaService implements SubastaServiceInterface
             return $subasta;
         }
 
-        if ($subasta->estado !== EstadoSubasta::PENDIENTE) {
+        if ($subasta->estado !== EstadoSubasta::ACEPTADA) {
             return response()->json([
                 'success' => false,
-                'message' => 'Solo se pueden iniciar subastas en estado pendiente'
+                'message' => 'Solo se pueden iniciar subastas en estado aceptada'
             ], 422);
         }
 
@@ -462,6 +464,16 @@ class SubastaService implements SubastaServiceInterface
 
         // Send notifications to interested users
         $this->sendComienzoSubastaNotification($subasta);
+
+        // Broadcast auction start event
+        $inicioSubastaData = [
+            'subasta_id' => $subasta->id,
+            'estado' => EstadoSubasta::INICIADA->value,
+            'lote_actual_id' => $primerLote->id,
+            'lote_actual_nombre' => $primerLote->nombre,
+            'url_transmision' => $subasta->urlTransmision
+        ];
+        event(new InicioSubastaEvent($inicioSubastaData));
 
         return response()->json([
             'success' => true,
@@ -612,6 +624,19 @@ class SubastaService implements SubastaServiceInterface
             // Send notifications to interested users
             $this->sendSubastaFinalizadaNotification($subasta);
 
+            // Broadcast auction close event - auction completely finished
+            $cierreSubastaData = [
+                'subasta_id' => $subasta->id,
+                'estado' => EstadoSubasta::CERRADA->value,
+                'lote_cerrado_id' => $loteActual->id,
+                'lote_cerrado_nombre' => $loteActual->nombre,
+                'ganador_id' => $ganadorId,
+                'siguiente_lote_id' => null,
+                'siguiente_lote_nombre' => null,
+                'subasta_finalizada' => true
+            ];
+            event(new CierreSubastaEvent($cierreSubastaData));
+
             return response()->json([
                 'success' => true,
                 'message' => 'Subasta cerrada correctamente',
@@ -626,6 +651,19 @@ class SubastaService implements SubastaServiceInterface
         ]);
 
         $this->iniciarProcesoDeAutomatizacion($subasta, $nuevoLoteActual);
+
+        // Broadcast auction close event - moving to next lot
+        $cierreSubastaData = [
+            'subasta_id' => $subasta->id,
+            'estado' => EstadoSubasta::INICIADA->value,
+            'lote_cerrado_id' => $loteActual->id,
+            'lote_cerrado_nombre' => $loteActual->nombre,
+            'ganador_id' => $ganadorId,
+            'siguiente_lote_id' => $nuevoLoteActual->id,
+            'siguiente_lote_nombre' => $nuevoLoteActual->nombre,
+            'subasta_finalizada' => false
+        ];
+        event(new CierreSubastaEvent($cierreSubastaData));
 
         return response()->json([
             'success' => true,
