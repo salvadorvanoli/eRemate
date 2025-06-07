@@ -1,4 +1,5 @@
 import { Component, signal } from '@angular/core';
+import { Router } from '@angular/router';
 import { Toast } from 'primeng/toast';
 import { MessageService } from 'primeng/api';
 import { SecurityService } from '../../../../core/services/security.service';
@@ -40,7 +41,8 @@ export class LoginFormComponent {
   constructor(
     private messageService: MessageService,
     private securityService: SecurityService,
-    private googleAuthService: GoogleAuthService
+    private googleAuthService: GoogleAuthService,
+    private router: Router
   ) {}
 
   login() { // TODO: Realizar la lógica de login
@@ -57,6 +59,10 @@ export class LoginFormComponent {
         next: () => {
           this.messageService.add({ severity: 'success', summary: 'Operación exitosa', detail: "¡Has iniciado sesión exitosamente!", life: 4000 });
           this.resetForm();
+          // mandar a inicio
+          setTimeout(() => {
+            this.router.navigate(['/inicio']);
+          }, 1000);
         },
         error: (err) => {
           if (err.error.error !== undefined) {
@@ -98,6 +104,10 @@ export class LoginFormComponent {
           life: 4000 
         });
         this.resetForm();
+        // mandar a inicio
+        setTimeout(() => {
+          this.router.navigate(['/inicio']);
+        }, 1000);
       },
       error: (err) => {
         let errorMessage = 'Error en autenticación con Google';
