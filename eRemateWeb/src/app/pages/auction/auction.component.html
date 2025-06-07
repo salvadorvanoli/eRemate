@@ -3,7 +3,8 @@
     [item2]="loteSeleccionado"
     [getImageUrl]="getImageUrl"
     [youtubeUrl]="youtubeUrl"
-    (onPuja)="verPuja()">
+    (onPuja)="verPuja()"
+    (onVerTodosLosLotes)="verTodosLosLotes()">
 </app-auction-info>
 
 <app-title-and-description 
@@ -59,3 +60,14 @@
         </app-primary-button>
     </div>
 </app-modal>
+
+<!-- Modal de Todos los Lotes -->
+@if (subasta) {
+    <app-auction-lots-modal 
+        [visible]="showLotsModal"
+        [subasta]="subasta"
+        [lotes]="lotes"
+        (closed)="onModalClose()"
+        (automaticBidCreated)="onModalClose()">
+    </app-auction-lots-modal>
+}

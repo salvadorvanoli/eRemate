@@ -1,10 +1,11 @@
 import { Injectable } from '@angular/core';
 import { HttpClient, HttpHeaders } from '@angular/common/http';
-import { map, Observable, switchMap } from 'rxjs';
+import { map, Observable, switchMap, catchError } from 'rxjs';
 import { BaseHttpService } from './base-http.service';
 import { Subasta } from '../models/subasta';
 import { CatalogElement } from '../models/catalog-element';
 import { Lote } from '../models/lote';
+import { PujaAutomatica } from '../models/puja-automatica';
 
 @Injectable({
   providedIn: 'root'
@@ -143,6 +144,26 @@ export class SubastaService extends BaseHttpService<any, Subasta> {
           return response.data;
         }
         throw new Error(response.message || 'Error al actualizar URL de transmisión');
+      })
+    );
+  }
+  // Métodos para el usuario registrado
+  crearPujaAutomatica(subastaId: number, pujaAutomatica: PujaAutomatica): Observable<any> {
+    return this.http.post<any>(`${this.baseUrl}/auction/${subastaId}/auto-bid`, pujaAutomatica, {
+      headers: this.getAuthHeaders()
+    }).pipe(
+      map(response => {
+        if (response.success) {
+          return response.data;
+        }
+        throw new Error(response.message || 'Error al crear la puja automática');
+      }),      catchError((error: any) => {
+        // Si es un error HTTP (como 422), extraer el mensaje del backend
+        if (error.error && error.error.message) {
+          throw new Error(error.error.message);
+        }
+        // Si ya es un Error personalizado del map anterior, mantenerlo
+        throw error;
       })
     );
   }

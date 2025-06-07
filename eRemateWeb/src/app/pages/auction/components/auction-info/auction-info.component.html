@@ -68,9 +68,7 @@
                         description="{{ item?.tipoSubasta || 'Tipo de Subasta' }}" />
  
                 </div>
-                                <!-- lote actual -->
-
-                @if (item2) {
+                                <!-- lote actual -->                @if (item2) {
                     <div class="current-lot-section">
                         <div class="lot-info">
                             <div class="lot-image">
@@ -85,14 +83,30 @@
                                 <p class="lot-value">Valor base: ${{ item2?.valorBase || '0' }}</p>
                             </div>
                         </div>
-                        <app-primary-button 
-                            label="Pujar por el lote en vivo"
-                            (onClick)="pujar()" 
-                            class="bid-button"> 
-                        </app-primary-button>
+                        <div class="action-buttons">
+                            @if (shouldShowViewAllLotsButton()) {
+                                <app-primary-button 
+                                    label="Ver todos los lotes"
+                                    (onClick)="verTodosLosLotes()" 
+                                    class="view-lots-button"> 
+                                </app-primary-button>
+                            }
+                            <app-primary-button 
+                                label="Pujar por el lote en vivo"
+                                (onClick)="pujar()" 
+                                class="bid-button"> 
+                            </app-primary-button>
+                        </div>
                     </div>                } @else {
                     <div class="no-lot-section">
                         <p class="no-lot-message">Actualmente no hay un lote siendo subastado</p>
+                        @if (shouldShowViewAllLotsButton()) {
+                            <app-primary-button 
+                                label="Ver todos los lotes"
+                                (onClick)="verTodosLosLotes()" 
+                                class="view-lots-button"> 
+                            </app-primary-button>
+                        }
                     </div>
                 }
                   

@@ -11,6 +11,7 @@ import { Subasta } from '../../core/models/subasta';
 import { ActivatedRoute } from '@angular/router';
 import { ModalComponent } from '../../shared/components/modal/modal.component';
 import { PrimaryButtonComponent } from '../../shared/components/buttons/primary-button/primary-button.component';
+import { AuctionLotsModalComponent } from './components/auction-lots-modal/auction-lots-modal.component';
 
 @Component({
   selector: 'app-auction',
@@ -22,7 +23,8 @@ import { PrimaryButtonComponent } from '../../shared/components/buttons/primary-
     LotProductDetailsComponent,
     LiveBiddingComponent,
     ModalComponent,
-    PrimaryButtonComponent
+    PrimaryButtonComponent,
+    AuctionLotsModalComponent
   ],
   templateUrl: './auction.component.html',
   styleUrl: './auction.component.scss'
@@ -31,9 +33,9 @@ export class AuctionComponent implements OnInit {
   subasta?: Subasta;
   lotes: Lote[] = [];
   loteSeleccionado?: Lote;
-
   showDetallesModal = false;
   showPujaModal = false;
+  showLotsModal = false;
   loteSeleccionadoModal?: Lote;
 
   // Nueva propiedad para el enlace de YouTube Live
@@ -50,14 +52,17 @@ export class AuctionComponent implements OnInit {
     this.loteSeleccionadoModal = { ...lote }; // Crear una copia para forzar la detección de cambios
     this.showDetallesModal = true;
   }
-
   verPuja(): void {
     this.showPujaModal = true;
   }
 
+  verTodosLosLotes(): void {
+    this.showLotsModal = true;
+  }
   onModalClose(): void {
     this.showDetallesModal = false;
     this.showPujaModal = false;
+    this.showLotsModal = false;
     this.loteSeleccionadoModal = undefined; // Limpiar la selección del modal
   }
 
@@ -162,11 +167,8 @@ export class AuctionComponent implements OnInit {
       return 'https://developers.elementor.com/docs/assets/img/elementor-placeholder-image.png';
     }
     return item.imagenUrl;
-  }
-
-  seleccionarLote(lote: Lote): void {
+  }  seleccionarLote(lote: Lote): void {
     this.loteSeleccionado = lote;
     this.loadLoteArticulos(lote);
   }
 }
-  
