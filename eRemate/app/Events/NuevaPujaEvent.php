@@ -54,7 +54,8 @@ class NuevaPujaEvent implements ShouldBroadcastNow
             'lote_id' => $this->nuevaPujaData['lote_id'],
             'lote_nombre' => $this->nuevaPujaData['lote_nombre'],
             'subasta_id' => $this->nuevaPujaData['subasta_id'],
-            'usuario_id' => $this->nuevaPujaData['usuario_id']
+            'usuario_id' => $this->nuevaPujaData['usuario_id'],
+            'oferta' => $this->nuevaPujaData['oferta']
         ];
     }
 }

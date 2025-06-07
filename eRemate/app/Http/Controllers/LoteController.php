@@ -243,4 +243,36 @@ class LoteController extends Controller
             ], 500);
         }
     }
+
+    public function obtenerUltimaPuja($id)
+    {
+        try {
+            $ultimaPuja = $this->loteService->obtenerUltimaPuja($id);
+
+            if ($ultimaPuja instanceof JsonResponse) {
+                return $ultimaPuja;
+            }
+
+            return response()->json([
+                'success' => true,
+                'data' => [
+                    'lote_id' => $id,
+                    'ultima_puja' => $ultimaPuja
+                ],
+                'message' => 'Última puja obtenida correctamente'
+            ], 200);
+
+        } catch (\Illuminate\Database\Eloquent\ModelNotFoundException $e) {
+            return response()->json([
+                'success' => false,
+                'message' => 'Lote no encontrado'
+            ], 404);
+
+        } catch (\Exception $e) {
+            return response()->json([
+                'success' => false,
+                'message' => 'Error al obtener última puja: ' . $e->getMessage()
+            ], 500);
+        }
+    }
 }
