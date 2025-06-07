@@ -28,42 +28,61 @@
     
     <ng-template pTemplate="header">
       <tr style="background-color: rgba(0, 0, 0, 0.04);">
-        <th *ngFor="let col of cols" [style.width]="'calc(89% / ' + cols.length + ')'" style="background-color: rgba(0, 0, 0, 0.04);">
+        <th *ngFor="let col of cols" [style.width]="'calc(85% / ' + cols.length + ')'" style="background-color: rgba(0, 0, 0, 0.04);">
           {{ col.header }}
         </th>
-        <th style="width: 11%; background-color: rgba(0, 0, 0, 0.04);">Acciones</th>
+        <th style="width: 15%; background-color: rgba(0, 0, 0, 0.04);">Acciones</th>
       </tr>
     </ng-template>
     
     <ng-template pTemplate="body" let-lot>
       <tr>
-        <td [style.width]="'calc(89% / ' + cols.length + ')'" *ngFor="let col of cols">
-          <span *ngIf="col.field === 'valorBase' || col.field === 'pujaMinima'">
+        <td [style.width]="'calc(85% / ' + cols.length + ')'" *ngFor="let col of cols">
+          <!-- Campo monetario -->
+          <span *ngIf="col.field === 'valorBase'">
             {{ formatCurrency(lot[col.field]) }}
           </span>
-          <span *ngIf="col.field !== 'valorBase' && col.field !== 'pujaMinima'">
+          
+          <!-- Campo de resultado con tag -->
+          <span *ngIf="col.field === 'estado_usuario_lote'">
+            <p-tag 
+              [value]="getResultadoTag(lot.estado_usuario_lote).value"
+              [severity]="getResultadoTag(lot.estado_usuario_lote).severity"
+              [icon]="getResultadoTag(lot.estado_usuario_lote).icon">
+            </p-tag>
+          </span>
+          
+          <!-- Otros campos -->
+          <span *ngIf="col.field !== 'valorBase' && col.field !== 'estado_usuario_lote'">
             {{ lot[col.field] }}
           </span>
         </td>
         
-        <td style="width: 11%">
+        <td style="width: 15%">
           <div class="flex gap-1 justify-center">
-            <p-button *ngIf="lot.es_ganador" 
-                      icon="pi pi-comment" 
-                      severity="info" 
-                      [rounded]="true" 
-                      [outlined]="true" 
-                      (click)="sendMessage(lot)" 
-                      pTooltip="Enviar mensaje" />
+            <!-- Solo mostrar acciones si es ganador -->
+            <ng-container *ngIf="isWinner(lot)">
+              <p-button 
+                        icon="pi pi-comment" 
+                        severity="info" 
+                        [rounded]="true" 
+                        [outlined]="true" 
+                        (click)="sendMessage(lot)" 
+                        pTooltip="Enviar mensaje" />
+              
+              <p-button 
+                        icon="pi pi-star" 
+                        severity="warn" 
+                        [rounded]="true" 
+                        [outlined]="true" 
+                        (click)="showRating(lot)" 
+                        pTooltip="Ver puntuación" />
+            </ng-container>
             
-         
-            <p-button *ngIf="lot.es_ganador" 
-                      icon="pi pi-star" 
-                      severity="warn" 
-                      [rounded]="true" 
-                      [outlined]="true" 
-                      (click)="showRating(lot)" 
-                      pTooltip="Ver puntuación" />
+            <!-- Mensaje cuando no es ganador -->
+            <span *ngIf="!isWinner(lot)" class="text-500 text-sm">
+              Sin acciones
+            </span>
           </div>
         </td>
       </tr>
@@ -71,14 +90,14 @@
     
     <ng-template pTemplate="emptymessage">
       <tr>
-        <td colspan="7" class="text-center p-4">
+        <td colspan="5" class="text-center p-4">
           No has realizado pujas en ningún lote
         </td>
       </tr>
     </ng-template>
   </p-table>
 
- 
+  <!-- Dialog de puntuación -->
   <p-dialog 
     [(visible)]="ratingDialog" 
     [style]="{width: '450px'}" 
@@ -94,12 +113,10 @@
       </div>
       
       <div *ngIf="!loading" class="flex flex-column align-items-center gap-3 p-3">
-      
         <div class="text-center">
           <p class="m-0 text-600" *ngIf="hasExistingRating">Puntuación actual:</p>
           <p class="m-0 text-600" *ngIf="!hasExistingRating">Selecciona una puntuación:</p>
         </div>
-        
         
         <div class="flex gap-1" style="font-size: 2rem;">
           <i *ngFor="let star of [1,2,3,4,5]; let i = index"
@@ -114,16 +131,17 @@
         </div>
         
         <p class="text-center m-0 text-lg font-semibold" *ngIf="rating > 0">
+          {{ rating }} de 5 estrellas
         </p>
         
         <p class="text-center m-0 text-sm text-500" *ngIf="!hasExistingRating && rating === 0">
+          Haz clic en las estrellas para calificar
         </p>
       </div>
     </ng-template>
     
     <ng-template pTemplate="footer">
       <div class="flex justify-content-center gap-2">
-      
         <p-button 
           *ngIf="hasExistingRating"
           label="Aceptar" 
@@ -132,7 +150,6 @@
           [style]="{'background-color': '#6334E3', 'border-color': '#6334E3'}"
         />
         
-   
         <ng-container *ngIf="!hasExistingRating">
           <p-button 
             label="Cancelar" 
@@ -152,5 +169,4 @@
       </div>
     </ng-template>
   </p-dialog>
-
 </div>

@@ -12,11 +12,20 @@ import { IconFieldModule } from 'primeng/iconfield';
 import { InputIconModule } from 'primeng/inputicon';
 import { TooltipModule } from 'primeng/tooltip';
 import { DialogModule } from 'primeng/dialog';
+import { TagModule } from 'primeng/tag';
 import { finalize } from 'rxjs/operators';
 import { AuctionHouseService } from '../../../../core/services/auction-house.service';
 import { Lote } from '../../../../core/models/lote';
 import { SecurityService } from '../../../../core/services/security.service';
 import { RegisteredUsersService } from '../../../../core/services/registered-users.service';
+
+interface LoteConEstado extends Omit<Lote, 'ganador_id'> {
+  estado_usuario_lote: 'es_ganador' | 'es_perdedor' | 'sin_ganador';
+  ganador_id: number | null;
+  puja_maxima: number;
+  oferta: number;
+  resultado_texto?: string; // Nueva propiedad para búsqueda
+}
 
 @Component({
   selector: 'app-table-lots',
@@ -32,20 +41,21 @@ import { RegisteredUsersService } from '../../../../core/services/registered-use
     InputIconModule,
     ProgressSpinnerModule,
     TooltipModule,
-    DialogModule
+    DialogModule,
+    TagModule
   ],
   providers: [MessageService],
   templateUrl: './table-lots.component.html',
   styleUrl: './table-lots.component.scss'
 })
 export class TableLotsComponent implements OnInit {
-    lots: Lote[] = [];
+    lots: LoteConEstado[] = [];
     cols: any[] = [];
     loading = false;
     globalFilterFields: string[] = [];
     
     ratingDialog: boolean = false;
-    selectedLot: Lote | null = null;
+    selectedLot: LoteConEstado | null = null;
     rating: number = 0;
     hasExistingRating: boolean = false;
     
@@ -69,11 +79,9 @@ export class TableLotsComponent implements OnInit {
             { field: 'nombre', header: 'Nombre' },
             { field: 'descripcion', header: 'Descripción' },
             { field: 'valorBase', header: 'Valor Base' },
-            { field: 'pujaMinima', header: 'Puja Mínima' },
-            { field: 'disponibilidad', header: 'Disponibilidad' },
-            { field: 'condicionesDeEntrega', header: 'Condiciones' }
+            { field: 'estado_usuario_lote', header: 'Resultado' }
         ];
-        this.globalFilterFields = this.cols.map(col => col.field);
+        this.globalFilterFields = ['nombre', 'descripcion', 'valorBase', 'resultado_texto'];
     }
 
     loadBiddedLots() {
@@ -96,8 +104,12 @@ export class TableLotsComponent implements OnInit {
         this.registeredUsersService.getBiddedLotsByUserId(String(userId))
             .pipe(finalize(() => this.loading = false))
             .subscribe({
-                next: (data: Lote[]) => {
-                    this.lots = data;
+                next: (data: LoteConEstado[]) => {
+                    // Agregar el texto del resultado para búsqueda
+                    this.lots = data.map(lot => ({
+                        ...lot,
+                        resultado_texto: this.getResultadoTag(lot.estado_usuario_lote).value
+                    }));
                 },
                 error: (error) => {
                     this.messageService.add({ 
@@ -124,21 +136,29 @@ export class TableLotsComponent implements OnInit {
             currency: 'UYU'
         }).format(value);
     }
+
+    getResultadoTag(estado: string) {
+        switch (estado) {
+            case 'es_ganador':
+                return { severity: 'success', value: 'Ganador', icon: 'pi pi-trophy' };
+            case 'es_perdedor':
+                return { severity: 'danger', value: 'Perdedor', icon: 'pi pi-times-circle' };
+            case 'sin_ganador':
+                return { severity: 'info', value: 'Sin ganador', icon: 'pi pi-clock' };
+            default:
+                return { severity: 'secondary', value: 'Desconocido', icon: 'pi pi-question' };
+        }
+    }
+
+    isWinner(lot: LoteConEstado): boolean {
+        return lot.estado_usuario_lote === 'es_ganador';
+    }
     
-    sendMessage(lote: Lote) {
+    sendMessage(lote: LoteConEstado) {
         this.router.navigate(['/chat-detail', lote.id]);
     }
 
-    toggleFavorite(lote: Lote) {
-        this.messageService.add({
-            severity: 'success',
-            summary: 'Favorito',
-            detail: `Lote "${lote.nombre}" añadido a favoritos`,
-            life: 3000
-        });
-    }
-
-    showRating(lote: Lote) {
+    showRating(lote: LoteConEstado) {
         this.selectedLot = lote;
         this.loading = true;
         
