@@ -15,6 +15,7 @@ declare global {
 })
 export class WebsocketService {
   private nuevaPujaSubject = new Subject<any>();
+  private actualizacionUrlTransmisionSubject = new Subject<any>();
   private nuevoMensajeSubject = new Subject<any>();
   private nuevaSolicitudPagoSubject = new Subject<any>();
   private estadoSolicitudPagoSubject = new Subject<any>();
@@ -55,6 +56,10 @@ export class WebsocketService {
           .listen('.nueva.puja', (event: any) => {
             console.log('Nueva puja recibida:', event);
             this.nuevaPujaSubject.next(event);
+          })
+          .listen('.actualizacion.url.transmision', (event: any) => {
+            console.log('Nueva URL transmisión recibida:', event);
+            this.actualizacionUrlTransmisionSubject.next(event);
           })
           .listen('.subasta.iniciada', (event: any) => {
             console.log('Subasta iniciada:', event);
@@ -174,5 +179,9 @@ export class WebsocketService {
 
   subscribeToAuctionClose(subastaId: number): Observable<any> {
     return this.cierreSubastaSubject.asObservable();
+  }
+
+  subscribeToTransmissionUrlUpdate(subastaId: number): Observable<any> {
+    return this.actualizacionUrlTransmisionSubject.asObservable();
   }
 }

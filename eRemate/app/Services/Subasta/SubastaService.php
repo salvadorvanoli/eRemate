@@ -14,6 +14,7 @@ use App\Models\Chat;
 use App\Events\NuevaPujaEvent;
 use App\Events\InicioSubastaEvent;
 use App\Events\CierreSubastaEvent;
+use App\Events\ActualizacionUrlTransmision;
 use App\Jobs\ProcesarPujasAutomaticas;
 use App\Notifications\ComienzoSubastaNotification;
 use App\Notifications\NuevaPujaNotification;
@@ -200,6 +201,14 @@ class SubastaService implements SubastaServiceInterface
         
         if (isset($data['estado'])) {
             unset($data['estado']);
+        }
+
+        if ($subasta->urlTransmision !== $data['urlTransmision']) {
+            $actualizacionUrlTransmisionData = [
+                'subasta_id' => $subasta->id,
+                'urlTransmision' => $data['urlTransmision']
+            ];
+            event(new ActualizacionUrlTransmision($actualizacionUrlTransmisionData));
         }
 
         $subasta->update($data);
@@ -854,26 +863,23 @@ class SubastaService implements SubastaServiceInterface
             ], 422);
         }
 
-        $pujaAutomaticaRepetida = PujaAutomatica::where('lote_id', $lote->id)
-            ->where('usuarioRegistrado_id', $usuario->id)
-            ->first();
+        $pujaAutomaticaData = PujaAutomatica::updateOrCreate(
+            [
+                'lote_id' => $lote->id,
+                'usuarioRegistrado_id' => $usuario->id
+            ],
+            [
+                'presupuesto' => $pujaAutomatica['presupuesto']
+            ]
+        );
 
-        if ($pujaAutomaticaRepetida) {
-            return response()->json([
-                'success' => false,
-                'message' => 'Ya existe una puja automática para este lote y usuario'
-            ], 422);
-        }
-
-        PujaAutomatica::create([
-            'presupuesto' => $pujaAutomatica['presupuesto'],
-            'lote_id' => $lote->id,
-            'usuarioRegistrado_id' => $usuario->id
-        ]);
+        $mensaje = $pujaAutomaticaData->wasRecentlyCreated 
+            ? 'Puja automática creada correctamente'
+            : 'Puja automática actualizada correctamente';
 
         return response()->json([
             'success' => true,
-            'message' => 'Puja automática creada correctamente'
+            'message' => $mensaje
         ]);
     }
     
