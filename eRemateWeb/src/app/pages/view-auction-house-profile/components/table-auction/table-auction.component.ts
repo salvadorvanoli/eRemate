@@ -11,6 +11,7 @@ import { ConfirmDialogModule } from 'primeng/confirmdialog';
 import { InputTextModule } from 'primeng/inputtext';
 import { IconFieldModule } from 'primeng/iconfield';
 import { InputIconModule } from 'primeng/inputicon';
+import { DropdownModule } from 'primeng/dropdown';
 import { finalize } from 'rxjs/operators';
 import * as L from 'leaflet';
 import { AuctionHouseService } from '../../../../core/services/auction-house.service';
@@ -33,6 +34,7 @@ import { Router } from '@angular/router';
     InputTextModule,
     IconFieldModule,
     InputIconModule,
+    DropdownModule,
     ProgressSpinnerModule,
     DatePipe  
   ],
@@ -48,8 +50,8 @@ export class TableAuctionComponent implements OnInit, AfterViewInit, OnDestroy {
     auction!: Subasta;
     selectedAuction: Subasta | null = null;
     submitted: boolean = false;
-    globalFilterFields: string[] = [];
-    rematadorEmail: string = '';
+    globalFilterFields: string[] = [];    rematadorEmail: string = '';
+    selectedRematador: RematadorResponse | null = null;
     emailError: string = '';
     rematadores: RematadorResponse[] = [];
     casaId: number | null = null; 
@@ -382,9 +384,7 @@ export class TableAuctionComponent implements OnInit, AfterViewInit, OnDestroy {
             fechaCierre: new Date(today.getTime() + 86400000), 
             ubicacion: ''
         };
-        
-        this.rematadorEmail = '';
-        this.emailError = '';
+          this.selectedRematador = null;
         this.dateErrors = { startDate: '', endDate: '' };
         this.submitted = false;
         this.mapVisible = false;
@@ -681,18 +681,7 @@ export class TableAuctionComponent implements OnInit, AfterViewInit, OnDestroy {
                         detail: 'No se pudo actualizar la subasta',
                         life: 3000
                     });
-                }
-            });
-    }
-
-    findRematadorByEmail(email: string): number | null {
-        const rematador = this.rematadores.find(r => r.usuario?.email === email);
-        
-        if (rematador) {
-            return rematador.rematador?.id || null;
-        }
-        
-        return null;
+                }            });
     }
     
     formatDateForInput(date: Date): string {
@@ -730,7 +719,6 @@ export class TableAuctionComponent implements OnInit, AfterViewInit, OnDestroy {
 
     saveAuction() {
         this.submitted = true;
-        this.emailError = '';
 
         this.validateDates();
         
@@ -738,16 +726,9 @@ export class TableAuctionComponent implements OnInit, AfterViewInit, OnDestroy {
             !this.auction.ubicacion?.trim() || 
             !this.auction.fechaInicio || 
             !this.auction.fechaCierre || 
-            !this.rematadorEmail?.trim() ||
+            !this.selectedRematador ||
             this.dateErrors.startDate ||
             this.dateErrors.endDate) {
-            return;
-        }
-        
-        const rematadorId = this.findRematadorByEmail(this.rematadorEmail);
-        
-        if (!rematadorId) {
-            this.emailError = 'No se encontró un rematador con ese email';
             return;
         }
         
@@ -764,7 +745,7 @@ export class TableAuctionComponent implements OnInit, AfterViewInit, OnDestroy {
             return; 
         }
         
-        this.auction.rematador_id = rematadorId;
+        this.auction.rematador_id = this.selectedRematador.rematador?.id || 0;
         const casaIdToSave = currentUser.id;
         
         const subastaData = {
@@ -801,9 +782,7 @@ export class TableAuctionComponent implements OnInit, AfterViewInit, OnDestroy {
                         detail: 'Subasta creada correctamente', 
                         life: 3000 
                     });
-                    
-                    this.auctionDialog = false;
-                    this.rematadorEmail = '';
+                      this.auctionDialog = false;
                 },
                 error: (error) => {
                     this.messageService.add({ 
