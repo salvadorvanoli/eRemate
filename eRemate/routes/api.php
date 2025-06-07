@@ -153,6 +153,7 @@ Route::prefix('auction')->group(function () {
 Route::prefix('lot')->group(function () {
     Route::get('/{id}', [LoteController::class, 'obtenerLote']);
     Route::get('/{id}/items', [LoteController::class, 'obtenerArticulos']);
+    Route::get('/{id}/status', [LoteController::class, 'obtenerEstadoLote']); // ← Nueva ruta
     Route::get('/auction/{id}', [LoteController::class, 'obtenerLotesPorSubasta']);
 
     Route::middleware('auth:sanctum')->group(function () {

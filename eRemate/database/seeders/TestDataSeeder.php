@@ -107,7 +107,10 @@ class TestDataSeeder extends Seeder
         Articulo::create([
             'lote_id' => $lote->id,
             'nombre' => 'Artículo de Prueba',
-            'imagenes' => json_encode(['imagen1.jpg', 'imagen2.jpg']),
+            'imagenes' => [
+                url('api/images/serve/articulos/telefonoNaranja.webp'), // ← Tu imagen local
+                url('api/images/serve/articulos/telefonoNaranja.webp'), // Repetir si necesitas más
+            ],
             'especificacionesTecnicas' => json_encode(['Peso: 1kg', 'Color: Azul']),
             'estado' => 'Nuevo',
             'categoria_id' => null,
