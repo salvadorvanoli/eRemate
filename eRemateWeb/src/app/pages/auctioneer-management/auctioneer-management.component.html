@@ -97,13 +97,13 @@
             </div>            <div class="detail-row">
               <span class="label">Última Puja:</span>
               <span class="value currency highlight">
-                {{ tieneOfertaValida(loteActual) ? formatearMonto(loteActual.oferta) : 'Sin pujas' }}
+                {{ ultimaPuja ? formatearMonto(ultimaPuja) : 'Sin pujas' }}
               </span>
             </div>
             <div class="detail-row">
               <span class="label">Oferta Actual:</span>
               <span class="value currency total">
-                {{ formatearMonto((loteActual.oferta || 0) + loteActual.valorBase) }}
+                {{ formatearMonto((loteActual.oferta || 0)) }}
               </span>
             </div>
           </div>          <!-- Articles in current lot -->
@@ -225,7 +225,7 @@
                 <div class="lot-values">
                   <span class="base-value">Base: {{ formatearMonto(lote.valorBase) }}</span>
                   @if (tieneOfertaValida(lote)) {
-                    <span class="current-offer">Actual: {{ formatearMonto((lote.oferta || 0) + lote.valorBase) }}</span>
+                    <span class="current-offer">Actual: {{ formatearMonto((lote.oferta || 0)) }}</span>
                   }
                 </div>
               </div>

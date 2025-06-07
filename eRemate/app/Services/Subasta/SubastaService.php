@@ -765,7 +765,8 @@ class SubastaService implements SubastaServiceInterface
             'lote_id' => $loteActual->id,
             'lote_nombre' => $loteActual->nombre,
             'subasta_id' => $subasta->id,
-            'usuario_id' => $pujaCreada->usuarioRegistrado_id
+            'usuario_id' => $pujaCreada->usuarioRegistrado_id,
+            'oferta' => $loteActual->oferta
         ];
 
         try {
