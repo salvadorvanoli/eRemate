@@ -618,7 +618,8 @@ class SubastaService implements SubastaServiceInterface
         if ($lotesSinGanador == 0) {
             $subasta->update([
                 'estado' => EstadoSubasta::CERRADA,
-                'loteActual_id' => null
+                'loteActual_id' => null,
+                'fechaCierre' => now()
             ]);
 
             // Send notifications to interested users
