@@ -196,7 +196,7 @@ export class RegisterFormComponent implements OnInit, OnDestroy {
         });
         
         setTimeout(() => {
-          window.location.reload();
+          this.router.navigate(['/inicio-sesion']);
         }, 2000);
       },
       error: (err: any) => {
