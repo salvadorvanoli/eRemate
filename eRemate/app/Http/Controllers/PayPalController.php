@@ -88,6 +88,29 @@ class PayPalController extends Controller
             $payerId = $request->input('payer_id');
             $usuarioRegistradoId = $request->input('usuario_registrado_id');
             
+            // Verificar si este pago ya fue procesado anteriormente
+            $facturaExistente = \App\Models\Factura::where('payment_id', $paymentId)->first();
+            if ($facturaExistente) {
+                \Log::info('Pago ya procesado anteriormente:', [
+                    'payment_id' => $paymentId,
+                    'factura_id' => $facturaExistente->id
+                ]);
+                
+                // Retornar los datos de la factura existente
+                $compra = \App\Models\Compra::where('factura_id', $facturaExistente->id)->first();
+                
+                return response()->json([
+                    'success' => true,
+                    'data' => [
+                        'payment_id' => $paymentId,
+                        'factura' => $facturaExistente,
+                        'compra' => $compra,
+                        'chat_id' => $request->input('chat_id')
+                    ],
+                    'message' => 'Pago ya procesado anteriormente'
+                ], 200);
+            }
+            
             // Autenticar user
             $usuarioAutenticado = auth()->user();
             if (!$usuarioAutenticado) {
@@ -431,6 +454,46 @@ class PayPalController extends Controller
             return response()->json([
                 'success' => false,
                 'error' => 'Error al verificar credenciales de PayPal',
+                'details' => $e->getMessage()
+            ], 500);
+        }
+    }
+
+    /**
+     * Verifica si un pago ya fue procesado
+     * 
+     * @param string $paymentId
+     * @return \Illuminate\Http\JsonResponse
+     */
+    public function verificarPagoProcesado($paymentId)
+    {
+        try {
+            $factura = \App\Models\Factura::where('payment_id', $paymentId)->first();
+            
+            if ($factura) {
+                $compra = $factura->compra;
+                
+                return response()->json([
+                    'success' => true,
+                    'processed' => true,
+                    'data' => [
+                        'payment_id' => $paymentId,
+                        'factura' => $factura,
+                        'compra' => $compra
+                    ]
+                ]);
+            }
+            
+            return response()->json([
+                'success' => true,
+                'processed' => false
+            ]);
+            
+        } catch (\Exception $e) {
+            \Log::error('Error al verificar pago procesado: ' . $e->getMessage());
+            return response()->json([
+                'success' => false,
+                'error' => 'Error al verificar estado del pago',
                 'details' => $e->getMessage()
             ], 500);
         }

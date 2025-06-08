@@ -234,6 +234,26 @@ class PayPalService implements PayPalServiceInterface
     public function ejecutarPago(string $paymentId, string $payerId, int $usuarioRegistradoId): mixed
     {
         try {
+            // Verificar si este pago ya fue procesado anteriormente
+            $facturaExistente = Factura::where('payment_id', $paymentId)->first();
+            if ($facturaExistente) {
+                Log::info("Pago ya procesado anteriormente: {$paymentId}");
+                
+                // Obtener la compra asociada
+                $compra = $facturaExistente->compra;
+                
+                return [
+                    'success' => true,
+                    'data' => [
+                        'payment_id' => $paymentId,
+                        'factura' => $facturaExistente,
+                        'compra' => $compra,
+                        'chat_id' => null // No tenemos chat_id en facturas existentes
+                    ],
+                    'message' => 'Pago ya procesado anteriormente'
+                ];
+            }
+            
             $accessToken = $this->obtenerAccessToken();
 
             // Ejecutar el pago en PayPal
@@ -266,11 +286,12 @@ class PayPalService implements PayPalServiceInterface
                 }
             }
 
-            // Crear factura con metodoPago PAYPAL
+            // Crear factura con metodoPago PAYPAL y payment_id
             $factura = Factura::create([
                 'monto' => $monto,
                 'metodoEntrega' => $metodoEntrega,
-                'metodoPago' => MetodoPago::PAYPAL
+                'metodoPago' => MetodoPago::PAYPAL,
+                'payment_id' => $paymentId
             ]);
 
             // Crear compra asociada al usuario registrado

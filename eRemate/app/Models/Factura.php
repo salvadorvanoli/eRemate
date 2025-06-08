@@ -17,7 +17,8 @@ class Factura extends Model
         'id',
         'monto',
         'metodoEntrega',
-        'metodoPago'
+        'metodoPago',
+        'payment_id'
     ];
 
     public function compra()

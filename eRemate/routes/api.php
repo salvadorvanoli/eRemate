@@ -197,6 +197,7 @@ Route::prefix('paypal')->group(function () {
         Route::post('/create-payment-from-chat', [PayPalController::class, 'crearPagoDesdeChatId']);
         Route::post('/execute-payment', [PayPalController::class, 'ejecutarPago']);
         Route::get('/payment-status/{paymentId}', [PayPalController::class, 'obtenerEstadoPago']);
+        Route::get('/verify-payment-processed/{paymentId}', [PayPalController::class, 'verificarPagoProcesado']);
     });
 });
 

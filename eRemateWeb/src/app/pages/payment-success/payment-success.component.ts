@@ -58,19 +58,16 @@ export class PaymentSuccessComponent implements OnInit, OnDestroy {
         this.error = 'Parámetros de pago inválidos o faltantes';
       }
     });
-  }
-
-  getCurrentUser() {
+  }  getCurrentUser() {
     this.loadingUser = true;
     this.securityService.getActualUser().subscribe({
       next: (user) => {
         this.currentUser = user;
         this.loadingUser = false;
-        
         if (user) {
-          // Si tenemos usuario y parámetros válidos, procesar el pago
-          if (this.paymentId && this.payerId) {
-            this.executePayment(this.paymentId, this.payerId);
+          // Primero verificar con el backend si el pago ya fue procesado
+          if (this.paymentId) {
+            this.checkPaymentAlreadyProcessed();
           }
         } else {
           // Iniciar polling para verificar autenticación
@@ -84,7 +81,6 @@ export class PaymentSuccessComponent implements OnInit, OnDestroy {
       }
     });
   }
-
   startAuthCheckPolling() {
     // Verificar la autenticación cada 2 segundos
     this.authCheckSubscription = interval(2000).subscribe(() => {
@@ -102,14 +98,65 @@ export class PaymentSuccessComponent implements OnInit, OnDestroy {
             this.currentUser = user;
             this.authCheckSubscription?.unsubscribe();
             
-            if (this.paymentId && this.payerId) {
-              this.executePayment(this.paymentId, this.payerId);
+            // Verificar con el backend si el pago ya fue procesado
+            if (this.paymentId) {
+              this.checkPaymentAlreadyProcessed();
             }
           }
         },
         error: () => {} 
       });
     });
+  }
+
+  checkPaymentAlreadyProcessed() {
+    // Verificar primero con el backend
+    this.paypalService.verificarPagoProcesado(this.paymentId).subscribe({
+      next: (response) => {
+        if (response.success && response.processed) {
+          // El pago ya fue procesado en el backend
+          this.paymentData = response.data;
+          this.success = true;
+          this.loading = false;
+          
+          // Actualizar localStorage con los datos del backend
+          const paymentProcessedKey = `payment_processed_${this.paymentId}`;
+          const paymentDataKey = `payment_data_${this.paymentId}`;
+          localStorage.setItem(paymentProcessedKey, 'true');
+          localStorage.setItem(paymentDataKey, JSON.stringify(response.data));
+        } else {
+          // El pago no fue procesado, verificar localStorage como fallback
+          this.checkLocalStorageAndProcess();
+        }
+      },
+      error: (error) => {
+        console.error('Error al verificar pago procesado:', error);
+        // En caso de error, verificar localStorage como fallback
+        this.checkLocalStorageAndProcess();
+      }
+    });
+  }
+
+  checkLocalStorageAndProcess() {
+    // Verificar si el pago ya fue procesado localmente
+    const paymentProcessedKey = `payment_processed_${this.paymentId}`;
+    const paymentAlreadyProcessed = localStorage.getItem(paymentProcessedKey);
+    
+    if (paymentAlreadyProcessed) {
+      // El pago ya fue procesado, mostrar la información guardada
+      const savedPaymentData = localStorage.getItem(`payment_data_${this.paymentId}`);
+      if (savedPaymentData) {
+        this.paymentData = JSON.parse(savedPaymentData);
+        this.success = true;
+        this.loading = false;
+        return;
+      }
+    }
+    
+    // Si tenemos usuario y parámetros válidos, procesar el pago
+    if (this.paymentId && this.payerId) {
+      this.executePayment(this.paymentId, this.payerId);
+    }
   }
   executePayment(paymentId: string, payerId: string) {
     // Verificar que el usuario es válido
@@ -146,6 +193,11 @@ export class PaymentSuccessComponent implements OnInit, OnDestroy {
         this.loading = false;        if (response && response.success) {
           this.success = true;
           this.paymentData = response.data;
+            // Guardar el estado del pago procesado y los datos en localStorage (permanente)
+          const paymentProcessedKey = `payment_processed_${this.paymentId}`;
+          const paymentDataKey = `payment_data_${this.paymentId}`;
+          localStorage.setItem(paymentProcessedKey, 'true');
+          localStorage.setItem(paymentDataKey, JSON.stringify(response.data));
           
           // Limpiar el payment_request_id del sessionStorage después del éxito
           sessionStorage.removeItem('payment_request_id');
@@ -164,13 +216,12 @@ export class PaymentSuccessComponent implements OnInit, OnDestroy {
         this.error = error.error?.error || error.message || 'Error al ejecutar el pago';
       }
     });
-  }
-
-  volverAlInicio() {
+  }  volverAlInicio() {
+    // No limpiar los datos del pago para mantenerlos permanentemente
     if (this.chatId) {
-      this.router.navigate(['/chat', this.chatId]);
+      this.router.navigate(['/chat-detail/', this.chatId]);
     } else {
-      this.router.navigate(['/']);
+      this.router.navigate(['/inicio']);
     }
   }
 
@@ -179,6 +230,13 @@ export class PaymentSuccessComponent implements OnInit, OnDestroy {
       this.router.navigate(['/factura', this.paymentData.factura.id]);
     } else {
       this.error = 'No se puede acceder a la factura en este momento';
+    }
+  }
+
+  private clearPaymentData() {
+    if (this.paymentId) {
+      localStorage.removeItem(`payment_processed_${this.paymentId}`);
+      localStorage.removeItem(`payment_data_${this.paymentId}`);
     }
   }
 }
