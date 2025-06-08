@@ -26,6 +26,7 @@ import { AuthGuard } from './core/guards/auth.guard';
 import { AuctioneerGuard } from './core/guards/auctioneer.guard';
 import { ChatAccessGuard } from './core/guards/chat-access.guard';
 import { PaymentAuthorizationGuard } from './core/guards/payment-authorization.guard';
+import { PaymentSuccessGuard } from './core/guards/payment-success.guard';
 
 export const routes: Routes = [
     { path: 'inicio', component: HomeComponent },
@@ -54,7 +55,7 @@ export const routes: Routes = [
     {
         path: 'pago/exitoso',
         component: PaymentSuccessComponent,
-        canActivate: [AuthGuard]
+        canActivate: [AuthGuard, PaymentSuccessGuard]
     },
     { path: 'pago/cancelado', redirectTo: '/pago', pathMatch: 'full' },
     { path: 'perfil', component: ViewProfileComponent },

@@ -42,7 +42,11 @@ Route::get('invoices/{id}', [FacturaController::class, 'show']);
 Route::post('invoices', [FacturaController::class, 'store']);
 Route::delete('invoices/{id}', [FacturaController::class, 'destroy']);
 Route::get('users/{userId}/invoices', [FacturaController::class, 'getFacturasPorUsuario']);
-Route::get('invoices/{id}/pdf', [FacturaController::class, 'descargarPdf']);
+
+// Rutas de Factura que requieren autenticación
+Route::middleware('auth:sanctum')->group(function () {
+    Route::get('invoices/{id}/pdf', [FacturaController::class, 'descargarPdf']);
+});
 
 // Rutas de Compra
 Route::get('purchases', [CompraController::class, 'index']);

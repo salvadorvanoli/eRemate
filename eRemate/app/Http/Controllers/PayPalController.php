@@ -468,10 +468,27 @@ class PayPalController extends Controller
     public function verificarPagoProcesado($paymentId)
     {
         try {
+            // Verificar que el usuario esté autenticado
+            $usuarioAutenticado = auth()->user();
+            if (!$usuarioAutenticado) {
+                return response()->json([
+                    'success' => false,
+                    'error' => 'Usuario no autenticado'
+                ], 401);
+            }
+
             $factura = \App\Models\Factura::where('payment_id', $paymentId)->first();
             
             if ($factura) {
                 $compra = $factura->compra;
+                
+                // Verificar que el usuario autenticado sea el dueño de la factura
+                if (!$compra || $compra->usuarioRegistrado_id !== $usuarioAutenticado->id) {
+                    return response()->json([
+                        'success' => false,
+                        'error' => 'No tienes permiso para acceder a esta información de pago'
+                    ], 403);
+                }
                 
                 return response()->json([
                     'success' => true,

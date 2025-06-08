@@ -3,6 +3,7 @@ import { CommonModule } from '@angular/common';
 import { ActivatedRoute, Router } from '@angular/router';
 import { PaypalService } from '../../core/services/paypal.service';
 import { SecurityService } from '../../core/services/security.service';
+import { FacturaService } from '../../core/services/factura.service';
 import { PrimaryButtonComponent } from '../../shared/components/buttons/primary-button/primary-button.component';
 import { Subscription, interval } from 'rxjs';
 
@@ -20,20 +21,20 @@ export class PaymentSuccessComponent implements OnInit, OnDestroy {
   success: boolean = false;
   error: string = '';
   paymentData: any = null;
-  currentUser: any = null;
-  paymentId: string = '';
+  currentUser: any = null;  paymentId: string = '';
   payerId: string = '';
   chatId: number | null = null;
+  downloadingInvoice: boolean = false;
   
   private authCheckSubscription?: Subscription;
   private maxRetries = 10;
   private retryCount = 0;
-
   constructor(
     private route: ActivatedRoute,
     private router: Router,
     private paypalService: PaypalService,
-    private securityService: SecurityService
+    private securityService: SecurityService,
+    private facturaService: FacturaService
   ) {}
 
   ngOnInit() {
@@ -114,7 +115,15 @@ export class PaymentSuccessComponent implements OnInit, OnDestroy {
     this.paypalService.verificarPagoProcesado(this.paymentId).subscribe({
       next: (response) => {
         if (response.success && response.processed) {
-          // El pago ya fue procesado en el backend
+          // Verificar que el pago pertenece al usuario actual
+          if (response.data?.compra?.usuarioRegistrado_id && 
+              response.data.compra.usuarioRegistrado_id !== this.currentUser.id) {
+            this.loading = false;
+            this.error = 'No tiene permisos para acceder a esta información de pago';
+            return;
+          }
+
+          // El pago ya fue procesado en el backend y pertenece al usuario
           this.paymentData = response.data;
           this.success = true;
           this.loading = false;
@@ -131,7 +140,19 @@ export class PaymentSuccessComponent implements OnInit, OnDestroy {
       },
       error: (error) => {
         console.error('Error al verificar pago procesado:', error);
-        // En caso de error, verificar localStorage como fallback
+        
+        // Manejar errores de autorización específicamente
+        if (error.status === 403) {
+          this.loading = false;
+          this.error = 'No tiene permisos para acceder a esta información de pago';
+          return;
+        } else if (error.status === 401) {
+          this.loading = false;
+          this.error = 'Su sesión ha expirado. Por favor, inicie sesión nuevamente';
+          return;
+        }
+        
+        // En caso de otros errores, verificar localStorage como fallback
         this.checkLocalStorageAndProcess();
       }
     });
@@ -223,14 +244,59 @@ export class PaymentSuccessComponent implements OnInit, OnDestroy {
     } else {
       this.router.navigate(['/inicio']);
     }
-  }
-
-  verFactura() {
-    if (this.paymentData?.factura?.id) {
-      this.router.navigate(['/factura', this.paymentData.factura.id]);
-    } else {
-      this.error = 'No se puede acceder a la factura en este momento';
+  }  verFactura() {
+    // Verificar que el usuario autenticado es el propietario de la factura
+    if (!this.currentUser || this.currentUser.tipo !== 'registrado') {
+      this.error = 'Debe estar autenticado como usuario registrado para descargar la factura';
+      return;
     }
+
+    if (!this.paymentData?.factura?.id) {
+      this.error = 'No se puede acceder a la factura en este momento';
+      return;
+    }
+
+    // Verificar ownership a través de la compra
+    if (this.paymentData?.compra?.usuarioRegistrado_id && 
+        this.paymentData.compra.usuarioRegistrado_id !== this.currentUser.id) {
+      this.error = 'No tiene permisos para descargar esta factura';
+      return;
+    }
+
+    this.downloadingInvoice = true;
+    this.facturaService.descargarFacturaPdf(this.paymentData.factura.id).subscribe({
+      next: (blob) => {
+        this.downloadingInvoice = false;
+        // Crear un URL para el blob
+        const url = window.URL.createObjectURL(blob);
+        
+        // Crear un elemento de enlace temporal para descargar
+        const link = document.createElement('a');
+        link.href = url;
+        link.download = `factura_${this.paymentData.factura.id}.pdf`;
+        
+        // Agregar el enlace al DOM, hacer click y removerlo
+        document.body.appendChild(link);
+        link.click();
+        document.body.removeChild(link);
+        
+        // Limpiar el URL del blob
+        window.URL.revokeObjectURL(url);
+      },
+      error: (error) => {
+        this.downloadingInvoice = false;
+        console.error('Error al descargar la factura:', error);
+        
+        // Manejar diferentes tipos de errores de autorización
+        if (error.status === 403) {
+          this.error = 'No tiene permisos para descargar esta factura';
+        } else if (error.status === 401) {
+          this.error = 'Su sesión ha expirado. Por favor, inicie sesión nuevamente';
+        } else {
+          this.error = 'No se pudo descargar la factura en este momento';
+        }
+      }
+    });
   }
 
   private clearPaymentData() {

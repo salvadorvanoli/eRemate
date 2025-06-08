@@ -78,6 +78,25 @@ class FacturaController extends Controller
     public function descargarPdf($id)
     {
         try {
+            // Verificar que el usuario esté autenticado
+            $usuarioAutenticado = auth()->user();
+            if (!$usuarioAutenticado) {
+                return response()->json(['error' => 'Usuario no autenticado'], 401);
+            }
+
+            // Obtener la factura con la compra asociada
+            $factura = $this->facturaService->buscarPorId($id);
+            
+            // Verificar que la factura tenga una compra asociada
+            if (!$factura->compra) {
+                return response()->json(['error' => 'Factura sin compra asociada'], 404);
+            }
+
+            // Verificar que el usuario autenticado sea el dueño de la factura
+            if ($factura->compra->usuarioRegistrado_id !== $usuarioAutenticado->id) {
+                return response()->json(['error' => 'No tienes permiso para acceder a esta factura'], 403);
+            }
+
             return $this->facturaService->generarPdf($id);
         } catch (ModelNotFoundException $e) {
             return response()->json(['error' => 'Factura no encontrada'], 404);
