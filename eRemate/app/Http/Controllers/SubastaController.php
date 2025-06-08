@@ -3,10 +3,12 @@
 namespace App\Http\Controllers;
 
 use App\Models\Subasta;
+use App\Enums\TipoSubasta;
 use Illuminate\Http\Request;
 use App\Services\Subasta\SubastaServiceInterface;
 use Illuminate\Http\JsonResponse;
 use Illuminate\Support\Facades\Validator;
+use Illuminate\Validation\Rules\Enum;
 
 class SubastaController extends Controller
 {
@@ -25,7 +27,7 @@ class SubastaController extends Controller
                 'rematador_id' => 'nullable|exists:rematadores,id',
                 'mensajes' => 'nullable|array',
                 'urlTransmision' => 'required|string',
-                'tipoSubasta' => 'required|string',
+                'tipoSubasta' => ['required', new Enum(TipoSubasta::class)],
                 'fechaInicio' => 'required|date',
                 'fechaCierre' => 'required|date|after:fechaInicio',
                 'ubicacion' => 'required|string'
@@ -90,7 +92,7 @@ class SubastaController extends Controller
                 'rematador_id' => 'sometimes|nullable|exists:rematadores,id',
                 'mensajes' => 'sometimes|nullable|array',
                 'urlTransmision' => 'sometimes|required|string',
-                'tipoSubasta' => 'sometimes|required|string',
+                'tipoSubasta' => ['sometimes', 'required', new Enum(TipoSubasta::class)],
                 'fechaInicio' => 'sometimes|required|date',
                 'fechaCierre' => 'sometimes|required|date|after:fechaInicio',
                 'ubicacion' => 'sometimes|required|string',
@@ -450,6 +452,33 @@ class SubastaController extends Controller
             return response()->json([
                 'success' => false,
                 'message' => 'Error al obtener imagen aleatoria: ' . $e->getMessage()
+            ], 500);
+        }
+    }
+
+    /**
+     * Obtener tipos de subasta disponibles
+     */
+    public function obtenerTipos()
+    {
+        try {
+            $tipos = collect(TipoSubasta::cases())->map(function ($tipo) {
+                return [
+                    'value' => $tipo->value,
+                    'label' => $tipo->etiqueta()
+                ];
+            });
+
+            return response()->json([
+                'success' => true,
+                'data' => $tipos,
+                'message' => 'Tipos de subasta obtenidos correctamente'
+            ], 200);
+
+        } catch (\Exception $e) {
+            return response()->json([
+                'success' => false,
+                'message' => 'Error al obtener tipos de subasta: ' . $e->getMessage()
             ], 500);
         }
     }

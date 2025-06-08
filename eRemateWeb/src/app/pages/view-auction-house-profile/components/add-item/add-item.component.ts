@@ -12,6 +12,7 @@ import { ItemService } from '../../../../core/services/item.service';
 import { MessageService } from 'primeng/api';
 import { ImageUploadInputComponent } from '../../../../shared/components/inputs/image-upload-input/image-upload-input.component';
 import { ImageService } from '../../../../core/services/image.service';
+import { EstadoOption, ESTADOS_ARTICULO } from '../../../../core/enums/estado-articulo.enum';
 import { finalize } from 'rxjs/operators';
 
 @Component({
@@ -46,10 +47,13 @@ export class AddItemComponent implements OnInit, OnChanges {
   
   @Output() save = new EventEmitter<Articulo>();
   @Output() cancel = new EventEmitter<void>();
-
   categorias: CategoriaSimple[] = [];
   selectedCategoria: CategoriaSimple | null = null;
   loadingCategorias: boolean = false;
+
+  estadosArticulo: EstadoOption[] = [];
+  selectedEstado: string | null = null;
+  loadingEstados: boolean = false;
 
   selectedImages = signal<File[]>([]);
   imagesInvalid = signal<boolean>(false);
@@ -62,9 +66,9 @@ export class AddItemComponent implements OnInit, OnChanges {
     private itemService: ItemService,
     private messageService: MessageService
   ) {}
-
   ngOnInit() {
     this.loadCategorias();
+    this.loadEstados();
     this.initializeArticuloData();
   }
 
@@ -93,7 +97,6 @@ export class AddItemComponent implements OnInit, OnChanges {
       this.formSubmitted.set(changes['submitted'].currentValue || false);
     }
   }
-
   private initializeArticuloData() {
     if (!this.articulo.id && (!this.articulo.imagenes || this.articulo.imagenes.length === 0)) {
       this.selectedImages.set([]);
@@ -108,14 +111,30 @@ export class AddItemComponent implements OnInit, OnChanges {
     } else {
       this.selectedCategoria = null;
     }
-  }
 
+    // Initialize estado data
+    if (this.estadosArticulo.length > 0) {
+      this.initializeEstadoData();
+    }
+  }
   private findAndSetCategoria() {
     if (this.articulo.categoria_id && this.categorias.length > 0) {
       this.selectedCategoria = this.categorias.find(cat => cat.id === this.articulo.categoria_id) || null;
     }
   }
 
+  private initializeEstadoData() {
+    if (this.articulo.estado) {
+      this.selectedEstado = this.articulo.estado;
+    } else {
+      this.selectedEstado = null;
+    }
+  }
+
+  getEstadoLabel(value: string): string {
+    const estado = this.estadosArticulo.find(e => e.value === value);
+    return estado ? estado.label : value;
+  }
   loadCategorias() {
     this.loadingCategorias = true;
     this.itemService.getAllCategories()
@@ -140,6 +159,24 @@ export class AddItemComponent implements OnInit, OnChanges {
             detail: 'No se pudieron cargar las categorías',
             life: 3000
           });
+        }
+      });
+  }
+
+  loadEstados() {
+    this.loadingEstados = true;
+    this.itemService.getEstadosArticulo()
+      .pipe(finalize(() => this.loadingEstados = false))
+      .subscribe({
+        next: (estados: EstadoOption[]) => {
+          this.estadosArticulo = estados;
+          this.initializeEstadoData();
+        },
+        error: (error) => {
+          // Fall back to local enum data if API fails
+          this.estadosArticulo = ESTADOS_ARTICULO;
+          this.initializeEstadoData();
+          console.warn('Could not load estados from API, using local data:', error);
         }
       });
   }
@@ -195,7 +232,6 @@ export class AddItemComponent implements OnInit, OnChanges {
       reader.readAsDataURL(file);
     }
   }
-
   async onSave() {
     this.formSubmitted.set(true);
     
@@ -203,13 +239,13 @@ export class AddItemComponent implements OnInit, OnChanges {
     const hasNewImages = this.selectedImages().length > 0;
     
     if (!this.articulo.nombre?.trim() || 
-        !this.articulo.estado?.trim() || 
+        !this.selectedEstado || 
         !this.articulo.especificacionesTecnicas?.trim() ||
         !this.selectedCategoria ||
         (!hasExistingImages && !hasNewImages)) {
       this.submitted = true;
       
-      let errorMessage = 'Todos los campos son obligatorios, incluyendo la categoría';
+      let errorMessage = 'Todos los campos son obligatorios, incluyendo la categoría y el estado';
       if (!hasExistingImages && !hasNewImages) {
         errorMessage += ' y al menos una imagen';
       }
@@ -237,6 +273,7 @@ export class AddItemComponent implements OnInit, OnChanges {
 
       const articuloToSave: Articulo = {
         ...this.articulo,
+        estado: this.selectedEstado,
         categoria: this.selectedCategoria,
         categoria_id: this.selectedCategoria.id,
         imagenes: imagenesFinales
@@ -261,11 +298,11 @@ export class AddItemComponent implements OnInit, OnChanges {
       this.articulo.imagenes.splice(index, 1);
     }
   }
-
   resetComponent() {
     this.selectedImages.set([]);
     this.imagesInvalid.set(false);
     this.formSubmitted.set(false);
     this.selectedCategoria = null;
+    this.selectedEstado = null;
   }
 }

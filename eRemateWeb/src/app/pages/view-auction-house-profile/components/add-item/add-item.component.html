@@ -35,12 +35,33 @@
     <small class="text-red-500" *ngIf="submitted && !selectedCategoria">Debe seleccionar una categoría.</small>
     <small class="text-gray-600 mt-1 block" *ngIf="categorias.length === 0 && !loadingCategorias">No hay categorías disponibles.</small>
   </div>
-  
-  <div class="field mt-3">
+    <div class="field mt-3">
     <label for="estado" class="block font-bold mb-2">Estado <span class="text-red-500">*</span></label>
-    <input type="text" pInputText id="estado" [(ngModel)]="articulo.estado" class="w-full" 
-      placeholder="Ej: Nuevo, Usado, Refaccionado, etc." />
-    <small class="text-red-500" *ngIf="submitted && !articulo.estado?.trim()">El estado del artículo es obligatorio.</small>
+    <p-dropdown 
+      id="estado"
+      [options]="estadosArticulo" 
+      [(ngModel)]="selectedEstado" 
+      optionLabel="label" 
+      optionValue="value"
+      placeholder="Seleccione el estado del artículo"
+      [showClear]="true"
+      class="w-full"
+      [disabled]="loadingEstados || estadosArticulo.length === 0"
+      [loading]="loadingEstados"
+    >
+      <ng-template pTemplate="selectedItem">
+        <div *ngIf="selectedEstado" class="flex align-items-center">
+          <div>{{getEstadoLabel(selectedEstado)}}</div>
+        </div>
+      </ng-template>
+      <ng-template pTemplate="item" let-estado>
+        <div class="flex align-items-center">
+          <div>{{estado.label}}</div>
+        </div>
+      </ng-template>
+    </p-dropdown>
+    <small class="text-red-500" *ngIf="submitted && !selectedEstado">El estado del artículo es obligatorio.</small>
+    <small class="text-gray-600 mt-1 block" *ngIf="estadosArticulo.length === 0 && !loadingEstados">No hay estados disponibles.</small>
   </div>
   
   <div class="field mt-3">

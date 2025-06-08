@@ -15,10 +15,12 @@ import { DropdownModule } from 'primeng/dropdown';
 import { finalize } from 'rxjs/operators';
 import * as L from 'leaflet';
 import { AuctionHouseService } from '../../../../core/services/auction-house.service';
+import { SubastaService } from '../../../../core/services/subasta.service';
 import { Subasta } from '../../../../core/models/subasta';
 import { UsuarioRematador, RematadorResponse } from '../../../../core/models/usuario';
 import { SecurityService } from '../../../../core/services/security.service';
 import { Router } from '@angular/router';
+import { TipoSubasta, TipoOption, TIPOS_SUBASTA } from '../../../../core/enums/tipo-subasta.enum';
 
 @Component({
   selector: 'app-table-auction',
@@ -51,10 +53,15 @@ export class TableAuctionComponent implements OnInit, AfterViewInit, OnDestroy {
     selectedAuction: Subasta | null = null;
     submitted: boolean = false;
     globalFilterFields: string[] = [];    rematadorEmail: string = '';
-    selectedRematador: RematadorResponse | null = null;
-    emailError: string = '';
+    selectedRematador: RematadorResponse | null = null;    emailError: string = '';
     rematadores: RematadorResponse[] = [];
     casaId: number | null = null; 
+    
+    // Propiedades para tipos de subasta
+    tipos: TipoOption[] = [];
+    selectedTipo: TipoOption | null = null;
+    selectedEditTipo: TipoOption | null = null;
+    loadingTipos: boolean = false;
     
     minDate: string = '';
     minEndDate: string = '';
@@ -80,12 +87,11 @@ export class TableAuctionComponent implements OnInit, AfterViewInit, OnDestroy {
 
 
     @ViewChild('dt') dt!: Table;
-    @Output() auctionSelected = new EventEmitter<number>();
-
-    constructor(
+    @Output() auctionSelected = new EventEmitter<number>();    constructor(
         private messageService: MessageService,
         private confirmationService: ConfirmationService,
         private auctionHouseService: AuctionHouseService,
+        private subastaService: SubastaService,
         private securityService: SecurityService,
         private router: Router
     ) {}
@@ -271,11 +277,11 @@ export class TableAuctionComponent implements OnInit, AfterViewInit, OnDestroy {
             });
         }
     }
-    
-    private initializeComponent() {
+      private initializeComponent() {
         this.configureTable();
         this.loadAuctionsData();
         this.loadRematadores();
+        this.loadTipos();
     }
     
     configureTable() {
@@ -348,8 +354,23 @@ export class TableAuctionComponent implements OnInit, AfterViewInit, OnDestroy {
                 },
                 error: (error) => {
                     this.rematadores = [];
-                }
-            });
+                }            });
+    }
+
+    loadTipos() {
+        this.loadingTipos = true;
+        this.subastaService.getTipos().subscribe({
+            next: (tipos) => {
+                this.tipos = tipos;
+                this.loadingTipos = false;
+            },
+            error: (error) => {
+                console.error('Error al cargar tipos de subasta:', error);
+                // Fallback a tipos estáticos si falla la carga del backend
+                this.tipos = TIPOS_SUBASTA;
+                this.loadingTipos = false;
+            }
+        });
     }
 
     openNew() {
@@ -382,9 +403,9 @@ export class TableAuctionComponent implements OnInit, AfterViewInit, OnDestroy {
             pujaHabilitada: false,
             fechaInicio: new Date(),
             fechaCierre: new Date(today.getTime() + 86400000), 
-            ubicacion: ''
-        };
+            ubicacion: ''        };
           this.selectedRematador = null;
+        this.selectedTipo = null;
         this.dateErrors = { startDate: '', endDate: '' };
         this.submitted = false;
         this.mapVisible = false;
@@ -466,14 +487,16 @@ export class TableAuctionComponent implements OnInit, AfterViewInit, OnDestroy {
         const today = new Date();
         this.editMinDate = this.formatDateForInputLocal(today);
         this.editMinEndDate = this.editMinDate;
-        
-        this.editingAuction = {
+          this.editingAuction = {
             id: auction.id,
             tipoSubasta: auction.tipoSubasta,
             fechaInicio: this.formatDateForInputLocal(new Date(auction.fechaInicio)),
             fechaCierre: this.formatDateForInputLocal(new Date(auction.fechaCierre)),
             ubicacion: auction.ubicacion
         };
+        
+        // Seleccionar el tipo correspondiente en el dropdown
+        this.selectedEditTipo = this.tipos.find(tipo => tipo.value === auction.tipoSubasta) || null;
         
         this.editSubmitted = false;
         this.editDateErrors = { startDate: '', endDate: '' };
@@ -625,14 +648,12 @@ export class TableAuctionComponent implements OnInit, AfterViewInit, OnDestroy {
         this.editMarker = L.marker([lat, lng]).addTo(this.editMap);
         const popupText = customTitle || this.editingAuction.ubicacion || 'Ubicación seleccionada';
         this.editMarker.bindPopup(popupText).openPopup();
-    }
-
-    updateAuction() {
+    }    updateAuction() {
         this.editSubmitted = true;
         
         this.validateEditDates();
         
-        if (!this.editingAuction.tipoSubasta?.trim() || 
+        if (!this.selectedEditTipo || 
             !this.editingAuction.ubicacion?.trim() || 
             !this.editingAuction.fechaInicio || 
             !this.editingAuction.fechaCierre ||
@@ -640,9 +661,8 @@ export class TableAuctionComponent implements OnInit, AfterViewInit, OnDestroy {
             this.editDateErrors.endDate) {
             return;
         }
-        
-        const updateData = {
-            tipoSubasta: this.editingAuction.tipoSubasta,
+          const updateData = {
+            tipoSubasta: this.selectedEditTipo?.value || this.editingAuction.tipoSubasta,
             fechaInicio: this.editingAuction.fechaInicio,
             fechaCierre: this.editingAuction.fechaCierre,
             ubicacion: this.editingAuction.ubicacion
@@ -652,12 +672,11 @@ export class TableAuctionComponent implements OnInit, AfterViewInit, OnDestroy {
         this.auctionHouseService.updateAuction(this.editingAuction.id, updateData)
             .pipe(finalize(() => this.loading = false))
             .subscribe({
-                next: (response) => {
-                    const index = this.auctions.findIndex(a => a.id === this.editingAuction.id);
+                next: (response) => {                    const index = this.auctions.findIndex(a => a.id === this.editingAuction.id);
                     if (index !== -1) {
                         this.auctions[index] = {
                             ...this.auctions[index],
-                            tipoSubasta: this.editingAuction.tipoSubasta,
+                            tipoSubasta: this.selectedEditTipo?.value || this.editingAuction.tipoSubasta,
                             fechaInicio: new Date(this.editingAuction.fechaInicio),
                             fechaCierre: new Date(this.editingAuction.fechaCierre),
                             ubicacion: this.editingAuction.ubicacion
@@ -718,11 +737,9 @@ export class TableAuctionComponent implements OnInit, AfterViewInit, OnDestroy {
     }
 
     saveAuction() {
-        this.submitted = true;
-
-        this.validateDates();
+        this.submitted = true;        this.validateDates();
         
-        if (!this.auction.tipoSubasta?.trim() || 
+        if (!this.selectedTipo || 
             !this.auction.ubicacion?.trim() || 
             !this.auction.fechaInicio || 
             !this.auction.fechaCierre || 
@@ -747,17 +764,16 @@ export class TableAuctionComponent implements OnInit, AfterViewInit, OnDestroy {
         
         this.auction.rematador_id = this.selectedRematador.rematador?.id || 0;
         const casaIdToSave = currentUser.id;
-        
-        const subastaData = {
+          const subastaData = {
             casaDeRemates_id: casaIdToSave, 
             rematador_id: this.auction.rematador_id,
             urlTransmision: this.auction.urlTransmision,
-            tipoSubasta: this.auction.tipoSubasta,
+            tipoSubasta: this.selectedTipo.value,
             estado: 'pendiente_aprobacion',
             fechaInicio: this.auction.fechaInicio,
             fechaCierre: this.auction.fechaCierre,
             ubicacion: this.auction.ubicacion,
-            mensajes: [] 
+            mensajes: []
         };
         
         this.loading = true;

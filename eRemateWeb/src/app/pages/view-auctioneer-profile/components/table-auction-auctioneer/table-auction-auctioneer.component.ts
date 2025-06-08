@@ -11,16 +11,19 @@ import { TooltipModule } from 'primeng/tooltip';
 import { ProgressSpinnerModule } from 'primeng/progressspinner';
 import { IconFieldModule } from 'primeng/iconfield';
 import { InputIconModule } from 'primeng/inputicon';
+import { DropdownModule } from 'primeng/dropdown';
 import { ConfirmationService, MessageService } from 'primeng/api';
 import { AuctioneerService } from '../../../../core/services/auctioneer.service';
 import { SecurityService } from '../../../../core/services/security.service';
+import { SubastaService } from '../../../../core/services/subasta.service';
 import { Subasta } from '../../../../core/models/subasta';
+import { TipoOption, TIPOS_SUBASTA } from '../../../../core/enums/tipo-subasta.enum';
 import { finalize } from 'rxjs';
 import { Table } from 'primeng/table';
 
 @Component({
   selector: 'app-table-auction-auctioneer',
-  standalone: true,
+  standalone: true,  
   imports: [
     CommonModule,
     FormsModule,
@@ -32,7 +35,8 @@ import { Table } from 'primeng/table';
     TooltipModule,
     ProgressSpinnerModule,
     IconFieldModule,
-    InputIconModule
+    InputIconModule,
+    DropdownModule
   ],
   providers: [ConfirmationService, MessageService],
   templateUrl: './table-auction-auctioneer.component.html',
@@ -41,8 +45,7 @@ import { Table } from 'primeng/table';
 export class TableAuctionAuctioneerComponent implements OnInit, OnChanges {
   @Input() viewType: 'schedule' | 'requests' = 'schedule';
   @ViewChild('dt') dt!: Table;
-  
-  auctions: Subasta[] = [];
+    auctions: Subasta[] = [];
   selectedAuction: Subasta | null = null;
   cols: any[] = [];
   globalFilterFields: string[] = [];
@@ -54,17 +57,22 @@ export class TableAuctionAuctioneerComponent implements OnInit, OnChanges {
   rematadorEmail: string = '';
   emailError: string = '';
   
-  constructor(
+  // Dropdown properties for auction types
+  tipos: TipoOption[] = [];
+  selectedTipo: TipoOption | null = null;
+  loadingTipos: boolean = false;
+    constructor(
     private auctioneerService: AuctioneerService,
     private securityService: SecurityService,
+    private subastaService: SubastaService,
     private confirmationService: ConfirmationService,
     private messageService: MessageService,
     private router: Router
   ) {}
-
   ngOnInit() {
     this.configureTable();
     this.loadCurrentUser();
+    this.loadTipos();
   }
   
   ngOnChanges(changes: SimpleChanges) {
@@ -143,6 +151,22 @@ export class TableAuctionAuctioneerComponent implements OnInit, OnChanges {
     });
   }
   
+  loadTipos() {
+    this.loadingTipos = true;
+    this.subastaService.getTipos()
+      .pipe(finalize(() => this.loadingTipos = false))
+      .subscribe({
+        next: (tipos) => {
+          this.tipos = tipos;
+        },
+        error: (error) => {
+          console.error('Error loading auction types:', error);
+          // Fallback to static types
+          this.tipos = TIPOS_SUBASTA;
+        }
+      });
+  }
+  
   formatDates(data: Subasta[]): Subasta[] {
     return data.map(item => {
       return {
@@ -178,10 +202,10 @@ export class TableAuctionAuctioneerComponent implements OnInit, OnChanges {
       pujaHabilitada: false
     };
   }
-  
-  openNew() {
+    openNew() {
     this.auction = this.initNewAuction();
     this.rematadorEmail = '';
+    this.selectedTipo = null;
     this.submitted = false;
     this.auctionDialog = true;
   }
@@ -298,9 +322,18 @@ export class TableAuctionAuctioneerComponent implements OnInit, OnChanges {
       }
     });
   }
-  
-  saveAuction() {
+    saveAuction() {
     this.submitted = true;
+    
+    if (!this.selectedTipo || 
+        !this.auction.fechaInicio || 
+        !this.auction.fechaCierre || 
+        !this.auction.ubicacion?.trim()) {
+      return;
+    }
+    
+    // Use the selected tipo value
+    this.auction.tipoSubasta = this.selectedTipo.value;
     
     setTimeout(() => {
       this.messageService.add({

@@ -121,11 +121,18 @@
     [modal]="true"
   >
     <ng-template pTemplate="content">
-      <div class="flex flex-col gap-4 p-fluid">
-        <div class="field">
+      <div class="flex flex-col gap-4 p-fluid">        <div class="field">
           <label for="tipoSubasta" class="block font-bold mb-2">Tipo de Subasta <span class="text-red-500">*</span></label>
-          <input type="text" pInputText id="tipoSubasta" [(ngModel)]="auction.tipoSubasta" required autofocus class="w-full" />
-          <small class="text-red-500" *ngIf="submitted && !auction.tipoSubasta?.trim()">El tipo de subasta es requerido.</small>
+          <p-dropdown 
+            id="tipoSubasta" 
+            [options]="tipos" 
+            [(ngModel)]="selectedTipo" 
+            optionLabel="label" 
+            placeholder="Seleccione un tipo de subasta"
+            [loading]="loadingTipos"
+            class="w-full" 
+          />
+          <small class="text-red-500" *ngIf="submitted && !selectedTipo">El tipo de subasta es requerido.</small>
         </div>
         <div class="field">
           <label for="fechaInicio" class="block font-bold mb-2">Fecha de Inicio <span class="text-red-500">*</span></label>

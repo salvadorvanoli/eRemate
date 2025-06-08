@@ -133,6 +133,7 @@ Route::prefix('auction')->group(function () {
     Route::get('/ordered', [SubastaController::class, 'obtenerSubastasOrdenadas']);
     Route::get('/filtered', [SubastaController::class, 'obtenerSubastasFiltradas']);
     Route::get('/locations', [SubastaController::class, 'obtenerUbicaciones']);
+    Route::get('/tipos', [SubastaController::class, 'obtenerTipos']);
     Route::get('/{id}', [SubastaController::class, 'obtenerSubasta']);
     Route::get('/{id}/lots', [SubastaController::class, 'obtenerLotes']);
     Route::get('/{id}/live-stream', [SubastaController::class, 'obtenerTransmisionEnVivo']);
@@ -179,6 +180,7 @@ Route::prefix('item')->group(function () {
     Route::get('/ordered', [ArticuloController::class, 'obtenerArticulosOrdenados']);
     Route::get('/filtered', [ArticuloController::class, 'obtenerArticulosFiltrados']);
     Route::get('/categories', [ArticuloController::class, 'obtenerCategorias']);
+    Route::get('/estados', [ArticuloController::class, 'obtenerEstados']);
     Route::get('/{id}', [ArticuloController::class, 'obtenerArticulo']);
 
     Route::middleware('auth:sanctum')->group(function () {
