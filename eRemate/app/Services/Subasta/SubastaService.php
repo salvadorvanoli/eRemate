@@ -622,6 +622,8 @@ class SubastaService implements SubastaServiceInterface
             ]
         );
 
+        PujaAutomatica::where('lote_id', $loteActual->id)->delete();
+
         $lotesSinGanador = $subasta->lotes()->where('ganador_id', null)->count();
 
         if ($lotesSinGanador == 0) {
@@ -770,7 +772,6 @@ class SubastaService implements SubastaServiceInterface
         $nuevaPujaData = [
             'id' => $pujaCreada->id,
             'monto' => $pujaCreada->monto,
-            'nuevo_total' => $nuevoTotal,
             'lote_id' => $loteActual->id,
             'lote_nombre' => $loteActual->nombre,
             'subasta_id' => $subasta->id,
@@ -840,7 +841,7 @@ class SubastaService implements SubastaServiceInterface
             return $subasta;
         }
 
-        if ($subasta->estado !== EstadoSubasta::PENDIENTE) {
+        if (in_array($subasta->estado, [EstadoSubasta::INICIADA, EstadoSubasta::CERRADA, EstadoSubasta::CANCELADA])) {
             return response()->json([
                 'success' => false,
                 'message' => 'Solo se pueden crear pujas automáticas en subastas pendientes'
@@ -988,11 +989,11 @@ class SubastaService implements SubastaServiceInterface
         $nuevaPujaData = [
             'id' => $pujaCreada->id,
             'monto' => $pujaCreada->monto,
-            'nuevo_total' => $nuevoTotal,
             'lote_id' => $loteActual->id,
             'lote_nombre' => $loteActual->nombre,
             'subasta_id' => $subasta->id,
-            'usuario_id' => $pujaCreada->usuarioRegistrado_id
+            'usuario_id' => $pujaCreada->usuarioRegistrado_id,
+            'oferta' => $nuevoTotal
         ];
 
         event(new NuevaPujaEvent($nuevaPujaData));

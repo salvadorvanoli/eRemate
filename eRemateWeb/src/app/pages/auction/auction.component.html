@@ -1,3 +1,4 @@
+<p-toast [style]="{'z-index': '100000'}" [baseZIndex]="100000" />
 <app-auction-info
     [item]="subasta"
     [item2]="loteSeleccionado"
@@ -71,3 +72,10 @@
         (automaticBidCreated)="onModalClose()">
     </app-auction-lots-modal>
 }
+
+<!-- Modal de Resultados (Ganador / Subasta Cerrada) -->
+<app-auction-result-modal
+    [visible]="showResultModal"
+    [type]="resultModalType"
+    (closed)="closeResultModal()">
+</app-auction-result-modal>

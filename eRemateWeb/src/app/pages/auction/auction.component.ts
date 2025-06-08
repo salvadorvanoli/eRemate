@@ -1,5 +1,6 @@
 import { Component, OnInit } from '@angular/core';
 import { MessageService } from 'primeng/api';
+import { Toast } from 'primeng/toast';
 import { AuctionInfoComponent } from './components/auction-info/auction-info.component';
 import { TitleAndDescriptionComponent } from '../../shared/components/title-and-description/title-and-description.component';
 import { DynamicCarouselComponent } from '../../shared/components/dynamic-carousel/dynamic-carousel.component';
@@ -13,13 +14,16 @@ import { ActivatedRoute } from '@angular/router';
 import { ModalComponent } from '../../shared/components/modal/modal.component';
 import { PrimaryButtonComponent } from '../../shared/components/buttons/primary-button/primary-button.component';
 import { AuctionLotsModalComponent } from './components/auction-lots-modal/auction-lots-modal.component';
+import { AuctionResultModalComponent, AuctionResultType } from './components/auction-result-modal/auction-result-modal.component';
 import { Subscription } from 'rxjs';
 import { WebsocketService } from '../../core/services/websocket.service';
+import { SecurityService } from '../../core/services/security.service';
 
 @Component({
   selector: 'app-auction',
   standalone: true,
   imports: [
+    Toast,
     AuctionInfoComponent,
     TitleAndDescriptionComponent,
     DynamicCarouselComponent,
@@ -27,7 +31,8 @@ import { WebsocketService } from '../../core/services/websocket.service';
     LiveBiddingComponent,
     ModalComponent,
     PrimaryButtonComponent,
-    AuctionLotsModalComponent
+    AuctionLotsModalComponent,
+    AuctionResultModalComponent
   ],
   providers: [
     MessageService
@@ -38,11 +43,12 @@ import { WebsocketService } from '../../core/services/websocket.service';
 export class AuctionComponent implements OnInit {
   subasta?: Subasta;
   lotes: Lote[] = [];
-  loteSeleccionado?: Lote;
-  showDetallesModal = false;
+  loteSeleccionado?: Lote;  showDetallesModal = false;
   showPujaModal = false;
   showLotsModal = false;
   loteSeleccionadoModal?: Lote;
+  showResultModal = false;
+  resultModalType: AuctionResultType = 'winner';
 
   // Nueva propiedad para el enlace de YouTube Live
   youtubeUrl?: string;
@@ -54,6 +60,7 @@ export class AuctionComponent implements OnInit {
     private loteService: LoteService,
     private subastaService: SubastaService,
     private websocketService: WebsocketService,
+    private securityService: SecurityService,
     private route: ActivatedRoute
   ) {}
 
@@ -68,12 +75,29 @@ export class AuctionComponent implements OnInit {
 
   verTodosLosLotes(): void {
     this.showLotsModal = true;
-  }
-  onModalClose(): void {
+  }  onModalClose(): void {
     this.showDetallesModal = false;
     this.showPujaModal = false;
     this.showLotsModal = false;
+    this.showResultModal = false;
     this.loteSeleccionadoModal = undefined; // Limpiar la selección del modal
+  }
+
+  // Método específico para cerrar modales de resultados
+  closeResultModal(): void {
+    this.showResultModal = false;
+  }
+
+  // Método para mostrar modal de ganador
+  showWinnerModal(): void {
+    this.resultModalType = 'winner';
+    this.showResultModal = true;
+  }
+
+  // Método para mostrar modal de subasta cerrada
+  showAuctionClosedModal(): void {
+    this.resultModalType = 'closed';
+    this.showResultModal = true;
   }
 
   ngOnInit() {
@@ -231,7 +255,9 @@ export class AuctionComponent implements OnInit {
       return 'https://developers.elementor.com/docs/assets/img/elementor-placeholder-image.png';
     }
     return item.imagenUrl;
-  }  seleccionarLote(lote: Lote): void {
+  }
+  
+  seleccionarLote(lote: Lote): void {
     this.loteSeleccionado = lote;
     this.loadLoteArticulos(lote);
   }
@@ -240,9 +266,19 @@ export class AuctionComponent implements OnInit {
     if (id !== undefined) {
       const pujaSub = this.websocketService.subscribeToPujas(id).subscribe({
         next: (event) => {
+
+          if (this.subasta) {
+            this.subasta = { ...this.subasta };
+          }
+
           this.actualizarLoteConNuevaPuja(event);
-          this.messageService.clear();
-          this.messageService.add({severity: 'success', summary: 'Nueva puja', detail: `Nueva puja recibida para el lote "${event.lote_nombre}": $${event.monto}`, life: 5000});
+          if (event.usuario_id !== this.securityService.actualUser?.id) {
+            this.messageService.clear();
+            this.messageService.add({severity: 'info', summary: 'Nueva puja recibida', detail: `Nueva puja recibida para el lote "${event.lote_nombre}": $${event.monto}`, life: 5000});
+          } else {
+            this.messageService.clear();
+            this.messageService.add({severity: 'success', summary: 'Nueva puja', detail: `Puja realizada exitosamente para el lote "${event.lote_nombre}": $${event.monto}`, life: 5000});
+          }
         }
       });
 
@@ -262,35 +298,44 @@ export class AuctionComponent implements OnInit {
           if (this.subasta) {
             this.subasta.estado = event.estado;
             this.subasta.loteActual_id = event.lote_actual_id;
+
+            this.subasta = { ...this.subasta };
             
             this.cargarLotesYActualizarActual(event.lote_actual_id);
           }
           this.messageService.clear();
-          this.messageService.add({severity: 'success', summary: 'Éxito', detail: `Subasta iniciada correctamente`, life: 4000});
+          this.messageService.add({severity: 'info', summary: '¡Atención!', detail: `¡La subasta ha comenzado!`, life: 4000});
         }
       });
       
       const cierreSub = this.websocketService.subscribeToAuctionClose(id).subscribe({
         next: (event) => {
           console.log('Evento de cierre recibido:', event);
-          
-          if (event.subasta_finalizada) {
-            this.messageService.clear();
-            this.messageService.add({severity: 'success', summary: 'Éxito', detail: `Subasta finalizada completamente`, life: 4000});
+            if (event.subasta_finalizada) {
+            this.showAuctionClosedModal();
             if (this.subasta) {
               this.subasta.estado = 'cerrada';
               this.subasta.loteActual_id = undefined;
             }
             this.loteSeleccionado = undefined;
 
-            this.cargarLotesYActualizarActual();        
-          } else {
+            if (this.subasta) {
+              this.subasta = { ...this.subasta };
+            }
+
+            this.cargarLotesYActualizarActual();          } else {
             if (event.siguiente_lote_id && event.siguiente_lote_nombre) {
-              this.messageService.clear();
-              this.messageService.add({severity: 'info', summary: '¡Atención!', detail: `Lote "${event.lote_cerrado_nombre}" cerrado. Siguiente lote: "${event.siguiente_lote_nombre}"`, life: 5000});
-              
+              if (this.securityService.actualUser?.id !== event.ganador_id) {
+                this.messageService.clear();
+                this.messageService.add({severity: 'info', summary: '¡Atención!', detail: `Lote "${event.lote_cerrado_nombre}" cerrado. Siguiente lote: "${event.siguiente_lote_nombre}"`, life: 5000});
+              } else {
+                this.showWinnerModal();
+              }
+
               if (this.subasta) {
                 this.subasta.loteActual_id = event.siguiente_lote_id;
+
+                this.subasta = { ...this.subasta };
                 
                 this.cargarLotesYActualizarActual(event.siguiente_lote_id);
               }
