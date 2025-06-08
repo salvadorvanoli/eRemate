@@ -77,14 +77,16 @@ export class AuctionComponent implements OnInit {
   }
 
   ngOnInit() {
+    const id = Number(this.route.snapshot.paramMap.get('id'));
+
     // Primero obtener la subasta, luego los lotes
-    this.getSubasta();
+    this.getSubasta(id);
+    this.suscribirseAEventosWebsocket(id);
   }
 
-  getSubasta(): void {
-    const id = Number(this.route.snapshot.paramMap.get('id'));
-    
+  getSubasta(id: number | undefined): void {
     if (id) {
+      console.log('Obteniendo subasta con ID:', id);
       this.subastaService.getSubastaById(id).subscribe(
         (data) => {
           this.subasta = {
@@ -234,66 +236,72 @@ export class AuctionComponent implements OnInit {
     this.loadLoteArticulos(lote);
   }
 
-  suscribirseAEventosWebsocket(): void {
-    if (this.subasta?.id !== undefined) {
-      const pujaSub = this.websocketService.subscribeToPujas(this.subasta?.id).subscribe({
+  suscribirseAEventosWebsocket(id: number | undefined): void {
+    if (id !== undefined) {
+      const pujaSub = this.websocketService.subscribeToPujas(id).subscribe({
         next: (event) => {
           this.actualizarLoteConNuevaPuja(event);
+          this.messageService.clear();
+          this.messageService.add({severity: 'success', summary: 'Nueva puja', detail: `Nueva puja recibida para el lote "${event.lote_nombre}": $${event.monto}`, life: 5000});
         }
       });
-      const urlTransmisionSub = this.websocketService.subscribeToTransmissionUrlUpdate(this.subasta?.id).subscribe({
+
+      const urlTransmisionSub = this.websocketService.subscribeToTransmissionUrlUpdate(id).subscribe({
         next: (event) => {
           console.log('Nueva URL de transmisión recibida:', event);
-          this.youtubeUrl = event.url_transmision || undefined;
+          this.youtubeUrl = event.urlTransmision || undefined;
         },
         error: (error) => {
           this.messageService.clear();
           this.messageService.add({severity: 'error', summary: 'Error', detail: `Error al recibir la actualización de la URL de transmisión: ${error}`, life: 4000});
         }
       });
-      const inicioSub = this.websocketService.subscribeToAuctionStart(this.subasta.id).subscribe({
-      next: (event) => {
-        if (this.subasta) {
-          this.subasta.estado = event.estado;
-          this.subasta.loteActual_id = event.lote_actual_id;
-          
-          this.cargarLotesYActualizarActual(event.lote_actual_id);
-        }
-        this.messageService.clear();
-        this.messageService.add({severity: 'success', summary: 'Éxito', detail: `Subasta iniciada correctamente`, life: 4000});
-      }
-    });const cierreSub = this.websocketService.subscribeToAuctionClose(this.subasta.id).subscribe({
-      next: (event) => {
-        console.log('Evento de cierre recibido:', event);
-        
-        if (event.subasta_finalizada) {
-          this.messageService.clear();
-          this.messageService.add({severity: 'success', summary: 'Éxito', detail: `Subasta finalizada completamente`, life: 4000});
-          if (this.subasta) {
-            this.subasta.estado = 'cerrada';
-            this.subasta.loteActual_id = undefined;
-          }
-          this.loteSeleccionado = undefined;
 
-          this.cargarLotesYActualizarActual();        
-        } else {
-          if (event.siguiente_lote_id && event.siguiente_lote_nombre) {
-            this.messageService.clear();
-            this.messageService.add({severity: 'info', summary: '¡Atención!', detail: `Lote "${event.lote_cerrado_nombre}" cerrado. Siguiente lote: "${event.siguiente_lote_nombre}"`, life: 5000});
+      const inicioSub = this.websocketService.subscribeToAuctionStart(id).subscribe({
+        next: (event) => {
+          if (this.subasta) {
+            this.subasta.estado = event.estado;
+            this.subasta.loteActual_id = event.lote_actual_id;
             
-            if (this.subasta) {
-              this.subasta.loteActual_id = event.siguiente_lote_id;
-              
-              this.cargarLotesYActualizarActual(event.siguiente_lote_id);
-            }
-          } else {
-            console.warn('Datos incompletos en evento de cierre:', event);
+            this.cargarLotesYActualizarActual(event.lote_actual_id);
+          }
+          this.messageService.clear();
+          this.messageService.add({severity: 'success', summary: 'Éxito', detail: `Subasta iniciada correctamente`, life: 4000});
+        }
+      });
+      
+      const cierreSub = this.websocketService.subscribeToAuctionClose(id).subscribe({
+        next: (event) => {
+          console.log('Evento de cierre recibido:', event);
+          
+          if (event.subasta_finalizada) {
             this.messageService.clear();
-            this.messageService.add({severity: 'error', summary: 'Error', detail: `Error al procesar el cierre del lote`, life: 4000});
+            this.messageService.add({severity: 'success', summary: 'Éxito', detail: `Subasta finalizada completamente`, life: 4000});
+            if (this.subasta) {
+              this.subasta.estado = 'cerrada';
+              this.subasta.loteActual_id = undefined;
+            }
+            this.loteSeleccionado = undefined;
+
+            this.cargarLotesYActualizarActual();        
+          } else {
+            if (event.siguiente_lote_id && event.siguiente_lote_nombre) {
+              this.messageService.clear();
+              this.messageService.add({severity: 'info', summary: '¡Atención!', detail: `Lote "${event.lote_cerrado_nombre}" cerrado. Siguiente lote: "${event.siguiente_lote_nombre}"`, life: 5000});
+              
+              if (this.subasta) {
+                this.subasta.loteActual_id = event.siguiente_lote_id;
+                
+                this.cargarLotesYActualizarActual(event.siguiente_lote_id);
+              }
+            } else {
+              console.warn('Datos incompletos en evento de cierre:', event);
+              this.messageService.clear();
+              this.messageService.add({severity: 'error', summary: 'Error', detail: `Error al procesar el cierre del lote`, life: 4000});
+            }
           }
         }
-      }
-    });
+      });
 
       this.subscriptions.push(pujaSub, urlTransmisionSub, inicioSub, cierreSub);
     }

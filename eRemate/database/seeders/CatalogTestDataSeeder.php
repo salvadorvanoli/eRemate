@@ -127,7 +127,14 @@ class CatalogTestDataSeeder extends Seeder
         // Crear 10 subastas con 4 lotes cada una
         $this->command->info('Creando subastas y lotes...');
         $tiposSubasta = ['Online', 'Presencial', 'Híbrida'];
-        $estados = [EstadoSubasta::PENDIENTE, EstadoSubasta::INICIADA, EstadoSubasta::CERRADA];
+        $estados = [
+            EstadoSubasta::PENDIENTE,
+            EstadoSubasta::PENDIENTE_APROBACION,
+            EstadoSubasta::ACEPTADA,
+            EstadoSubasta::CANCELADA,
+            EstadoSubasta::INICIADA,
+            EstadoSubasta::CERRADA
+        ];
         
         for ($i = 0; $i < 10; $i++) {
             // Distribuir subastas entre casas de remates
@@ -139,7 +146,7 @@ class CatalogTestDataSeeder extends Seeder
             $fechaCierre = clone $fechaInicio;
             $fechaCierre->addHours(rand(1, 24));
             
-            $estado = $estados[$i % 3]; // Alternar estados
+            $estado = $estados[$i % 6]; // Alternar estados
             
             $subasta = Subasta::create([
                 'casaDeRemates_id' => $casasDeRemates[$casaDeRematesIndex]->id,
