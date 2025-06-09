@@ -518,4 +518,39 @@ class LoteService implements LoteServiceInterface
         }
     }
 
+
+    public function obtenerUltimaPuja($id)
+    {
+        try {
+            $lote = Lote::findOrFail($id);
+            
+            $ultimaPuja = \App\Models\Puja::where('lote_id', $id)
+            ->orderBy('id', 'desc')
+            ->first();
+            
+            $valorActual = $ultimaPuja ?? 0;
+
+            return response()->json([
+                'success' => true,
+                'data' => [
+                    'lote_id' => $id,
+                    'valor_actual' => $valorActual,
+                    'es_valor_base' => $ultimaPuja === null
+                ],
+                'message' => 'Valor actual del lote obtenido correctamente'
+            ], 200);
+
+        } catch (\Illuminate\Database\Eloquent\ModelNotFoundException $e) {
+            return response()->json([
+                'success' => false,
+                'message' => 'Lote no encontrado'
+            ], 404);
+
+        } catch (\Exception $e) {
+            return response()->json([
+                'success' => false,
+                'message' => 'Error al obtener valor actual del lote: ' . $e->getMessage()
+            ], 500);
+        }
+    }
 }

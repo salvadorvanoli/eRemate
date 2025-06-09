@@ -14,14 +14,19 @@ import { Checkbox } from 'primeng/checkbox';
 })
 export class FormCheckboxComponent {
 
+  isChecked: boolean = false;
+
   @Input() label: string = '';
   @Input() classes: string = '';
-
-  isChecked: boolean = false;
 
   @Output() checkedChange = new EventEmitter<boolean>();
 
   onCheckboxChange() {
     this.checkedChange.emit(this.isChecked);
+  }
+
+  reset() {
+    this.isChecked = false;
+    this.checkedChange.emit(false);
   }
 }

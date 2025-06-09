@@ -57,4 +57,17 @@ export class LoteService extends BaseHttpService<any, Lote> {
     );
   }
 
+  getUltimaPuja(loteId: number): Observable<any> {
+    return this.http.get<any>(`${this.baseUrl}/lot/${loteId}/ultima-puja`, {
+      headers: this.getAuthHeaders()
+    }).pipe(
+      map(response => {
+        if (response.success) {
+          return response.data;
+        }
+        throw new Error(response.message || 'Error al obtener la última puja');
+      })
+    );
+  }
+
 }

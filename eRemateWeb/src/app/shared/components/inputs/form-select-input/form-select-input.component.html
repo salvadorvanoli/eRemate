@@ -1,6 +1,6 @@
 <select
-    [ngModel]="value()"
-    (ngModelChange)="value.set($event); textValue.emit($event);"
+    [(ngModel)]="value"
+    (ngModelChange)="onValueChange($event);"
     [ngModelOptions]="{standalone: true}"
     class="w-full p-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500 font-semibold"
 >

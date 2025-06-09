@@ -25,6 +25,7 @@ export class AuctionInfoComponent implements OnInit, AfterViewInit, OnDestroy, O
 @Input() getImageUrl?: (item: any) => string;
 @Input() youtubeUrl?: string;
 @Output() onPuja = new EventEmitter<void>();
+@Output() onVerTodosLosLotes = new EventEmitter<void>();
 
 countdown: string = '';
 private timerSub?: Subscription;
@@ -54,6 +55,17 @@ ngAfterViewInit() {
 
 pujar(): void {
     this.onPuja.emit();
+}
+
+verTodosLosLotes(): void {
+    this.onVerTodosLosLotes.emit();
+}
+
+shouldShowViewAllLotsButton(): boolean {
+    if (!this.item?.estado) return false;
+    
+    const estadosNoPermitidos = ['iniciada', 'cerrada', 'cancelada'];
+    return !estadosNoPermitidos.includes(this.item.estado);
 }
 
 openLocationDialog(): void {

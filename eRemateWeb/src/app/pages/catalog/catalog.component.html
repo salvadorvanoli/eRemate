@@ -13,17 +13,22 @@
             >
                 <ng-template #header>
                     <div class="w-full grid grid-cols-1 xs:grid-cols-2 md:grid-cols-5 gap-4">
-                        <app-search-bar (textValue)="onSearchTextChange($event)" />
+                        <app-search-bar #searchBar (textValue)="onSearchTextChange($event)" />
                         <div class="flex items-center sm:justify-center">
-                            <app-form-checkbox label="Cerradas" (checkedChange)="onClosedCheck($event)" />
+                            <app-form-checkbox #closedCheckbox label="Cerradas" (checkedChange)="onClosedCheck($event)" />
                         </div>
-                        <app-form-select-input [options]="categories" placeholder="Categorías" (textValue)="onCategorySelection($event)" />
-                        <app-form-select-input [options]="locations" placeholder="Ubicación" (textValue)="onLocationSelection($event)" />
-                        <app-date-picker class="col-span-1 xs:col-span-2 md:col-span-1" classes="w-full" label="Cierra antes de" (dateTimeChange)="onLimitCloseDateSelection($event)" />
+                        <app-form-select-input #categorySelect [options]="categories" placeholder="Categorías" (textValue)="onCategorySelection($event)" />
+                        <app-form-select-input #locationSelect [options]="locations" placeholder="Ubicación" (textValue)="onLocationSelection($event)" />
+                        <app-date-picker #datePicker class="col-span-1 xs:col-span-2 md:col-span-1" classes="w-full" label="Cierra antes de" (dateTimeChange)="onLimitCloseDateSelection($event)" />
+                        <div class="col-span-1 xs:col-span-2 md:col-span-5 gap-4 grid grid-cols-2">
+                            <app-primary-button label="Filtrar" classes="w-full" (onClick)="applyFilters()" />
+                            <app-primary-button label="Restablecer" classes="w-full" (onClick)="resetFilters()" />
+                        </div>
                     </div>
                 </ng-template>
                 <ng-template #list let-items>
-                    <div *ngFor="let item of items; let first = first">                        <app-element-row
+                    <div *ngFor="let item of items; let first = first">
+                        <app-element-row
                             [element]="item"
                             [dataType]="dataType"
                             [first]="first"
@@ -39,5 +44,5 @@
         </div>
     </div>
 } @else {
-    <!-- <app-message classes="p-2 m-10" icon="pi pi-info-circle" [message]="No hay  disponibles" />-->
+    <app-message classes="p-2 m-10" icon="pi pi-info-circle" message="No hay elementos disponibles" />
 }

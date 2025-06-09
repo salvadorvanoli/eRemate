@@ -1,8 +1,8 @@
 <p-iconfield>
     <input
         pInputText
-        [ngModel]="text()"
-        (ngModelChange)="text.set($event); textValue.emit($event);"
+        [(ngModel)]="searchText"
+        (ngModelChange)="onInputChange()"
         [ngModelOptions]="{standalone: true}"
         type="text"
         placeholder="Buscar"

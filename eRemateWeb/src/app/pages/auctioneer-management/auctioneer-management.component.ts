@@ -33,6 +33,8 @@ export class AuctioneerManagementComponent implements OnInit, OnDestroy {
   loteActual?: Lote;
   lotes: Lote[] = [];
 
+  ultimaPuja: number | undefined = undefined;
+
   url: string = '';
   isUrlInvalid: boolean = false;
 
@@ -61,6 +63,7 @@ export class AuctioneerManagementComponent implements OnInit, OnDestroy {
 
   ngOnInit(): void {
     this.subastaId = Number(this.route.snapshot.paramMap.get('id'));
+
     if (this.subastaId) {
       this.cargarDatosSubasta();
       this.suscribirseAEventosWebsocket();
@@ -99,7 +102,8 @@ export class AuctioneerManagementComponent implements OnInit, OnDestroy {
       }
     });
   }  
-    cargarLotes(): void {
+  
+  cargarLotes(): void {
     this.loteService.getLotesBySubasta(this.subastaId).subscribe({
       next: (lotes: Lote[]) => {
         this.lotes = lotes;
@@ -107,6 +111,12 @@ export class AuctioneerManagementComponent implements OnInit, OnDestroy {
           this.loteActual = this.lotes.find(lote => lote.id === this.subasta?.loteActual_id);
           if (this.loteActual?.id) {
             this.cargarArticulosDelLoteActual(this.loteActual.id);
+
+            this.loteService.getUltimaPuja(this.loteActual?.id).subscribe({
+              next: (puja) => {
+                this.ultimaPuja = puja.valor_actual.monto || undefined;
+              }
+            });
           }
         }
         this.loading = false;
@@ -126,6 +136,11 @@ export class AuctioneerManagementComponent implements OnInit, OnDestroy {
         if (nuevoLoteActualId) {
           this.loteActual = this.lotes.find(lote => lote.id === nuevoLoteActualId);
           if (this.loteActual?.id) {
+            this.loteService.getUltimaPuja(this.loteActual?.id).subscribe({
+              next: (puja) => {
+                this.ultimaPuja = puja.valor_actual.monto || undefined;
+              }
+            });
             this.cargarArticulosDelLoteActual(this.loteActual.id);
           } else {
             console.warn('No se encontró el lote con ID:', nuevoLoteActualId);
@@ -166,9 +181,13 @@ export class AuctioneerManagementComponent implements OnInit, OnDestroy {
   suscribirseAEventosWebsocket(): void {
     const pujaSub = this.websocketService.subscribeToPujas(this.subastaId).subscribe({
       next: (event) => {
+        this.ultimaPuja = event.monto;
+
         this.actualizarLoteConNuevaPuja(event);
       }
-    });    const inicioSub = this.websocketService.subscribeToAuctionStart(this.subastaId).subscribe({
+    });    
+    
+    const inicioSub = this.websocketService.subscribeToAuctionStart(this.subastaId).subscribe({
       next: (event) => {
         if (this.subasta) {
           this.subasta.estado = event.estado;
@@ -179,9 +198,10 @@ export class AuctioneerManagementComponent implements OnInit, OnDestroy {
         this.successMessage = 'Subasta iniciada correctamente';
         this.clearMessagesAfterDelay();
       }
-    });const cierreSub = this.websocketService.subscribeToAuctionClose(this.subastaId).subscribe({
+    });
+    
+    const cierreSub = this.websocketService.subscribeToAuctionClose(this.subastaId).subscribe({
       next: (event) => {
-        console.log('Evento de cierre recibido:', event);
         
         if (event.subasta_finalizada) {
           this.successMessage = 'Subasta finalizada completamente';
@@ -215,7 +235,7 @@ export class AuctioneerManagementComponent implements OnInit, OnDestroy {
 
   actualizarLoteConNuevaPuja(event: any): void {
     if (this.loteActual && event.lote_id === this.loteActual.id) {
-      this.loteActual.oferta = event.nuevo_total || event.monto;
+      this.loteActual.oferta = event.oferta;
     }
   }
 

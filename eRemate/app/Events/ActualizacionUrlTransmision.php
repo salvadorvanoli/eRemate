@@ -10,17 +10,17 @@ use Illuminate\Contracts\Broadcasting\ShouldBroadcastNow;
 use Illuminate\Foundation\Events\Dispatchable;
 use Illuminate\Queue\SerializesModels;
 
-class NuevaPujaEvent implements ShouldBroadcastNow
+class ActualizacionUrlTransmision implements ShouldBroadcastNow
 {
     use Dispatchable, InteractsWithSockets, SerializesModels;
-    public $nuevaPujaData;
+    public $actualizacionUrlTransmisionData;
 
     /**
      * Create a new event instance.
      */
-    public function __construct($pujaData)
+    public function __construct($actualizacionUrlTransmisionData)
     {
-        $this->nuevaPujaData = $pujaData;
+        $this->actualizacionUrlTransmisionData = $actualizacionUrlTransmisionData;
     }
 
     /**
@@ -30,7 +30,7 @@ class NuevaPujaEvent implements ShouldBroadcastNow
      */
     public function broadcastOn(): Channel|array
     {
-        return new Channel('subasta.'.$this->nuevaPujaData['subasta_id']);
+        return new Channel('subasta.'.$this->actualizacionUrlTransmisionData['subasta_id']);
     }
 
     /**
@@ -38,7 +38,7 @@ class NuevaPujaEvent implements ShouldBroadcastNow
      */
     public function broadcastAs(): string
     {
-        return 'nueva.puja';
+        return 'actualizacion.url.transmision';
     }
 
     /**
@@ -49,13 +49,8 @@ class NuevaPujaEvent implements ShouldBroadcastNow
     public function broadcastWith(): array
     {
         return [
-            'id' => $this->nuevaPujaData['id'],
-            'monto' => $this->nuevaPujaData['monto'],
-            'lote_id' => $this->nuevaPujaData['lote_id'],
-            'lote_nombre' => $this->nuevaPujaData['lote_nombre'],
-            'subasta_id' => $this->nuevaPujaData['subasta_id'],
-            'usuario_id' => $this->nuevaPujaData['usuario_id'],
-            'oferta' => $this->nuevaPujaData['oferta']
+            'subasta_id' => $this->actualizacionUrlTransmisionData['subasta_id'],
+            'urlTransmision' => $this->actualizacionUrlTransmisionData['urlTransmision']
         ];
     }
 }

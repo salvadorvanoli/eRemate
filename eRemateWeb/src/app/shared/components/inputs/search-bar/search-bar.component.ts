@@ -1,4 +1,4 @@
-import { Component, EventEmitter, Output, signal } from '@angular/core';
+import { Component, EventEmitter, Output } from '@angular/core';
 import { InputIcon } from 'primeng/inputicon';
 import { IconField } from 'primeng/iconfield';
 import { InputTextModule } from 'primeng/inputtext';
@@ -18,7 +18,16 @@ import { FormsModule } from '@angular/forms';
 })
 export class SearchBarComponent {
 
-  text = signal('');
+  searchText: string = '';
 
   @Output() textValue = new EventEmitter<string>();
+
+  onInputChange(): void {
+    this.textValue.emit(this.searchText);
+  }
+
+  reset() {
+    this.searchText = '';
+    this.textValue.emit('');
+  }
 }

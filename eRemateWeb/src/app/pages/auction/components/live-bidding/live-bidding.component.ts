@@ -1,4 +1,4 @@
-import { Component, Input, OnInit, OnDestroy } from '@angular/core';
+import { Component, Input, OnInit, OnDestroy, SimpleChanges } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { FormsModule } from '@angular/forms';
 import { LotProductDetailsComponent } from '../lot-product-details/lot-product-details.component';
@@ -20,7 +20,7 @@ import { Lote } from '../../../../core/models/lote';
   templateUrl: './live-bidding.component.html',
   styleUrl: './live-bidding.component.scss'
 })
-export class LiveBiddingComponent implements OnInit, OnDestroy {  @Input() subasta?: Subasta;
+export class LiveBiddingComponent implements OnInit, OnDestroy {
   
   loteActual?: Lote;
   loading = false;
@@ -30,6 +30,8 @@ export class LiveBiddingComponent implements OnInit, OnDestroy {  @Input() subas
   
   pujaAmount: number = 0;
   pujando = false;
+
+  @Input() subasta?: Subasta;
 
   constructor(
     private loteService: LoteService,
@@ -42,6 +44,12 @@ export class LiveBiddingComponent implements OnInit, OnDestroy {  @Input() subas
 
   ngOnDestroy() {
   }  
+
+  ngOnChanges(changes: SimpleChanges) {
+    if (changes['subasta'] && changes['subasta'].currentValue) {
+      this.loadLoteActual();
+    }
+  }
   
   loadLoteActual() {
     if (!this.subasta?.id) {
@@ -53,7 +61,9 @@ export class LiveBiddingComponent implements OnInit, OnDestroy {  @Input() subas
     this.loading = true;
     this.error = false;
     this.errorMessage = '';
-    this.successMessage = '';    this.subastaService.getLoteActual(this.subasta.id).subscribe({
+    this.successMessage = '';
+    
+    this.subastaService.getLoteActual(this.subasta.id).subscribe({
       next: (lote: Lote) => {
         this.loteActual = lote;
         this.loading = false;
@@ -79,7 +89,9 @@ export class LiveBiddingComponent implements OnInit, OnDestroy {  @Input() subas
 
   get totalAPagar(): number {
     return this.valorActual + this.pujaAmount;
-  }  get puedeRealizar(): boolean {
+  }
+  
+  get puedeRealizar(): boolean {
     const valorMinimo = this.valorActual + this.pujaMinima;
     return this.pujaAmount > 0 && 
            this.totalAPagar >= valorMinimo && 

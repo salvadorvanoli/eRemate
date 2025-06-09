@@ -185,6 +185,7 @@ class CatalogTestDataSeeder extends Seeder
             $usuariosRegistrados[] = $userReg;
         }
 
+
         $this->command->info('✅ Usuarios registrados creados: ' . count($usuariosRegistrados));
 
         /////////////// SUBASTAS DE CASA 1 ///////////////
@@ -517,6 +518,7 @@ class CatalogTestDataSeeder extends Seeder
         // Mostrar usuarios
         foreach ($usuariosRegistrados as $index => $usuario) {
             $this->command->info("  👤 Usuario " . ($index + 1) . ": usuario" . ($index + 1) . "@ejemplo.com");
+
         }
 
         $this->command->info('');
