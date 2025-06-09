@@ -22,6 +22,9 @@ use App\Notifications\SubastaFinalizadaNotification;
 use Illuminate\Support\Facades\Auth;
 use Illuminate\Http\JsonResponse;
 use Carbon\Carbon;
+use App\Services\Lote\LoteServiceInterface;
+use App\Models\GanadorPotencial;
+use Illuminate\Support\Facades\Log; 
 
 class SubastaService implements SubastaServiceInterface
 {
@@ -276,7 +279,7 @@ class SubastaService implements SubastaServiceInterface
                 'lote_id' => $subasta->loteActual_id,
                 'subasta_id' => $subasta->id,
                 'etiqueta' => strtoupper($subasta->estado->name),
-                'texto1' => strtoupper($subasta->tipoSubasta),
+                'texto1' => strtoupper($subasta->tipoSubasta->value),
                 'texto2' => strtoupper($subasta->ubicacion),
                 'texto3' => "{$totalLotes} LOTES EN TOTAL",
                 'fechaInicio' => $subasta->fechaInicio,
@@ -368,7 +371,7 @@ class SubastaService implements SubastaServiceInterface
                 'lote_id' => $subasta->loteActual_id,
                 'subasta_id' => $subasta->id,
                 'etiqueta' => strtoupper($subasta->estado->name),
-                'texto1' => strtoupper($subasta->tipoSubasta),
+                'texto1' => strtoupper($subasta->tipoSubasta->value),
                 'texto2' => strtoupper($subasta->ubicacion),
                 'texto3' => "{$totalLotes} LOTES EN TOTAL",
                 'fechaInicio' => $subasta->fechaInicio,
@@ -514,7 +517,7 @@ class SubastaService implements SubastaServiceInterface
                 }
             }
         } catch (\Exception $e) {
-            \Log::error('Error sending ComienzoSubastaNotification: ' . $e->getMessage());
+            Log::error('Error sending ComienzoSubastaNotification: ' . $e->getMessage());
         }
     }
 
@@ -545,7 +548,7 @@ class SubastaService implements SubastaServiceInterface
                 }
             }
         } catch (\Exception $e) {
-            \Log::error('Error sending NuevaPujaNotification: ' . $e->getMessage());
+            Log::error('Error sending NuevaPujaNotification: ' . $e->getMessage());
         }
     }
 
@@ -570,118 +573,159 @@ class SubastaService implements SubastaServiceInterface
                 }
             }
         } catch (\Exception $e) {
-            \Log::error('Error sending SubastaFinalizadaNotification: ' . $e->getMessage());
+            Log::error('Error sending SubastaFinalizadaNotification: ' . $e->getMessage());
         }
     }
 
     public function cerrarSubasta(int $id)
     {
-        $rematador = $this->validarUsuario();
-        if (!$rematador instanceof Usuario) {
-            return $rematador;
-        }
+        try {
+            Log::info("=== INICIO CERRAR SUBASTA ===", ['id' => $id]);
+            
+            $rematador = $this->validarUsuario();
+            Log::info("Usuario validado", ['usuario' => $rematador instanceof Usuario]);
+            
 
-        $subasta = $this->buscarSubastaPorId($id);
-        if (!$subasta instanceof Subasta) {
-            return $subasta;
-        }
+            $subasta = $this->buscarSubastaPorId($id);
+            if (!$subasta instanceof Subasta) {
+                return $subasta;
+            }
 
-        if ($subasta->estado !== EstadoSubasta::INICIADA) {
-            return response()->json([
-                'success' => false,
-                'message' => 'Solo se pueden cerrar subastas que estén iniciadas'
-            ], 422);
-        }
+            if ($subasta->estado !== EstadoSubasta::INICIADA) {
+                return response()->json([
+                    'success' => false,
+                    'message' => 'Solo se pueden cerrar subastas que estén iniciadas'
+                ], 422);
+            }
 
-        $loteActual = $subasta->loteActual;
-        if (!$loteActual) {
-            return response()->json([
-                'success' => false,
-                'message' => 'No hay un lote siendo subastado actualmente'
-            ], 404);
-        }
-        if ($loteActual->fechaUltimaPuja === null) {
-            return response()->json([
-                'success' => false,
-                'message' => 'No se puede cerrar la subasta porque no se han realizado pujas en el lote actual'
-            ], 422);
-        }
+            $loteActual = $subasta->loteActual;
+            if (!$loteActual) {
+                return response()->json([
+                    'success' => false,
+                    'message' => 'No hay un lote siendo subastado actualmente'
+                ], 404);
+            }
+            if ($loteActual->fechaUltimaPuja === null) {
+                return response()->json([
+                    'success' => false,
+                    'message' => 'No se puede cerrar la subasta porque no se han realizado pujas en el lote actual'
+                ], 422);
+            }
 
-        $ganadorId = $loteActual->pujas()->latest()->first()->usuarioRegistrado_id;
+            // === CÓDIGO ANTERIOR (COMENTADO) ===
+            // $ganadorId = $loteActual->pujas()->latest()->first()->usuarioRegistrado_id;
+            // $loteActual->update([
+            //     'ganador_id' => $ganadorId
+            // ]);
+
+            // === NUEVO CÓDIGO: GANADORES POTENCIALES ===
+          
+            $loteService = app(LoteServiceInterface::class);
+            $resultadoGanadores = $loteService->generarListaGanadoresPotenciales($loteActual->id);
+            
+            if (!$resultadoGanadores instanceof \Illuminate\Http\JsonResponse || 
+                !$resultadoGanadores->getData()->success) {
+                return response()->json([
+                    'success' => false,
+                    'message' => 'Error al generar ganadores potenciales'
+                ], 500);
+            }
+
+            
+            $primerGanadorPotencial = GanadorPotencial::where('lote_id', $loteActual->id)
+                ->where('posicion', 1)
+                ->first();
+            
+            $ganadorId = $primerGanadorPotencial ? $primerGanadorPotencial->usuario_registrado_id : null;
+            // === FIN NUEVO CÓDIGO ===
+
         
-        $loteActual->update([
-            'ganador_id' => $ganadorId
-        ]);
+            PujaAutomatica::where('lote_id', $loteActual->id)->delete();
 
-        // Crea el chat para finalizar la transacción
-        Chat::updateOrCreate(
-            ['id' => $loteActual->id],
-            [
-                'usuarioRegistrado_id' => $ganadorId,
-                'casa_de_remate_id' => $subasta->casaDeRemates_id
-            ]
-        );
+            // === CÓDIGO ANTERIOR (COMENTADO) ===
+            // $lotesSinGanador = $subasta->lotes()->where('ganador_id', null)->count();
 
-        PujaAutomatica::where('lote_id', $loteActual->id)->delete();
+            // === NUEVO CÓDIGO: VERIFICAR LOTES SIN GANADOR CONFIRMADO ===
+            $lotesSinGanador = $subasta->lotes()
+                ->whereDoesntHave('ganadoresPotenciales', function($query) {
+                    $query->where('es_ganador_actual', true);
+                })
+                ->count();
+            // === FIN NUEVO CÓDIGO ===
 
-        $lotesSinGanador = $subasta->lotes()->where('ganador_id', null)->count();
+            if ($lotesSinGanador == 0) {
+                $subasta->update([
+                    'estado' => EstadoSubasta::CERRADA,
+                    'loteActual_id' => null,
+                    'fechaCierre' => now()
+                ]);
 
-        if ($lotesSinGanador == 0) {
+                $this->sendSubastaFinalizadaNotification($subasta);
+
+                // Broadcast auction close event - auction completely finished
+                $cierreSubastaData = [
+                    'subasta_id' => $subasta->id,
+                    'estado' => EstadoSubasta::CERRADA->value,
+                    'lote_cerrado_id' => $loteActual->id,
+                    'lote_cerrado_nombre' => $loteActual->nombre,
+                    'ganador_id' => $ganadorId,
+                    'siguiente_lote_id' => null,
+                    'siguiente_lote_nombre' => null,
+                    'subasta_finalizada' => true
+                ];
+                event(new CierreSubastaEvent($cierreSubastaData));
+
+                return response()->json([
+                    'success' => true,
+                    'message' => 'Subasta cerrada correctamente',
+                    'data' => $subasta
+                ]);
+            }
+
+            // === CÓDIGO ANTERIOR (COMENTADO) ===
+            // $nuevoLoteActual = $subasta->lotes()->where('ganador_id', null)->first();
+
+            // === NUEVO CÓDIGO: BUSCAR SIGUIENTE LOTE SIN GANADORES POTENCIALES ===
+            
+            $nuevoLoteActual = $subasta->lotes()
+                ->whereDoesntHave('ganadoresPotenciales')
+                ->first();
+            // === FIN NUEVO CÓDIGO ===
+
             $subasta->update([
-                'estado' => EstadoSubasta::CERRADA,
-                'loteActual_id' => null,
-                'fechaCierre' => now()
+                'loteActual_id' => $nuevoLoteActual->id
             ]);
 
-            // Send notifications to interested users
-            $this->sendSubastaFinalizadaNotification($subasta);
+            $this->iniciarProcesoDeAutomatizacion($subasta, $nuevoLoteActual);
 
-            // Broadcast auction close event - auction completely finished
+            // Broadcast auction close event - moving to next lot
             $cierreSubastaData = [
                 'subasta_id' => $subasta->id,
-                'estado' => EstadoSubasta::CERRADA->value,
+                'estado' => EstadoSubasta::INICIADA->value,
                 'lote_cerrado_id' => $loteActual->id,
                 'lote_cerrado_nombre' => $loteActual->nombre,
                 'ganador_id' => $ganadorId,
-                'siguiente_lote_id' => null,
-                'siguiente_lote_nombre' => null,
-                'subasta_finalizada' => true
+                'siguiente_lote_id' => $nuevoLoteActual->id,
+                'siguiente_lote_nombre' => $nuevoLoteActual->nombre,
+                'subasta_finalizada' => false
             ];
             event(new CierreSubastaEvent($cierreSubastaData));
 
             return response()->json([
                 'success' => true,
-                'message' => 'Subasta cerrada correctamente',
+                'message' => 'Lote subastado correctamente',
                 'data' => $subasta
             ]);
+        } catch (\Exception $e) {
+            Log::error("ERROR EN CERRAR SUBASTA: " . $e->getMessage(), [
+                'trace' => $e->getTraceAsString()
+            ]);
+            
+            return response()->json([
+                'success' => false,
+                'message' => 'Error interno: ' . $e->getMessage()
+            ], 500);
         }
-
-        $nuevoLoteActual = $subasta->lotes()->where('ganador_id', null)->first();
-
-        $subasta->update([
-            'loteActual_id' => $nuevoLoteActual->id
-        ]);
-
-        $this->iniciarProcesoDeAutomatizacion($subasta, $nuevoLoteActual);
-
-        // Broadcast auction close event - moving to next lot
-        $cierreSubastaData = [
-            'subasta_id' => $subasta->id,
-            'estado' => EstadoSubasta::INICIADA->value,
-            'lote_cerrado_id' => $loteActual->id,
-            'lote_cerrado_nombre' => $loteActual->nombre,
-            'ganador_id' => $ganadorId,
-            'siguiente_lote_id' => $nuevoLoteActual->id,
-            'siguiente_lote_nombre' => $nuevoLoteActual->nombre,
-            'subasta_finalizada' => false
-        ];
-        event(new CierreSubastaEvent($cierreSubastaData));
-
-        return response()->json([
-            'success' => true,
-            'message' => 'Lote subastado correctamente',
-            'data' => $subasta
-        ]);
     }
 
     public function realizarPuja(array $puja, int $id)
