@@ -24,7 +24,8 @@ interface LoteConEstado extends Omit<Lote, 'ganador_id'> {
   ganador_id: number | null;
   puja_maxima: number;
   oferta: number;
-  resultado_texto?: string; // Nueva propiedad para búsqueda
+  es_ganador_potencial: boolean | number;
+  resultado_texto?: string;
 }
 
 @Component({
@@ -101,17 +102,44 @@ export class TableLotsComponent implements OnInit {
             return;
         }
         
+        console.log('🚀 Cargando lotes para usuario ID:', userId);
+        
         this.registeredUsersService.getBiddedLotsByUserId(String(userId))
             .pipe(finalize(() => this.loading = false))
             .subscribe({
                 next: (data: LoteConEstado[]) => {
-                    // Agregar el texto del resultado para búsqueda
+                    console.log('✅ Datos recibidos del backend:', data);
+                    console.log('📊 Cantidad de lotes recibidos:', data.length);
+                    
+                    data.forEach((lote, index) => {
+                        console.log(`📦 Lote ${index + 1}:`, {
+                            id: lote.id,
+                            nombre: lote.nombre,
+                            estado_usuario_lote: lote.estado_usuario_lote,
+                            es_ganador_potencial: lote.es_ganador_potencial,
+                            valorBase: lote.valorBase,
+                            puja_maxima: lote.puja_maxima,
+                            oferta: lote.oferta,
+                            ganador_id: lote.ganador_id
+                        });
+                    });
+                    
                     this.lots = data.map(lot => ({
                         ...lot,
                         resultado_texto: this.getResultadoTag(lot.estado_usuario_lote).value
                     }));
+                    
+                    console.log('🔄 Datos procesados para la tabla:', this.lots);
                 },
                 error: (error) => {
+                    console.error('❌ Error al cargar lotes:', error);
+                    console.error('❌ Detalles del error:', {
+                        status: error.status,
+                        statusText: error.statusText,
+                        message: error.message,
+                        url: error.url
+                    });
+                    
                     this.messageService.add({ 
                         severity: 'error', 
                         summary: 'Error', 
@@ -150,6 +178,14 @@ export class TableLotsComponent implements OnInit {
         }
     }
 
+    isPotentialWinner(lot: LoteConEstado): boolean {
+        if (lot.estado_usuario_lote === 'es_ganador' || lot.estado_usuario_lote === 'es_perdedor') {
+            return false;
+        }
+        
+        return lot.es_ganador_potencial === true || lot.es_ganador_potencial === 1;
+    }
+    
     isWinner(lot: LoteConEstado): boolean {
         return lot.estado_usuario_lote === 'es_ganador';
     }
@@ -265,5 +301,93 @@ export class TableLotsComponent implements OnInit {
         this.selectedLot = null;
         this.rating = 0;
         this.hasExistingRating = false;
+    }
+
+    aceptarLote(lote: LoteConEstado) {
+        if (!lote.id) {
+            this.messageService.add({
+                severity: 'error',
+                summary: 'Error',
+                detail: 'ID del lote no válido',
+                life: 3000
+            });
+            return;
+        }
+
+        console.log('✅ Aceptando lote:', {
+            id: lote.id,
+            nombre: lote.nombre,
+            es_ganador_potencial: lote.es_ganador_potencial
+        });
+
+        this.loading = true;
+        
+        this.registeredUsersService.aceptarLote(lote.id)
+            .pipe(finalize(() => this.loading = false))
+            .subscribe({
+                next: (response) => {
+                    console.log('✅ Respuesta de aceptar lote:', response);
+                    this.messageService.add({
+                        severity: 'success',
+                        summary: 'Éxito',
+                        detail: 'Lote aceptado correctamente',
+                        life: 3000
+                    });
+                    this.loadBiddedLots();
+                },
+                error: (error) => {
+                    console.error('❌ Error al aceptar lote:', error);
+                    this.messageService.add({
+                        severity: 'error',
+                        summary: 'Error',
+                        detail: 'No se pudo aceptar el lote',
+                        life: 3000
+                    });
+                }
+            });
+    }
+
+    rechazarLote(lote: LoteConEstado) {
+        if (!lote.id) {
+            this.messageService.add({
+                severity: 'error',
+                summary: 'Error',
+                detail: 'ID del lote no válido',
+                life: 3000
+            });
+            return;
+        }
+
+        console.log('❌ Rechazando lote:', {
+            id: lote.id,
+            nombre: lote.nombre,
+            es_ganador_potencial: lote.es_ganador_potencial
+        });
+
+        this.loading = true;
+        
+        this.registeredUsersService.rechazarLote(lote.id)
+            .pipe(finalize(() => this.loading = false))
+            .subscribe({
+                next: (response) => {
+                    console.log('✅ Respuesta de rechazar lote:', response);
+                    this.messageService.add({
+                        severity: 'success',
+                        summary: 'Éxito',
+                        detail: 'Lote rechazado correctamente',
+                        life: 3000
+                    });
+                    this.loadBiddedLots();
+                },
+                error: (error) => {
+                    console.error('❌ Error al rechazar lote:', error);
+                    this.messageService.add({
+                        severity: 'error',
+                        summary: 'Error',
+                        detail: 'No se pudo rechazar el lote',
+                        life: 3000
+                    });
+                }
+            });
     }
 }

@@ -30,16 +30,16 @@
       
       <ng-template pTemplate="header">
         <tr style="background-color: rgba(0, 0, 0, 0.04);">
-          <th *ngFor="let col of cols" [style.width]="'calc(85% / ' + cols.length + ')'" style="background-color: rgba(0, 0, 0, 0.04);">
+          <th *ngFor="let col of cols" [style.width]="'calc(75% / ' + cols.length + ')'" style="background-color: rgba(0, 0, 0, 0.04);">
             {{ col.header }}
           </th>
-          <th style="width: 15%; background-color: rgba(0, 0, 0, 0.04);">Acciones</th>
+          <th style="width: 25%; background-color: rgba(0, 0, 0, 0.04);">Acciones</th>
         </tr>
       </ng-template>
       
       <ng-template pTemplate="body" let-lot>
         <tr>
-          <td [style.width]="'calc(85% / ' + cols.length + ')'" *ngFor="let col of cols">
+          <td [style.width]="'calc(75% / ' + cols.length + ')'" *ngFor="let col of cols">
             <!-- Campo monetario -->
             <span *ngIf="col.field === 'valorBase'">
               {{ formatCurrency(lot[col.field]) }}
@@ -60,29 +60,52 @@
             </span>
           </td>
           
-          <td style="width: 15%">
-            <div class="flex gap-1 justify-center">
-              <!-- Solo mostrar acciones si es ganador -->
-              <ng-container *ngIf="isWinner(lot)">
+          <td style="width: 25%">
+            <div class="flex gap-1 justify-center flex-wrap">
+              <!-- Botones para ganador potencial -->
+              <ng-container *ngIf="isPotentialWinner(lot)">
+                <!-- Botón Aceptar -->
                 <p-button 
-                          icon="pi pi-comment" 
-                          severity="info" 
-                          [rounded]="true" 
-                          [outlined]="true" 
-                          (click)="sendMessage(lot)" 
-                          pTooltip="Enviar mensaje" />
+                  icon="pi pi-check" 
+                  severity="success" 
+                  [rounded]="true" 
+                  [outlined]="true" 
+                  (click)="aceptarLote(lot)" 
+                  [disabled]="loading"
+                  pTooltip="Aceptar lote" />
                 
+                <!-- Botón Rechazar -->
                 <p-button 
-                          icon="pi pi-star" 
-                          severity="warn" 
-                          [rounded]="true" 
-                          [outlined]="true" 
-                          (click)="showRating(lot)" 
-                          pTooltip="Ver puntuación" />
+                  icon="pi pi-times" 
+                  severity="danger" 
+                  [rounded]="true" 
+                  [outlined]="true" 
+                  (click)="rechazarLote(lot)" 
+                  [disabled]="loading"
+                  pTooltip="Rechazar lote" />
               </ng-container>
               
-              <!-- Mensaje cuando no es ganador -->
-              <span *ngIf="!isWinner(lot)" class="text-500 text-sm">
+              <!-- Botones para ganador (mantener los existentes) -->
+              <ng-container *ngIf="isWinner(lot)">
+                <p-button 
+                  icon="pi pi-comment" 
+                  severity="info" 
+                  [rounded]="true" 
+                  [outlined]="true" 
+                  (click)="sendMessage(lot)" 
+                  pTooltip="Enviar mensaje" />
+                
+                <p-button 
+                  icon="pi pi-star" 
+                  severity="warn" 
+                  [rounded]="true" 
+                  [outlined]="true" 
+                  (click)="showRating(lot)" 
+                  pTooltip="Ver puntuación" />
+              </ng-container>
+              
+              <!-- Mensaje cuando no es ganador ni ganador potencial -->
+              <span *ngIf="!isWinner(lot) && !isPotentialWinner(lot)" class="text-500 text-sm">
                 Sin acciones
               </span>
             </div>
@@ -92,7 +115,7 @@
       
       <ng-template pTemplate="emptymessage">
         <tr>
-          <td colspan="5" class="text-center p-4">
+          <td [attr.colspan]="cols.length + 1" class="text-center p-4">
             No has realizado pujas en ningún lote
           </td>
         </tr>

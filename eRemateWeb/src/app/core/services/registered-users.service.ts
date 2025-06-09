@@ -139,4 +139,29 @@ export class RegisteredUsersService extends BaseHttpService<UsuarioRegistrado, U
       })
     );
   }
+
+aceptarLote(loteId: string | number): Observable<any> {
+    const url = `${this.baseUrl.replace('/registered-users', '')}/lot/${loteId}/accept`;
+    
+    return this.http.post<any>(url, {}, {
+      headers: this.getAuthHeaders()
+    }).pipe(
+      catchError(error => {
+        return throwError(() => error);
+      })
+    );
+  }
+
+  rechazarLote(loteId: string | number): Observable<any> {
+    const url = `${this.baseUrl.replace('/registered-users', '')}/lot/${loteId}/reject`;
+    
+    return this.http.post<any>(url, {}, {
+      headers: this.getAuthHeaders()
+    }).pipe(
+      catchError(error => {
+        return throwError(() => error);
+      })
+    );
+  }
+
 }
