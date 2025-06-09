@@ -3,6 +3,8 @@
 namespace Database\Seeders;
 
 use App\Enums\EstadoSubasta;
+use App\Enums\TipoSubasta;
+use App\Enums\EstadoArticulo;
 use Illuminate\Database\Seeder;
 use App\Models\Usuario;
 use App\Models\CasaDeRemates;
@@ -203,8 +205,8 @@ class CatalogTestDataSeeder extends Seeder
             'rematador_id' => $rematador1->id,
             'mensajes' => [],
             'urlTransmision' => 'https://transmision.eremate.com/cosas-viejas',
-            'tipoSubasta' => 'Antiguedades',
-            'estado' => EstadoSubasta::PENDIENTE,
+            'tipoSubasta' => TipoSubasta::PRESENCIAL, // ← Usando enum
+            'estado' => EstadoSubasta::PENDIENTE, // ← Usando enum
             'fechaInicio' => now()->addDays(2),
             'fechaCierre' => now()->addDays(3),
             'ubicacion' => 'Santa Lucía, Canelones',
@@ -228,7 +230,7 @@ class CatalogTestDataSeeder extends Seeder
             'nombre' => 'Teléfono Rotativo Naranja',
             'imagenes' => [url('api/images/serve/articulos/telefonoNaranja.webp')],
             'especificacionesTecnicas' => 'Teléfono rotativo vintage, funcionamiento verificado, cable original incluido',
-            'estado' => 'Muy bueno',
+            'estado' => EstadoArticulo::MUY_BUENO, // ← Usando enum (antes: 'Muy bueno')
             'categoria_id' => $catElectronica->id,
         ]);
 
@@ -250,7 +252,7 @@ class CatalogTestDataSeeder extends Seeder
             'nombre' => 'Gorro de Lana Vintage',
             'imagenes' => [url('api/images/serve/articulos/GorroLanaVintage.jpg')],
             'especificacionesTecnicas' => 'Gorro de lana tejido a mano, estilo vintage años 70',
-            'estado' => 'Bueno',
+            'estado' => EstadoArticulo::BUENO, // ← Usando enum
             'categoria_id' => $catModa->id,
         ]);
 
@@ -262,7 +264,7 @@ class CatalogTestDataSeeder extends Seeder
                 url('api/images/serve/articulos/CamisetaVintage2.jpeg')
             ],
             'especificacionesTecnicas' => 'Camiseta original de banda de rock, años 80, talla M',
-            'estado' => 'Usado - Bueno',
+            'estado' => EstadoArticulo::BUENO, // ← Usando enum (antes: 'Usado - Bueno')
             'categoria_id' => $catModa->id,
         ]);
 
@@ -272,8 +274,8 @@ class CatalogTestDataSeeder extends Seeder
             'rematador_id' => $rematador1->id,
             'mensajes' => [],
             'urlTransmision' => 'https://transmision.eremate.com/celular',
-            'tipoSubasta' => 'Celular',
-            'estado' => EstadoSubasta::PENDIENTE,
+            'tipoSubasta' => TipoSubasta::REMOTA, // ← Usando enum (antes: 'Celular')
+            'estado' => EstadoSubasta::PENDIENTE, // ← Usando enum
             'fechaInicio' => now()->addDays(5),
             'fechaCierre' => now()->addDays(6),
             'ubicacion' => 'San José de Mayo, San José',
@@ -301,7 +303,7 @@ class CatalogTestDataSeeder extends Seeder
                 url('api/images/serve/articulos/iphone3.jpeg')
             ],
             'especificacionesTecnicas' => 'iPhone 13 Pro 256GB, color Azul Sierra, incluye cargador original y caja',
-            'estado' => 'Excelente',
+            'estado' => EstadoArticulo::MUY_BUENO, // ← Usando enum (antes: 'Excelente')
             'categoria_id' => $catElectronica->id,
         ]);
 
@@ -311,8 +313,8 @@ class CatalogTestDataSeeder extends Seeder
             'rematador_id' => $rematador1->id,
             'mensajes' => [],
             'urlTransmision' => 'https://transmision.eremate.com/ropa',
-            'tipoSubasta' => 'Ropa variada',
-            'estado' => EstadoSubasta::PENDIENTE,
+            'tipoSubasta' => TipoSubasta::HIBRIDA, // ← Usando enum (antes: 'Ropa variada')
+            'estado' => EstadoSubasta::ACEPTADA, // ← Usando enum
             'fechaInicio' => now()->addDays(7),
             'fechaCierre' => now()->addDays(8),
             'ubicacion' => 'Pocitos, Montevideo',
@@ -339,7 +341,7 @@ class CatalogTestDataSeeder extends Seeder
                 url('api/images/serve/articulos/buzoAzul2.webp')
             ],
             'especificacionesTecnicas' => 'Buso deportivo azul marino, talla L, 100% algodón',
-            'estado' => 'Nuevo',
+            'estado' => EstadoArticulo::NUEVO, // ← Usando enum
             'categoria_id' => $catModa->id,
         ]);
 
@@ -351,7 +353,7 @@ class CatalogTestDataSeeder extends Seeder
                 url('api/images/serve/articulos/buzoRojo2.jpg')
             ],
             'especificacionesTecnicas' => 'Buso casual rojo, talla M, mezcla algodón-poliéster',
-            'estado' => 'Nuevo',
+            'estado' => EstadoArticulo::NUEVO, // ← Usando enum
             'categoria_id' => $catModa->id,
         ]);
 
@@ -362,7 +364,7 @@ class CatalogTestDataSeeder extends Seeder
                 url('api/images/serve/articulos/buzoVioleta.jpeg')
             ],
             'especificacionesTecnicas' => 'Buso con capucha violeta, talla S, material premium',
-            'estado' => 'Nuevo',
+            'estado' => EstadoArticulo::NUEVO, // ← Usando enum
             'categoria_id' => $catModa->id,
         ]);
 
@@ -386,7 +388,7 @@ class CatalogTestDataSeeder extends Seeder
                 url('api/images/serve/articulos/jeanAzul.jpg')
             ],
             'especificacionesTecnicas' => 'Jean azul clásico, corte slim fit, talla 32, marca premium',
-            'estado' => 'Nuevo',
+            'estado' => EstadoArticulo::NUEVO, // ← Usando enum
             'categoria_id' => $catModa->id,
         ]);
 
@@ -398,7 +400,7 @@ class CatalogTestDataSeeder extends Seeder
                 url('api/images/serve/articulos/jeanNegro2.jpg')
             ],
             'especificacionesTecnicas' => 'Jean negro elegante, corte regular, talla 34, mezclilla premium',
-            'estado' => 'Nuevo',
+            'estado' => EstadoArticulo::NUEVO, // ← Usando enum
             'categoria_id' => $catModa->id,
         ]);
 
@@ -422,7 +424,7 @@ class CatalogTestDataSeeder extends Seeder
                 url('api/images/serve/articulos/cinturonCuero.jpg')
             ],
             'especificacionesTecnicas' => 'Cinturón de cuero genuino marrón, hebilla metálica, longitud ajustable',
-            'estado' => 'Nuevo',
+            'estado' => EstadoArticulo::NUEVO, // ← Usando enum
             'categoria_id' => $catModa->id,
         ]);
 
@@ -432,8 +434,8 @@ class CatalogTestDataSeeder extends Seeder
             'rematador_id' => $rematador1->id,
             'mensajes' => [],
             'urlTransmision' => 'https://transmision.eremate.com/electrodomesticos',
-            'tipoSubasta' => 'Electrodomésticos',
-            'estado' => EstadoSubasta::PENDIENTE,
+            'tipoSubasta' => TipoSubasta::PRESENCIAL, // ← Usando enum (antes: 'Electrodomésticos')
+            'estado' => EstadoSubasta::INICIADA, // ← Usando enum
             'fechaInicio' => now()->addDays(10),
             'fechaCierre' => now()->addDays(11),
             'ubicacion' => 'Canelones, Canelones',
@@ -460,7 +462,7 @@ class CatalogTestDataSeeder extends Seeder
                 url('api/images/serve/articulos/Heladera2.jpeg')
             ],
             'especificacionesTecnicas' => 'Refrigerador Samsung 450L, doble puerta, dispensador de agua, eficiencia energética A+',
-            'estado' => 'Muy bueno',
+            'estado' => EstadoArticulo::MUY_BUENO, // ← Usando enum (antes: 'Muy bueno')
             'categoria_id' => $catHogar->id,
         ]);
 
@@ -484,7 +486,7 @@ class CatalogTestDataSeeder extends Seeder
                 url('api/images/serve/articulos/freezer.jpg')
             ],
             'especificacionesTecnicas' => 'Congelador horizontal 300L, control de temperatura digital, bajo consumo energético',
-            'estado' => 'Excelente',
+            'estado' => EstadoArticulo::MUY_BUENO, // ← Usando enum (antes: 'Excelente')
             'categoria_id' => $catHogar->id,
         ]);
 
@@ -519,11 +521,11 @@ class CatalogTestDataSeeder extends Seeder
 
         $this->command->info('');
         $this->command->info('📋 SUBASTAS CREADAS PARA CASA 1:');
-        $this->command->info('  1. 🕰️  Cosas viejas (Presencial)');
-        $this->command->info('  2. 📱 Celular (Online)'); 
-        $this->command->info('  3. 👕 Ropa (Híbrida)');
-        $this->command->info('  4. ❄️  Heladera (Presencial)');
+        $this->command->info('  1. 🕰️  Cosas viejas (PRESENCIAL - PENDIENTE)');
+        $this->command->info('  2. 📱 Celular (REMOTA - PENDIENTE)'); 
+        $this->command->info('  3. 👕 Ropa (HIBRIDA - ACEPTADA)');
+        $this->command->info('  4. ❄️  Heladera (PRESENCIAL - INICIADA)');
         $this->command->info('');
-        $this->command->info('💡 Las imágenes están configuradas como "img.png" - reemplázalas manualmente');
+        $this->command->info('💡 Todos los campos ahora usan los enums correctos');
     }
 }
