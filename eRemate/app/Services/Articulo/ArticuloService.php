@@ -10,6 +10,7 @@ use App\Models\Usuario;
 use App\Models\UsuarioRegistrado;
 use App\Models\Subasta;
 use App\Enums\EstadoSubasta;
+use App\Enums\EstadoArticulo;
 use Illuminate\Support\Facades\Auth;
 use Illuminate\Http\JsonResponse;
 use Carbon\Carbon;
@@ -232,7 +233,7 @@ class ArticuloService implements ArticuloServiceInterface
                 'lotes' => null,
                 'lote_id' => $articulo->lote_id,
                 'subasta_id' => $articulo->subasta_id,
-                'etiqueta' => strtoupper($articulo->estado),
+                'etiqueta' => strtoupper($articulo->estado->label()),
                 'texto1' => $articulo->categoria_nombre ?? 'Sin categoría',
                 'texto2' => $articulo->nombre,
                 'texto3' => $texto3,
@@ -328,7 +329,7 @@ class ArticuloService implements ArticuloServiceInterface
                 'lotes' => null,
                 'lote_id' => $articulo->lote_id,
                 'subasta_id' => $articulo->subasta_id,
-                'etiqueta' => strtoupper($articulo->estado),
+                'etiqueta' => strtoupper($articulo->estado->label()),
                 'texto1' => $articulo->categoria_nombre ?? 'Sin categoría',
                 'texto2' => $articulo->nombre,
                 'texto3' => $texto3,
