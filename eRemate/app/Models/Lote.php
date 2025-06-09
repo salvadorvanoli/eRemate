@@ -67,7 +67,7 @@ class Lote extends Model
 
     public function ganadoresPotenciales()
     {
-        return $this->hasMany(GanadorPotencial::class)->orderBy('posicion');
+        return $this->hasMany(GanadorPotencial::class);
     }
 
     public function ganadorActual()

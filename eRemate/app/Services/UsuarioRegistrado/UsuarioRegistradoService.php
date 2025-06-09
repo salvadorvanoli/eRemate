@@ -116,6 +116,14 @@ class UsuarioRegistradoService implements UsuarioRegistradoServiceInterface
                             WHEN lotes.ganador_id = {$usuarioId} THEN 'es_ganador'
                             ELSE 'es_perdedor'
                         END as estado_usuario_lote
+                    "),
+                    DB::raw("
+                        EXISTS(
+                            SELECT 1 FROM ganadores_potenciales 
+                            WHERE ganadores_potenciales.lote_id = lotes.id 
+                            AND ganadores_potenciales.usuario_registrado_id = {$usuarioId}
+                            AND ganadores_potenciales.es_ganador_actual = 1
+                        ) as es_ganador_potencial
                     ")
                 ])
                 ->groupBy([

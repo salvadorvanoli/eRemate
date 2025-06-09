@@ -267,7 +267,7 @@ class LoteController extends Controller
         }
     }
 
-    // Nuevos métodos para ganadores potenciales
+  
     public function generarGanadoresPotenciales($id)
     {
         try {
@@ -283,7 +283,7 @@ class LoteController extends Controller
     public function aceptarLote(Request $request, $id)
     {
         try {
-            $usuarioId = $request->user()->id; // Asumiendo que tienes middleware de auth
+            $usuarioId = $request->user()->id; 
             return $this->loteService->aceptarLote($id, $usuarioId);
         } catch (\Exception $e) {
             return response()->json([
@@ -296,7 +296,7 @@ class LoteController extends Controller
     public function rechazarLote(Request $request, $id)
     {
         try {
-            $usuarioId = $request->user()->id; // Asumiendo que tienes middleware de auth
+            $usuarioId = $request->user()->id; 
             return $this->loteService->rechazarLote($id, $usuarioId);
         } catch (\Exception $e) {
             return response()->json([
@@ -314,6 +314,18 @@ class LoteController extends Controller
             return response()->json([
                 'success' => false,
                 'message' => 'Error al obtener ganadores potenciales: ' . $e->getMessage()
+            ], 500);
+        }
+    }
+
+    public function obtenerSiguienteGanador($id)
+    {
+        try {
+            return $this->loteService->obtenerSiguienteGanadorPendiente($id);
+        } catch (\Exception $e) {
+            return response()->json([
+                'success' => false,
+                'message' => 'Error al obtener siguiente ganador: ' . $e->getMessage()
             ], 500);
         }
     }

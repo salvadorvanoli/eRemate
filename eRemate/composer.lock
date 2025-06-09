@@ -4,7 +4,7 @@
         "Read more about it at https://getcomposer.org/doc/01-basic-usage.md#installing-dependencies",
         "This file is @generated automatically"
     ],
-    "content-hash": "641c13673e81c74d39aaeac8ee72cdb3",
+    "content-hash": "fedda66165253a561a713226f5e78c5d",
     "packages": [
         {
             "name": "apimatic/core",
@@ -1741,7 +1741,6 @@
         },
         {
             "name": "laravel/framework",
-
             "version": "v12.17.0",
             "source": {
                 "type": "git",
@@ -1752,7 +1751,6 @@
                 "type": "zip",
                 "url": "https://api.github.com/repos/laravel/framework/zipball/8729d084510480fdeec9b6ad198180147d4a7f06",
                 "reference": "8729d084510480fdeec9b6ad198180147d4a7f06",
-
                 "shasum": ""
             },
             "require": {
@@ -1954,9 +1952,7 @@
                 "issues": "https://github.com/laravel/framework/issues",
                 "source": "https://github.com/laravel/framework"
             },
-
             "time": "2025-06-03T14:04:18+00:00"
-
         },
         {
             "name": "laravel/prompts",

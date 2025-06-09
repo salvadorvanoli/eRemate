@@ -7,7 +7,7 @@ use Illuminate\Database\Eloquent\Relations\BelongsTo;
 
 class GanadorPotencial extends Model
 {
-    protected $table = 'ganadores_potencials';
+    protected $table = 'ganadores_potenciales';
 
     protected $fillable = [
         'lote_id',

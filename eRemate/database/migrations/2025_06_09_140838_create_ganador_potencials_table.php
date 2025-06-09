@@ -11,18 +11,17 @@ return new class extends Migration
      */
     public function up(): void
     {
-        Schema::create('ganadores_potencials', function (Blueprint $table) {
+        Schema::create('ganadores_potenciales', function (Blueprint $table) {  // ✅ CAMBIAR AQUÍ
             $table->id();
             $table->foreignId('lote_id')->constrained('lotes')->onDelete('cascade');
             $table->foreignId('usuario_registrado_id')->constrained('usuarios_registrados')->onDelete('cascade');
-            $table->integer('posicion'); // 1, 2, 3, etc.
+            $table->integer('posicion');
             $table->enum('estado', ['pendiente', 'aceptado', 'rechazado'])->default('pendiente');
             $table->timestamp('fecha_notificacion')->nullable();
             $table->timestamp('fecha_respuesta')->nullable();
             $table->boolean('es_ganador_actual')->default(false);
             $table->timestamps();
 
-            // Índices para mejorar performance
             $table->index(['lote_id', 'posicion']);
             $table->index(['usuario_registrado_id', 'estado']);
             $table->index(['lote_id', 'es_ganador_actual']);
@@ -34,6 +33,6 @@ return new class extends Migration
      */
     public function down(): void
     {
-        Schema::dropIfExists('ganadores_potenciales');
+        Schema::dropIfExists('ganadores_potenciales');  // ✅ CAMBIAR AQUÍ TAMBIÉN
     }
 };
