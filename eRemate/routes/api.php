@@ -158,7 +158,7 @@ Route::prefix('auction')->group(function () {
 Route::prefix('lot')->group(function () {
     Route::get('/{id}', [LoteController::class, 'obtenerLote']);
     Route::get('/{id}/items', [LoteController::class, 'obtenerArticulos']);
-    Route::get('/{id}/status', [LoteController::class, 'obtenerEstadoLote']); // ← Nueva ruta
+    Route::get('/{id}/status', [LoteController::class, 'obtenerEstadoLote']);
     Route::get('/auction/{id}', [LoteController::class, 'obtenerLotesPorSubasta']);
 
     Route::middleware('auth:sanctum')->group(function () {
@@ -166,8 +166,11 @@ Route::prefix('lot')->group(function () {
         Route::post('/{id}/items/{articuloId}/add', [LoteController::class, 'agregarArticulo']);
         Route::post('/{id}/items/{articuloId}/remove', [LoteController::class, 'removerArticulo']);
 
-        Route::put('/{id}', [LoteController::class, 'actualizarLote']);
+        // Nuevas rutas para que el usuario acepte/rechace lotes
+        Route::post('/{id}/accept', [LoteController::class, 'aceptarLote']);
+        Route::post('/{id}/reject', [LoteController::class, 'rechazarLote']);
 
+        Route::put('/{id}', [LoteController::class, 'actualizarLote']);
         Route::delete('/{id}', [LoteController::class, 'eliminarLote']);
     });
 });

@@ -9,6 +9,8 @@ use Illuminate\Support\Facades\Auth;
 use Illuminate\Http\JsonResponse;
 use App\Enums\EstadoSubasta;
 use Illuminate\Support\Facades\DB;
+use App\Models\GanadorPotencial;
+use App\Models\Puja;
 
 class LoteService implements LoteServiceInterface
 {
@@ -297,6 +299,222 @@ class LoteService implements LoteServiceInterface
                 'success' => false,
                 'error' => 'Error al obtener estado del lote: ' . $e->getMessage()
             ];
+        }
+    }
+
+    public function generarListaGanadoresPotenciales(int $loteId): mixed
+    {
+        try {
+            $lote = $this->buscarLotePorId($loteId);
+            if (!$lote instanceof Lote) {
+                return $lote;
+            }
+
+            // Obtener las mejores pujas ordenadas por monto descendente
+            $mejoresPujas = Puja::where('lote_id', $loteId)
+                ->orderBy('cantidad', 'desc')
+                ->orderBy('created_at', 'asc') // En caso de empate, gana el primero
+                ->get()
+                ->unique('usuario_registrado_id') // Un usuario solo puede aparecer una vez
+                ->take(10); // Máximo 10 ganadores potenciales
+
+            if ($mejoresPujas->isEmpty()) {
+                return response()->json([
+                    'success' => false,
+                    'message' => 'No hay pujas para este lote'
+                ], 404);
+            }
+
+            // Limpiar ganadores potenciales existentes
+            GanadorPotencial::where('lote_id', $loteId)->delete();
+
+            // Crear lista de ganadores potenciales
+            $ganadoresPotenciales = [];
+            $posicion = 1;
+
+            foreach ($mejoresPujas as $puja) {
+                $ganadorPotencial = GanadorPotencial::create([
+                    'lote_id' => $loteId,
+                    'usuario_registrado_id' => $puja->usuario_registrado_id,
+                    'posicion' => $posicion,
+                    'estado' => GanadorPotencial::ESTADO_PENDIENTE,
+                    'fecha_notificacion' => null,
+                    'es_ganador_actual' => false
+                ]);
+
+                $ganadoresPotenciales[] = $ganadorPotencial;
+                $posicion++;
+            }
+
+            // Notificar al primer ganador potencial
+            $this->notificarSiguienteGanador($loteId);
+
+            return response()->json([
+                'success' => true,
+                'message' => 'Lista de ganadores potenciales generada correctamente',
+                'data' => $ganadoresPotenciales
+            ], 200);
+
+        } catch (\Exception $e) {
+            return response()->json([
+                'success' => false,
+                'error' => 'Error al generar lista de ganadores: ' . $e->getMessage()
+            ], 500);
+        }
+    }
+
+    public function aceptarLote(int $loteId, int $usuarioId): mixed
+    {
+        try {
+            $ganadorPotencial = GanadorPotencial::where('lote_id', $loteId)
+                ->where('usuario_registrado_id', $usuarioId)
+                ->where('estado', GanadorPotencial::ESTADO_PENDIENTE)
+                ->first();
+
+            if (!$ganadorPotencial) {
+                return response()->json([
+                    'success' => false,
+                    'message' => 'No tienes una oferta pendiente para este lote'
+                ], 404);
+            }
+
+            DB::beginTransaction();
+
+            // Actualizar el registro del ganador potencial
+            $ganadorPotencial->update([
+                'estado' => GanadorPotencial::ESTADO_ACEPTADO,
+                'fecha_respuesta' => now(),
+                'es_ganador_actual' => true
+            ]);
+
+            // Actualizar el lote con el ganador confirmado
+            $lote = Lote::find($loteId);
+            $lote->update(['ganador_id' => $usuarioId]);
+
+            // Marcar otros ganadores potenciales como no válidos
+            GanadorPotencial::where('lote_id', $loteId)
+                ->where('id', '!=', $ganadorPotencial->id)
+                ->where('estado', GanadorPotencial::ESTADO_PENDIENTE)
+                ->update(['estado' => GanadorPotencial::ESTADO_RECHAZADO]);
+
+            DB::commit();
+
+            return response()->json([
+                'success' => true,
+                'message' => 'Lote aceptado correctamente',
+                'data' => $ganadorPotencial->load('lote', 'usuarioRegistrado')
+            ], 200);
+
+        } catch (\Exception $e) {
+            DB::rollback();
+            return response()->json([
+                'success' => false,
+                'error' => 'Error al aceptar lote: ' . $e->getMessage()
+            ], 500);
+        }
+    }
+
+    public function rechazarLote(int $loteId, int $usuarioId): mixed
+    {
+        try {
+            $ganadorPotencial = GanadorPotencial::where('lote_id', $loteId)
+                ->where('usuario_registrado_id', $usuarioId)
+                ->where('estado', GanadorPotencial::ESTADO_PENDIENTE)
+                ->first();
+
+            if (!$ganadorPotencial) {
+                return response()->json([
+                    'success' => false,
+                    'message' => 'No tienes una oferta pendiente para este lote'
+                ], 404);
+            }
+
+            // Marcar como rechazado
+            $ganadorPotencial->update([
+                'estado' => GanadorPotencial::ESTADO_RECHAZADO,
+                'fecha_respuesta' => now()
+            ]);
+
+            // Notificar al siguiente ganador potencial
+            $this->notificarSiguienteGanador($loteId);
+
+            return response()->json([
+                'success' => true,
+                'message' => 'Lote rechazado. Se ha notificado al siguiente ganador potencial'
+            ], 200);
+
+        } catch (\Exception $e) {
+            return response()->json([
+                'success' => false,
+                'error' => 'Error al rechazar lote: ' . $e->getMessage()
+            ], 500);
+        }
+    }
+
+    public function obtenerGanadoresPotenciales(int $loteId): mixed
+    {
+        try {
+            $ganadoresPotenciales = GanadorPotencial::where('lote_id', $loteId)
+                ->with(['usuarioRegistrado.usuario'])
+                ->orderBy('posicion')
+                ->get();
+
+            return response()->json([
+                'success' => true,
+                'data' => $ganadoresPotenciales
+            ], 200);
+
+        } catch (\Exception $e) {
+            return response()->json([
+                'success' => false,
+                'error' => 'Error al obtener ganadores potenciales: ' . $e->getMessage()
+            ], 500);
+        }
+    }
+
+    public function obtenerSiguienteGanadorPendiente(int $loteId): mixed
+    {
+        try {
+            $siguienteGanador = GanadorPotencial::where('lote_id', $loteId)
+                ->where('estado', GanadorPotencial::ESTADO_PENDIENTE)
+                ->orderBy('posicion')
+                ->with(['usuarioRegistrado.usuario'])
+                ->first();
+
+            if (!$siguienteGanador) {
+                return response()->json([
+                    'success' => false,
+                    'message' => 'No hay más ganadores potenciales pendientes'
+                ], 404);
+            }
+
+            return response()->json([
+                'success' => true,
+                'data' => $siguienteGanador
+            ], 200);
+
+        } catch (\Exception $e) {
+            return response()->json([
+                'success' => false,
+                'error' => 'Error al obtener siguiente ganador: ' . $e->getMessage()
+            ], 500);
+        }
+    }
+
+    private function notificarSiguienteGanador(int $loteId): void
+    {
+        $siguienteGanador = GanadorPotencial::where('lote_id', $loteId)
+            ->where('estado', GanadorPotencial::ESTADO_PENDIENTE)
+            ->orderBy('posicion')
+            ->first();
+
+        if ($siguienteGanador) {
+            $siguienteGanador->update([
+                'fecha_notificacion' => now()
+            ]);
+
+            // Aquí puedes agregar lógica de notificación (email, push, etc.)
+            // Por ejemplo: Mail::to($siguienteGanador->usuarioRegistrado->usuario->email)->send(new NotificacionGanador($siguienteGanador));
         }
     }
 

@@ -12,5 +12,12 @@ interface LoteServiceInterface
     public function removerArticulo(int $id, int $articuloId);
     public function obtenerLotesPorSubasta(int $subastaId);
     public function eliminarLote(int $id);
-    public function obtenerEstadoLote(int $loteId): array; // ← Nuevo método
+    public function obtenerEstadoLote(int $loteId): array;
+
+    //métodos para ganadores potenciales
+    public function generarListaGanadoresPotenciales(int $loteId): mixed;
+    public function aceptarLote(int $loteId, int $usuarioId): mixed;
+    public function rechazarLote(int $loteId, int $usuarioId): mixed;
+    public function obtenerGanadoresPotenciales(int $loteId): mixed;
+    public function obtenerSiguienteGanadorPendiente(int $loteId): mixed;
 }

@@ -59,4 +59,20 @@ class UsuarioRegistrado extends Model
     {
         return $this->hasMany(Lote::class, 'ganador_id');
     }
+
+    public function ganadoresPotenciales()
+    {
+        return $this->hasMany(GanadorPotencial::class);
+    }
+
+    public function lotesComoGanadorPotencial()
+    {
+        return $this->hasMany(GanadorPotencial::class);
+    }
+
+    public function lotesPendientesAceptacion()
+    {
+        return $this->hasMany(GanadorPotencial::class)
+                    ->where('estado', GanadorPotencial::ESTADO_PENDIENTE);
+    }
 }
