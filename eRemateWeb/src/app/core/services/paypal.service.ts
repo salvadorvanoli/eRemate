@@ -199,4 +199,10 @@ export class PaypalService {
       headers: this.getAuthHeaders()
     });
   }
+
+  verificarPagoProcesado(paymentId: string): Observable<any> {
+    return this.http.get<any>(`${this.baseUrl}/paypal/verify-payment-processed/${paymentId}`, {
+      headers: this.getAuthHeaders()
+    });
+  }
 }

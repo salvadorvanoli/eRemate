@@ -42,7 +42,11 @@ Route::get('invoices/{id}', [FacturaController::class, 'show']);
 Route::post('invoices', [FacturaController::class, 'store']);
 Route::delete('invoices/{id}', [FacturaController::class, 'destroy']);
 Route::get('users/{userId}/invoices', [FacturaController::class, 'getFacturasPorUsuario']);
-Route::get('invoices/{id}/pdf', [FacturaController::class, 'descargarPdf']);
+
+// Rutas de Factura que requieren autenticación
+Route::middleware('auth:sanctum')->group(function () {
+    Route::get('invoices/{id}/pdf', [FacturaController::class, 'descargarPdf']);
+});
 
 // Rutas de Compra
 Route::get('purchases', [CompraController::class, 'index']);
@@ -129,6 +133,7 @@ Route::prefix('auction')->group(function () {
     Route::get('/ordered', [SubastaController::class, 'obtenerSubastasOrdenadas']);
     Route::get('/filtered', [SubastaController::class, 'obtenerSubastasFiltradas']);
     Route::get('/locations', [SubastaController::class, 'obtenerUbicaciones']);
+    Route::get('/tipos', [SubastaController::class, 'obtenerTipos']);
     Route::get('/{id}', [SubastaController::class, 'obtenerSubasta']);
     Route::get('/{id}/lots', [SubastaController::class, 'obtenerLotes']);
     Route::get('/{id}/live-stream', [SubastaController::class, 'obtenerTransmisionEnVivo']);
@@ -153,6 +158,7 @@ Route::prefix('auction')->group(function () {
 Route::prefix('lot')->group(function () {
     Route::get('/{id}', [LoteController::class, 'obtenerLote']);
     Route::get('/{id}/items', [LoteController::class, 'obtenerArticulos']);
+    Route::get('/{id}/status', [LoteController::class, 'obtenerEstadoLote']); // ← Nueva ruta
     Route::get('/auction/{id}', [LoteController::class, 'obtenerLotesPorSubasta']);
     Route::get('/{id}/ultima-puja', [LoteController::class, 'obtenerUltimaPuja']);
 
@@ -175,6 +181,7 @@ Route::prefix('item')->group(function () {
     Route::get('/ordered', [ArticuloController::class, 'obtenerArticulosOrdenados']);
     Route::get('/filtered', [ArticuloController::class, 'obtenerArticulosFiltrados']);
     Route::get('/categories', [ArticuloController::class, 'obtenerCategorias']);
+    Route::get('/estados', [ArticuloController::class, 'obtenerEstados']);
     Route::get('/{id}', [ArticuloController::class, 'obtenerArticulo']);
 
     Route::middleware('auth:sanctum')->group(function () {
@@ -197,6 +204,7 @@ Route::prefix('paypal')->group(function () {
         Route::post('/create-payment-from-chat', [PayPalController::class, 'crearPagoDesdeChatId']);
         Route::post('/execute-payment', [PayPalController::class, 'ejecutarPago']);
         Route::get('/payment-status/{paymentId}', [PayPalController::class, 'obtenerEstadoPago']);
+        Route::get('/verify-payment-processed/{paymentId}', [PayPalController::class, 'verificarPagoProcesado']);
     });
 });
 

@@ -61,6 +61,17 @@ export class AuctionHouseService extends BaseHttpService<Casa, Casa> {
     const url = `${this.baseUrl}/auction/${auctionId}/lots`;
     return this.http.get<any[]>(url);
   } 
+
+  getLotStatus(lotId: string | number): Observable<any> {
+    const url = `${this.baseUrl}/lot/${lotId}/status`;
+    return this.http.get<any>(url, {
+      headers: this.getAuthHeaders()
+    }).pipe(
+      catchError(error => {
+        return throwError(() => error);
+      })
+    );
+  }
   
   deleteLot(lotId: string): Observable<any> {
     const url = `${this.baseUrl}/lot/${lotId}`;

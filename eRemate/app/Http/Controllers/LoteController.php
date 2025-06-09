@@ -244,6 +244,28 @@ class LoteController extends Controller
         }
     }
 
+    public function obtenerEstadoLote($id)
+    {
+        try {
+            $estado = $this->loteService->obtenerEstadoLote($id);
+            
+            if (!$estado['success']) {
+                return response()->json([
+                    'success' => false,
+                    'message' => $estado['error']
+                ], 404);
+            }
+            
+            return response()->json($estado['data'], 200);
+            
+        } catch (\Exception $e) {
+            return response()->json([
+                'success' => false,
+                'message' => 'Error al obtener estado del lote: ' . $e->getMessage()
+            ], 500);
+        }
+    }
+
     public function obtenerUltimaPuja($id)
     {
         try {

@@ -248,3 +248,40 @@
     padding: 0.5rem !important;
   }
 }
+
+/* Estilos específicos para el dropdown de rematador */
+::ng-deep .rematador-dropdown-panel.p-dropdown-panel {
+  /* El panel debe tener el mismo ancho que el trigger */
+  width: 100% !important;
+  min-width: 100% !important;
+  
+  /* Configurar altura máxima para mostrar exactamente 2 opciones */
+  .p-dropdown-items-wrapper {
+    max-height: 96px !important; /* 2 opciones × 48px cada una */
+    overflow-y: auto !important;
+  }
+  
+  /* Estilo de los elementos individuales - altura fija para consistencia */
+  .p-dropdown-item {
+    padding: 0.75rem 1rem !important;
+    font-size: 0.875rem !important;
+    white-space: nowrap !important;
+    overflow: hidden !important;
+    text-overflow: ellipsis !important;
+    height: 48px !important; /* Altura exacta para que 2 opciones = 96px */
+    min-height: 48px !important;
+    max-height: 48px !important;
+    display: flex !important;
+    align-items: center !important;
+    box-sizing: border-box !important;
+  }
+  
+  .p-dropdown-item:hover {
+    background-color: #f3f4f6 !important;
+  }
+  
+  .p-dropdown-item.p-highlight {
+    background-color: #6334E3 !important;
+    color: white !important;
+  }
+}

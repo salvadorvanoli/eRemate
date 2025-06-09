@@ -19,7 +19,9 @@ use App\Jobs\ProcesarPujasAutomaticas;
 use App\Notifications\ComienzoSubastaNotification;
 use App\Notifications\NuevaPujaNotification;
 use App\Notifications\SubastaFinalizadaNotification;
+use App\Notifications\UmbralOfertaNotification;
 use Illuminate\Support\Facades\Auth;
+use Illuminate\Support\Facades\Cache;
 use Illuminate\Http\JsonResponse;
 use Carbon\Carbon;
 
@@ -275,8 +277,8 @@ class SubastaService implements SubastaServiceInterface
                 'lotes' => $loteIds,
                 'lote_id' => $subasta->loteActual_id,
                 'subasta_id' => $subasta->id,
-                'etiqueta' => strtoupper($subasta->estado->name),
-                'texto1' => strtoupper($subasta->tipoSubasta),
+                'etiqueta' => strtoupper($subasta->estado->label()),
+                'texto1' => strtoupper($subasta->tipoSubasta->label()),
                 'texto2' => strtoupper($subasta->ubicacion),
                 'texto3' => "{$totalLotes} LOTES EN TOTAL",
                 'fechaInicio' => $subasta->fechaInicio,
@@ -367,8 +369,8 @@ class SubastaService implements SubastaServiceInterface
                 'lotes' => $loteIds,
                 'lote_id' => $subasta->loteActual_id,
                 'subasta_id' => $subasta->id,
-                'etiqueta' => strtoupper($subasta->estado->name),
-                'texto1' => strtoupper($subasta->tipoSubasta),
+                'etiqueta' => strtoupper($subasta->estado->label()),
+                'texto1' => strtoupper($subasta->tipoSubasta->label()),
                 'texto2' => strtoupper($subasta->ubicacion),
                 'texto3' => "{$totalLotes} LOTES EN TOTAL",
                 'fechaInicio' => $subasta->fechaInicio,
@@ -629,7 +631,8 @@ class SubastaService implements SubastaServiceInterface
         if ($lotesSinGanador == 0) {
             $subasta->update([
                 'estado' => EstadoSubasta::CERRADA,
-                'loteActual_id' => null
+                'loteActual_id' => null,
+                'fechaCierre' => now()
             ]);
 
             // Send notifications to interested users
@@ -789,6 +792,9 @@ class SubastaService implements SubastaServiceInterface
         if ($loteActual instanceof Lote){
             $this->sendNuevaPujaNotification($subasta, $pujaCreada, $loteActual);
         }
+
+        // Check if the current offer reaches any threshold and send notification to auction house
+        $this->checkThresholdAndNotify($subasta, $loteActual, $nuevoTotal);
 
         return response()->json([
             'success' => true,
@@ -1002,6 +1008,9 @@ class SubastaService implements SubastaServiceInterface
          if ($loteActual instanceof Lote){
             $this->sendNuevaPujaNotification($subasta, $pujaCreada, $loteActual);
         }
+
+        // Check if the current offer reaches any threshold and send notification to auction house
+        $this->checkThresholdAndNotify($subasta, $loteActual, $nuevoTotal);
         
         return $pujaCreada;
     }
@@ -1084,5 +1093,61 @@ class SubastaService implements SubastaServiceInterface
                 ]
             ]
         ]);
+    }
+
+    /**
+     * Check if the current offer reaches any threshold and send notification to auction house
+     */
+    private function checkThresholdAndNotify(Subasta $subasta, Lote $lote, $nuevoTotal)
+    {
+        try {
+            $valorBase = $lote->valorBase;
+            if ($valorBase <= 0) {
+                return; 
+            }
+
+            // Define thresholds to check (2x, 3x, 5x, 7x, 10x)
+            $thresholds = [2, 3, 5, 7, 10];
+            
+            // Calculate the current multiplier (with some tolerance for "a little bit over")
+            $currentMultiplier = $nuevoTotal / $valorBase;
+            
+            foreach ($thresholds as $threshold) {
+                // Check if we've just crossed this threshold (0% tolerance below, 25% tolerance above)
+                $lowerBound = $threshold; 
+                $upperBound = $threshold * 1.25;
+                
+                if ($currentMultiplier >= $lowerBound && $currentMultiplier <= $upperBound) {
+                    // Check if we haven't already sent this notification for this threshold
+                    // We can use cache or a simple check to avoid duplicate notifications
+                    $cacheKey = "threshold_notification_{$subasta->id}_{$lote->id}_{$threshold}";
+                    
+                    if (!\Cache::has($cacheKey)) {
+                        // Send notification to auction house
+                        $casaDeRemates = CasaDeRemates::find($subasta->casaDeRemates_id);
+                        if ($casaDeRemates) {
+                            $usuarioCasa = Usuario::find($casaDeRemates->id);
+                            if ($usuarioCasa) {
+                                $usuarioCasa->notify(new UmbralOfertaNotification(
+                                    $subasta, 
+                                    $lote, 
+                                    $threshold, 
+                                    $nuevoTotal, 
+                                    $valorBase
+                                ));
+                                
+                                // Cache this notification for 1 hour to avoid duplicates
+                                \Cache::put($cacheKey, true, now()->addHour());
+                                
+                                \Log::info("Threshold notification sent for auction {$subasta->id}, lot {$lote->id}, threshold {$threshold}x");
+                            }
+                        }
+                        break; // Only send one notification per bid
+                    }
+                }
+            }
+        } catch (\Exception $e) {
+            \Log::error('Error checking threshold and sending notification: ' . $e->getMessage());
+        }
     }
 }

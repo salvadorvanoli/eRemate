@@ -105,6 +105,17 @@ export class SubastaService extends BaseHttpService<any, Subasta> {
     return this.http.get<string[]>(`${this.baseUrl}/auction/locations`);
   }
 
+  getTipos(): Observable<any[]> {
+    return this.http.get<any>(`${this.baseUrl}/auction/tipos`).pipe(
+      map(response => {
+        if (response.success) {
+          return response.data;
+        }
+        throw new Error(response.message || 'Error al obtener tipos de subasta');
+      })
+    );
+  }
+
   // Métodos para el rematador
   iniciarSubasta(subastaId: number): Observable<any> {
     return this.http.post<any>(`${this.baseUrl}/auction/${subastaId}/start`, {}, {

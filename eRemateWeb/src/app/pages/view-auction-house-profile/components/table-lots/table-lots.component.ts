@@ -25,6 +25,7 @@ import { Articulo } from '../../../../core/models/articulo';
 import { AddItemComponent } from '../add-item/add-item.component';
 import { SecurityService } from '../../../../core/services/security.service';
 import { ItemService } from '../../../../core/services/item.service';
+import { Router } from '@angular/router';
 
 interface Lot {
     id: string;
@@ -37,6 +38,8 @@ interface Lot {
     condicionesEntrega: string; 
     articulos: Articulo[];
     disponibilidad?: string;
+    tieneGanador?: boolean;
+    esEditable?: boolean;
 }
 
 @Component({
@@ -107,7 +110,8 @@ export class TableLotsComponent implements OnInit, OnChanges {
         private confirmationService: ConfirmationService,
         private auctionHouseService: AuctionHouseService,
         private securityService: SecurityService,
-        private itemService: ItemService
+        private itemService: ItemService,
+        public router: Router
     ) {}
 
     ngOnInit() {
@@ -164,8 +168,12 @@ export class TableLotsComponent implements OnInit, OnChanges {
                         incrementoMinimo: lot.pujaMinima || 0,
                         condicionesEntrega: lot.condicionesDeEntrega || '',
                         disponibilidad: lot.disponibilidad || '',
-                        articulos: lot.articulos || []
+                        articulos: lot.articulos || [],
+                        tieneGanador: false,
+                        esEditable: true
                     }));
+                    
+                    this.loadLotStatuses();
                 },
                 error: (error) => {
                     this.lots = [];
@@ -173,10 +181,28 @@ export class TableLotsComponent implements OnInit, OnChanges {
             });
     }
 
+    loadLotStatuses() {
+        this.lots.forEach(lot => {
+            this.auctionHouseService.getLotStatus(lot.id)
+                .subscribe({
+                    next: (status) => {
+                        lot.tieneGanador = status.tieneGanador || false;
+                        lot.esEditable = status.esEditable !== false;
+                    },
+                    error: (error) => {
+                        lot.tieneGanador = false;
+                        lot.esEditable = true;
+                    }
+                });
+        });
+    }
+
     onSelectionChange() {
     }
 
     editArticlesForLot(lot: Lot) {
+        if (!lot.esEditable) return;
+        
         this.selectedLotForArticles = {...lot};
         this.loading = true;
         
@@ -227,7 +253,7 @@ export class TableLotsComponent implements OnInit, OnChanges {
     }
     
     openArticlesDialog() {
-        if (this.selectedLots) {
+        if (this.selectedLots && this.selectedLots.esEditable) {
             const selectedLot = this.selectedLots;            
             this.selectedLotForArticles = {...selectedLot};
             this.loading = true;
@@ -538,6 +564,8 @@ export class TableLotsComponent implements OnInit, OnChanges {
     }
 
     deleteLot(lot: Lot) {
+        if (!lot.esEditable) return;
+        
         this.confirmationService.confirm({
             message: `¿Está seguro de que desea eliminar el lote?`,
             header: 'Confirmar eliminación',
@@ -693,6 +721,8 @@ export class TableLotsComponent implements OnInit, OnChanges {
     }
     
     editLot(lot: Lot) {
+        if (!lot.esEditable) return;
+        
         this.editingLot = {
             id: lot.id,
             nombre: lot.lote,
@@ -872,4 +902,9 @@ export class TableLotsComponent implements OnInit, OnChanges {
             };
         }
     }
+
+    hasEditableLots(): boolean {
+  return this.lots.some(lot => lot.esEditable === true);
+    }
+    
 }

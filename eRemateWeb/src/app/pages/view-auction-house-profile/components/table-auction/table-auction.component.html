@@ -118,8 +118,16 @@
       <div class="flex flex-col gap-4 p-fluid">
         <div class="field">
           <label for="tipoSubasta" class="block font-bold mb-2">Tipo de Subasta <span class="text-red-500">*</span></label>
-          <input type="text" pInputText id="tipoSubasta" [(ngModel)]="auction.tipoSubasta" required autofocus class="w-full" />
-          <small class="text-red-500" *ngIf="submitted && !auction.tipoSubasta?.trim()">El tipo de subasta es requerido.</small>
+          <p-dropdown 
+            id="tipoSubasta" 
+            [options]="tipos" 
+            [(ngModel)]="selectedTipo" 
+            optionLabel="label" 
+            placeholder="Seleccione un tipo de subasta"
+            [loading]="loadingTipos"
+            class="w-full" 
+          />
+          <small class="text-red-500" *ngIf="submitted && !selectedTipo">El tipo de subasta es requerido.</small>
         </div>
         <div class="field">
           <label for="fechaInicio" class="block font-bold mb-2">Fecha de Inicio <span class="text-red-500">*</span></label>
@@ -134,7 +142,29 @@
             [min]="minEndDate" (change)="validateDates()" />
           <small class="text-red-500" *ngIf="submitted && !auction.fechaCierre">La fecha de cierre es requerida.</small>
           <small class="text-red-500" *ngIf="submitted && dateErrors.endDate">{{dateErrors.endDate}}</small>
-        </div>        <div class="field">
+        </div>        
+        
+        <div class="field">
+          <label for="rematadorDropdown" class="block font-bold mb-2">Rematador <span class="text-red-500">*</span></label>
+          <p-dropdown 
+            id="rematadorDropdown" 
+            [(ngModel)]="selectedRematador" 
+            [options]="rematadores" 
+            optionLabel="usuario.email" 
+            placeholder="Seleccione un rematador"
+            class="w-full"
+            [required]="true"
+            [showClear]="true"
+            scrollHeight="96px"
+            [style]="{'width': '100%'}"
+            [panelStyle]="{'width': '100%', 'min-width': '100%'}"
+            panelStyleClass="rematador-dropdown-panel">
+          </p-dropdown>
+          <small class="text-red-500" *ngIf="submitted && !selectedRematador">La selección del rematador es requerida.</small>
+          <div class="mb-4"></div>
+        </div>
+        
+        <div class="field">
           <label for="ubicacion" class="block font-bold mb-2">Ubicación <span class="text-red-500">*</span></label>
           <input type="text" pInputText id="ubicacion" [(ngModel)]="auction.ubicacion" required class="w-full" 
                  (input)="onLocationChange()" placeholder="Ingrese la dirección completa" />
@@ -150,13 +180,12 @@
             </div>
             <small class="text-gray-600 mt-1 block text-center">Vista previa de la ubicación usando OpenStreetMap</small>
           </div>
-        </div>
-        <div class="field">
-          <label for="rematadorEmail" class="block font-bold mb-2">Email del Rematador <span class="text-red-500">*</span></label>
-          <input type="email" pInputText id="rematadorEmail" [(ngModel)]="rematadorEmail" required class="w-full" />
-          <small class="text-red-500" *ngIf="submitted && !rematadorEmail?.trim()">El email del rematador es requerido.</small>
-          <small class="text-red-500" *ngIf="submitted && emailError">{{emailError}}</small>
-        </div>
+        </div>        
+        
+        
+        
+        <!-- Espacio adicional para el dropdown        <div style="height: 20px;"></div>
+ -->
       </div>
     </ng-template>
 
@@ -196,8 +225,16 @@
       <div class="flex flex-col gap-4 p-fluid">
         <div class="field">
           <label for="editTipoSubasta" class="block font-bold mb-2">Tipo de Subasta <span class="text-red-500">*</span></label>
-          <input type="text" pInputText id="editTipoSubasta" [(ngModel)]="editingAuction.tipoSubasta" required class="w-full" />
-          <small class="text-red-500" *ngIf="editSubmitted && !editingAuction.tipoSubasta?.trim()">El tipo de subasta es requerido.</small>
+          <p-dropdown 
+            id="editTipoSubasta" 
+            [options]="tipos" 
+            [(ngModel)]="selectedEditTipo" 
+            optionLabel="label" 
+            placeholder="Seleccione un tipo de subasta"
+            [loading]="loadingTipos"
+            class="w-full" 
+          />
+          <small class="text-red-500" *ngIf="editSubmitted && !selectedEditTipo">El tipo de subasta es requerido.</small>
         </div>
         
         <div class="field">

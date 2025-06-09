@@ -2,6 +2,7 @@
 
 namespace App\Models;
 
+use App\Enums\EstadoArticulo;
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\Factories\HasFactory;
 
@@ -19,7 +20,8 @@ class Articulo extends Model
     ];
 
     protected $casts = [
-        'imagenes' => 'array'
+        'imagenes' => 'array',
+        'estado' => EstadoArticulo::class,
     ];
 
     public function lote()

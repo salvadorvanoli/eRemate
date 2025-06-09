@@ -1,10 +1,12 @@
 import { HttpClient, HttpHeaders } from '@angular/common/http';
 import { Injectable } from '@angular/core';
 import { Observable } from 'rxjs';
+import { map } from 'rxjs/operators';
 import { BaseHttpService } from './base-http.service';
 import { Articulo } from '../models/articulo';
 import { CatalogElement } from '../models/catalog-element';
 import { Categoria } from '../models/categoria2';
+import { EstadoOption } from '../enums/estado-articulo.enum';
 
 @Injectable({
   providedIn: 'root'
@@ -40,5 +42,14 @@ export class ItemService extends BaseHttpService<Articulo, Articulo> {
 
   getCategories(): Observable<Categoria[]> {
     return this.http.get<Categoria[]>(`${this.baseUrl}/item/categories`);
+  }
+
+  getEstadosArticulo(): Observable<EstadoOption[]> {
+    const url = `${this.baseUrl}${this.end}/estados`;
+    return this.http.get<{success: boolean, data: EstadoOption[]}>(url, {
+      headers: this.getAuthHeaders()
+    }).pipe(
+      map(response => response.data || [])
+    );
   }
 }

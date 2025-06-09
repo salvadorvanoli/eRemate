@@ -28,12 +28,11 @@
           <p><span class="font-medium">Factura #:</span> {{ paymentData.factura?.id }}</p>
         </div>
       }
-      
-      <div class="flex gap-3">
+        <div class="flex gap-3">
         <app-primary-button
-          [label]="'Ver Factura'"
+          [label]="downloadingInvoice ? 'Descargando...' : 'Descargar Factura'"
           (onClick)="verFactura()"
-          [disabled]="!paymentData?.factura?.id"
+          [disabled]="!paymentData?.factura?.id || downloadingInvoice"
           class="flex-1">
         </app-primary-button>
         

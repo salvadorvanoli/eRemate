@@ -3,10 +3,12 @@
 namespace App\Http\Controllers;
 
 use App\Models\Articulo;
+use App\Enums\EstadoArticulo;
 use App\Services\Articulo\ArticuloServiceInterface;
 use Illuminate\Http\Request;
 use Illuminate\Http\JsonResponse;
 use Illuminate\Support\Facades\Validator;
+use Illuminate\Validation\Rules\Enum;
 
 class ArticuloController extends Controller
 {
@@ -39,7 +41,7 @@ class ArticuloController extends Controller
                 ],
                 'imagenes' => 'required|array',
                 'especificacionesTecnicas' => 'required|string',
-                'estado' => 'required|string|max:255',
+                'estado' => ['required', new Enum(EstadoArticulo::class)],
                 'categoria_id' => 'nullable|exists:categorias,id'
             ]);
 
@@ -117,7 +119,7 @@ class ArticuloController extends Controller
                 ],
                 'imagenes' => 'sometimes|required|array',
                 'especificacionesTecnicas' => 'sometimes|required|string',
-                'estado' => 'sometimes|required|string|max:255',
+                'estado' => ['sometimes', 'required', new Enum(EstadoArticulo::class)],
                 'categoria_id' => 'sometimes|nullable|exists:categorias,id'
             ]);
 
@@ -286,6 +288,21 @@ class ArticuloController extends Controller
             return response()->json([
                 'success' => false,
                 'message' => 'Error al obtener categorías: ' . $e->getMessage()
+            ], 500);
+        }
+    }
+
+    public function obtenerEstados()
+    {
+        try {
+            return response()->json([
+                'success' => true,
+                'data' => EstadoArticulo::options()
+            ], 200);
+        } catch (\Exception $e) {
+            return response()->json([
+                'success' => false,
+                'message' => 'Error al obtener estados: ' . $e->getMessage()
             ], 500);
         }
     }

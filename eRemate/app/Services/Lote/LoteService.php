@@ -7,6 +7,8 @@ use App\Models\Lote;
 use App\Models\Usuario;
 use Illuminate\Support\Facades\Auth;
 use Illuminate\Http\JsonResponse;
+use App\Enums\EstadoSubasta;
+use Illuminate\Support\Facades\DB;
 
 class LoteService implements LoteServiceInterface
 {
@@ -255,6 +257,47 @@ class LoteService implements LoteServiceInterface
             'success' => true,
             'message' => 'Lote eliminado correctamente'
         ]);
+    }
+
+    public function obtenerEstadoLote(int $loteId): array
+    {
+        try {
+            $resultado = DB::table('lotes')
+                ->join('subastas', 'lotes.subasta_id', '=', 'subastas.id')
+                ->where('lotes.id', $loteId)
+                ->select([
+                    DB::raw('lotes.ganador_id IS NOT NULL as tieneGanador'),
+                    DB::raw("
+                        CASE 
+                            WHEN subastas.estado IN ('pendiente', 'pendiente_aprobacion', 'aceptada') 
+                            THEN true 
+                            ELSE false 
+                        END as esEditable
+                    ")
+                ])
+                ->first();
+                
+            if (!$resultado) {
+                return [
+                    'success' => false,
+                    'error' => 'Lote no encontrado'
+                ];
+            }
+            
+            return [
+                'success' => true,
+                'data' => [
+                    'tieneGanador' => (bool) $resultado->tieneGanador,
+                    'esEditable' => (bool) $resultado->esEditable
+                ]
+            ];
+            
+        } catch (\Exception $e) {
+            return [
+                'success' => false,
+                'error' => 'Error al obtener estado del lote: ' . $e->getMessage()
+            ];
+        }
     }
 
     public function obtenerUltimaPuja($id)

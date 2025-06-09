@@ -13,4 +13,5 @@ interface LoteServiceInterface
     public function obtenerLotesPorSubasta(int $subastaId);
     public function eliminarLote(int $id);
     public function obtenerUltimaPuja(int $id);
+    public function obtenerEstadoLote(int $loteId): array;
 }
