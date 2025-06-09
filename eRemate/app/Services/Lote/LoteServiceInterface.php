@@ -14,4 +14,10 @@ interface LoteServiceInterface
     public function eliminarLote(int $id);
     public function obtenerUltimaPuja(int $id);
     public function obtenerEstadoLote(int $loteId): array;
+    //métodos para ganadores potenciales
+    public function generarListaGanadoresPotenciales(int $loteId): mixed;
+    public function aceptarLote(int $loteId, int $usuarioId): mixed;
+    public function rechazarLote(int $loteId, int $usuarioId): mixed;
+    public function obtenerGanadoresPotenciales(int $loteId): mixed;
+    public function obtenerSiguienteGanadorPendiente(int $loteId): mixed;
 }

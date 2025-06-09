@@ -1,9 +1,10 @@
 .rectangle-6 {
-  width: 986px;
-  height: 600px;
-  padding: 8px 8px 8px 8px;
+  width: 100%;
+  max-width: 986px;
+  min-height: 600px;
+  padding: 8px;
   background: #FAFAFA;
-  border-radius: 24px 24px 24px 24px;
+  border-radius: 24px;
   margin: 0 auto;
   box-sizing: border-box;
 }
@@ -11,7 +12,7 @@
 .profile-container {
   display: flex;
   height: 100%;
-  flex-direction: row-reverse; 
+  flex-direction: row-reverse;
   width: 100%;
   max-width: 1000px;
   min-height: 500px;
@@ -21,22 +22,22 @@
   margin: 0 auto;
   overflow: hidden;
   box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1);
+  box-sizing: border-box;
 }
-
 
 .right-column {
   width: 260px;
-  padding: 20px 0px; 
+  padding: 20px 0px;
   display: flex;
   flex-direction: column;
   align-items: center;
-  margin-left: -50px; 
+  margin-left: -50px;
 }
 
 .left-column {
   flex: 1;
-  padding: 20px 0px; 
-  margin-right: -60px; 
+  padding: 20px 0px;
+  margin-right: -60px;
   display: flex;
   flex-direction: column;
   gap: 12px;
@@ -53,7 +54,7 @@
   border-color: #444444;
   border-width: 1px;
   border-style: solid;
-  border-radius: 1px 1px 1px 1px;
+  border-radius: 1px;
   display: flex;
   align-items: center;
   justify-content: center;
@@ -80,42 +81,45 @@
 }
 
 .text-input-1 {
-  width: 457px;
+  width: 100%;
+  max-width: 457px;
   height: 48px;
-  padding: 10px 10px 10px 10px;
+  padding: 10px;
   background: #FFFFFF;
   color: #AAAAAA;
   border-color: #D6D6D6;
   border-width: 2px;
   border-style: solid;
-  border-radius: 4px 4px 4px 4px;
+  border-radius: 4px;
   font-family: "Source Sans 3", Arial, sans-serif;
   font-weight: 400;
   font-size: 16px;
   text-align: left;
+  box-sizing: border-box;
 }
 
 .input-group {
-  margin-bottom: 10px; 
+  margin-bottom: 10px;
 }
-
 
 :host ::ng-deep {
   .p-button.upload-button {
-    width: 200px;
+    width: 100%;
+    max-width: 200px;
   }
   
   .p-inputtext {
-    width: 457px;
+    width: 100%;
+    max-width: 457px;
     height: 48px;
     padding: 10px;
     border: 2px solid #D6D6D6;
     border-radius: 4px;
     font-family: "Source Sans 3", Arial, sans-serif;
     font-size: 16px;
+    box-sizing: border-box;
   }
 }
-
 
 .loading-container {
   display: flex;
@@ -156,6 +160,7 @@
   border: 2px solid #D6D6D6;
   padding: 0.625rem;
   border-radius: 0.25rem;
+  box-sizing: border-box;
 }
 
 .button-container {
@@ -225,26 +230,86 @@
   background-color: #f5f5f5;
 }
 
-
-@media (max-width: 768px) {
-  .profile-content {
+/* Tablet Portrait */
+@media (max-width: 1024px) {
+  .profile-container {
+    max-width: 95%;
     flex-direction: column-reverse;
+  }
+  
+  .right-column,
+  .left-column {
+    margin: 0;
+    width: 100%;
+  }
+  
+  .form-section {
+    padding: 0.5rem;
+  }
+}
+
+/* Tablet */
+@media (max-width: 768px) {
+  .rectangle-6 {
+    padding: 4px;
+    border-radius: 16px;
+  }
+  
+  .profile-container {
+    padding: 0.75rem;
+    border-radius: 1rem;
+    // flex-direction: column-reverse; // Considera si esta reversión en profile-container es necesaria
+                                     // o si la de profile-content era la principal.
+                                     // Si profile-content es el contenedor directo de form e image,
+                                     // su flex-direction es más crítico para el orden.
+  }
+  
+  .profile-content {
+    flex-direction: column; /* CAMBIADO DE column-reverse a column */
   }
   
   .image-section {
     width: 100%;
     margin-bottom: 1.5rem;
+    padding: 0.5rem;
   }
   
   .form-section {
     width: 100%;
+    padding: 0.5rem;
+  }
+  
+  .profile-image-container {
+    width: 200px;
+    height: 200px;
+  }
+  
+  .form-input {
+    height: 2.75rem;
+    font-size: 0.9rem;
+  }
+  
+  .update-button {
+    width: 100%;
+    max-width: 300px;
+    font-size: 1rem;
   }
 }
 
-@media (max-width: 480px) {
+/* Mobile Large */
+@media (max-width: 600px) {
   .profile-container {
     padding: 0.5rem;
-    border-radius: 1rem;
+    margin: 0.5rem;
+  }
+  
+  .form-group {
+    margin-bottom: 0.75rem;
+  }
+  
+  .form-label {
+    font-size: 0.8rem;
+    margin-bottom: 0.25rem;
   }
   
   .profile-image-container {
@@ -252,12 +317,106 @@
     height: 180px;
   }
   
+  .upload-button-container {
+    margin-top: 0.75rem;
+  }
+}
+
+/* Mobile */
+@media (max-width: 480px) {
+  .rectangle-6 {
+    padding: 2px;
+    border-radius: 12px;
+    margin: 0.25rem;
+  }
+  
+  .profile-container {
+    padding: 0.5rem;
+    border-radius: 0.75rem;
+    min-height: auto;
+  }
+  
+  .profile-image-container {
+    width: 150px;
+    height: 150px;
+  }
+  
   .form-input {
     height: 2.5rem;
+    font-size: 0.85rem;
+    padding: 0.5rem;
+  }
+  
+  .form-label {
+    font-size: 0.75rem;
   }
   
   .update-button {
     width: 100%;
-    font-size: 1rem;
+    font-size: 0.9rem;
+    height: 2.75rem;
+    min-width: auto;
+  }
+  
+  .button-container {
+    margin-top: 1rem;
+  }
+  
+  .image-section,
+  .form-section {
+    padding: 0.25rem;
+  }
+}
+
+/* Mobile Small */
+@media (max-width: 360px) {
+  .profile-container {
+    margin: 0.25rem;
+    padding: 0.375rem;
+  }
+  
+  .profile-image-container {
+    width: 120px;
+    height: 120px;
+  }
+  
+  .form-input {
+    height: 2.25rem;
+    font-size: 0.8rem;
+  }
+  
+  .form-label {
+    font-size: 0.7rem;
+  }
+  
+  .update-button {
+    height: 2.5rem;
+    font-size: 0.85rem;
+  }
+  
+  .no-image i {
+    font-size: 3rem !important;
+  }
+}
+
+/* Landscape mode for small devices */
+@media (max-height: 500px) and (orientation: landscape) {
+  .profile-container {
+    flex-direction: row;
+    min-height: auto;
+  }
+  
+  .profile-content {
+    flex-direction: row;
+  }
+  
+  .image-section {
+    margin-bottom: 0;
+    margin-right: 1rem;
+  }
+  
+  .profile-image-container {
+    width: 120px;
+    height: 120px;
   }
 }

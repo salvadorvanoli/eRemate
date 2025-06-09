@@ -7,25 +7,39 @@
 }
 
 .view-container {
-  width: 1040px;
+  max-width: 1040px; // Cambiado de width a max-width
+  width: 100%;      // Añadido para ocupar el ancho disponible
   margin: 0 auto;
-  padding: 20px 0;
+  padding: 20px;    // Padding general para todos los lados
+  box-sizing: border-box; // Para incluir padding y borde en el ancho/alto total
 }
 
 .info-selector-wrapper {
   display: flex;
   justify-content: center; 
   margin-bottom: 20px;
+  width: 100%; // Asegurar que el selector también sea responsive
 }
 
-.titulos {
-  margin: 40px auto 10px;
-  padding: 0px 25px;
+.titulos { // Usado por app-bold-subtitle indirectamente o como clase general
+  margin: 20px auto 10px; // Reducido margen superior
+  padding: 0 15px;    // Padding horizontal para pantallas pequeñas
   display: flex;
   align-items: center;
   justify-content: flex-start;
   font-size: 18px;
   font-weight: 600;
+  max-width: 100%;
+  box-sizing: border-box;
+}
+
+.title-container { // Contenedor para el título de "Lotes Pujados"
+  max-width: 1040px; // Coincidir con view-container
+  width: 100%;
+  margin-left: auto;
+  margin-right: auto;
+  padding: 0 15px; // Padding para consistencia
+  box-sizing: border-box;
 }
 
 .subasta-seleccionada {
@@ -34,7 +48,6 @@
   color: #6334E3;
   font-weight: normal;
 }
-
 
 app-table-lots {
   position: relative;
@@ -62,29 +75,57 @@ app-table-lots.has-selected::before {
   padding: 40px;
   text-align: center;
   color: #6c757d;
+  width: 100%;
+  box-sizing: border-box;
 }
 
 .bidded-lots-container {
   display: flex;
   flex-direction: column;
-  gap: 0; /* Elimina cualquier espacio entre elementos */
+  gap: 0; 
   
   .compact-title {
-    margin-bottom: -25px; /* Valor negativo para superponer y acercar más */
+    margin-bottom: -25px; 
     position: relative;
-    z-index: 1; /* Asegurar que esté encima */
+    z-index: 1; 
   }
 }
 
-/* Ajustar el espacio del componente app-bold-subtitle */
 :host ::ng-deep app-bold-subtitle {
   margin: 0;
   padding: 0;
   display: block;
 }
 
-/* Ajustar el espacio superior de la tabla */
 .bidded-lots-container app-table-lots {
   margin-top: 0;
   padding-top: 0;
+}
+
+// Media queries para responsividad
+@media (max-width: 768px) {
+  .view-container {
+    padding: 15px;
+  }
+
+  .titulos, .title-container {
+    padding: 0 10px;
+    font-size: 17px;
+    margin-top: 15px;
+  }
+
+  .statistics-placeholder {
+    padding: 20px;
+  }
+}
+
+@media (max-width: 480px) {
+  .view-container {
+    padding: 10px;
+  }
+
+  .titulos, .title-container {
+    font-size: 16px;
+    margin-top: 10px;
+  }
 }

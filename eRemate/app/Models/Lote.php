@@ -64,4 +64,21 @@ class Lote extends Model
     {
         return $this->hasOne(Calificacion::class);
     }
+
+    public function ganadoresPotenciales()
+    {
+        return $this->hasMany(GanadorPotencial::class);
+    }
+
+    public function ganadorActual()
+    {
+        return $this->hasOne(GanadorPotencial::class)->where('es_ganador_actual', true);
+    }
+
+    public function siguienteGanadorPendiente()
+    {
+        return $this->hasOne(GanadorPotencial::class)
+                ->where('estado', GanadorPotencial::ESTADO_PENDIENTE)
+                ->orderBy('posicion');
+    }
 }

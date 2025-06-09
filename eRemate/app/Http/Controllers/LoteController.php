@@ -266,6 +266,68 @@ class LoteController extends Controller
         }
     }
 
+    public function generarGanadoresPotenciales($id)
+    {
+        try {
+            return $this->loteService->generarListaGanadoresPotenciales($id);
+        } catch (\Exception $e) {
+            return response()->json([
+                'success' => false,
+                'message' => 'Error al generar ganadores potenciales: ' . $e->getMessage()
+            ], 500);
+        }
+    }
+
+    public function aceptarLote(Request $request, $id)
+    {
+        try {
+            $usuarioId = $request->user()->id; 
+            return $this->loteService->aceptarLote($id, $usuarioId);
+        } catch (\Exception $e) {
+            return response()->json([
+                'success' => false,
+                'message' => 'Error al aceptar lote: ' . $e->getMessage()
+            ], 500);
+        }
+    }
+
+    public function rechazarLote(Request $request, $id)
+    {
+        try {
+            $usuarioId = $request->user()->id; 
+            return $this->loteService->rechazarLote($id, $usuarioId);
+        } catch (\Exception $e) {
+            return response()->json([
+                'success' => false,
+                'message' => 'Error al rechazar lote: ' . $e->getMessage()
+            ], 500);
+        }
+    }
+
+    public function obtenerGanadoresPotenciales($id)
+    {
+        try {
+            return $this->loteService->obtenerGanadoresPotenciales($id);
+        } catch (\Exception $e) {
+            return response()->json([
+                'success' => false,
+                'message' => 'Error al obtener ganadores potenciales: ' . $e->getMessage()
+            ], 500);
+        }
+    }
+
+    public function obtenerSiguienteGanador($id)
+    {
+        try {
+            return $this->loteService->obtenerSiguienteGanadorPendiente($id);
+        } catch (\Exception $e) {
+            return response()->json([
+                'success' => false,
+                'message' => 'Error al obtener siguiente ganador: ' . $e->getMessage()
+            ], 500);
+        }
+    }
+
     public function obtenerUltimaPuja($id)
     {
         try {

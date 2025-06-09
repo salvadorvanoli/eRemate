@@ -47,16 +47,15 @@
           <td [style.width]="'calc(84% / ' + cols.length + ')'" *ngFor="let col of cols" style="text-align: center;">
             <ng-container [ngSwitch]="col.field">
               <ng-container *ngSwitchCase="'fechaInicioDisplay'">
-                <!-- ✅ AGREGAR título de columna para móviles -->
-                <span class="p-column-title">{{ col.header }}: </span>
+                <!-- ✅ ELIMINAR título de columna para móviles -->
                 {{ auction.fechaInicioDisplay }}
               </ng-container>
               <ng-container *ngSwitchCase="'fechaCierreDisplay'">
-                <span class="p-column-title">{{ col.header }}: </span>
+                <!-- ✅ ELIMINAR título de columna para móviles -->
                 {{ auction.fechaCierreDisplay }}
               </ng-container>
               <ng-container *ngSwitchDefault>
-                <span class="p-column-title">{{ col.header }}: </span>
+                <!-- ✅ ELIMINAR título de columna para móviles -->
                 {{ auction[col.field] }}
               </ng-container>
             </ng-container>
@@ -64,7 +63,7 @@
           
           <!-- Acciones diferentes según el tipo de vista -->
           <td style="width: 16%; text-align: center;">
-            <span class="p-column-title">Acciones: </span>
+            <!-- ✅ ELIMINAR título de columna para móviles -->
             <div class="flex gap-2 justify-center">
               <!-- Botones para la agenda de subastas -->
               <div *ngIf="viewType === 'schedule'" class="flex gap-1">
@@ -180,5 +179,9 @@
   </p-dialog>
 
   <!-- ✅ ACTUALIZAR confirmDialog para ser responsive -->
-  <p-confirmDialog [style]="{width: '95vw', maxWidth: '450px'}" />
+  <p-confirmDialog 
+    [style]="{width: '90vw', maxWidth: '450px'}" 
+    [baseZIndex]="10000" 
+    rejectButtonStyleClass="p-button-text"
+  />
 </div>

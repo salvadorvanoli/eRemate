@@ -904,7 +904,7 @@ export class TableLotsComponent implements OnInit, OnChanges {
     }
 
     hasEditableLots(): boolean {
-  return this.lots.some(lot => lot.esEditable === true);
-    }
+    return this.lots.length === 0 || this.lots.some(lot => lot.esEditable === true);
+}
     
 }
