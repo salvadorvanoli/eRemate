@@ -4,10 +4,24 @@
   box-shadow: 0 2px 6px rgba(0, 0, 0, 0.05);
   padding: 1.5rem;
   padding-top: 0rem;
-  width: 1040px;
+  width: 100%; // Modificado: Hacerlo responsive
+  max-width: 1040px; // Modificado: Mantener el ancho máximo si se desea
   margin: 0 auto;
   margin-bottom: 40px;
   margin-top: 0;
+  box-sizing: border-box; // Añadido: Buena práctica
+}
+
+// Nuevo: Wrapper para el scroll horizontal de la tabla
+.table-scroll-wrapper {
+  width: 100%;
+  overflow-x: auto;
+  -webkit-overflow-scrolling: touch; // Scroll suave en iOS
+}
+
+.table-scroll-wrapper .p-table { // O .p-datatable si se usa esa clase
+  min-width: 700px; // Ajusta este valor según el contenido de tu tabla.
+                   // Es el ancho mínimo antes de que aparezca el scroll.
 }
 
 h2 {
@@ -58,6 +72,90 @@ h2 {
       
       &:focus {
         box-shadow: 0 0 0 2px rgba(245, 158, 11, 0.2) !important;
+      }
+    }
+  }
+  
+  /* ✅ ESTILOS PARA MODALES RESPONSIVE Y CENTRADOS */
+  .p-dialog-mask.p-component-overlay { // Estilos para la máscara del modal
+    position: fixed !important;
+    top: 0 !important;
+    left: 0 !important;
+    width: 100vw !important;
+    height: 100vh !important;
+    display: flex !important;
+    align-items: center !important;
+    justify-content: center !important;
+    padding: 1rem !important; // Espacio alrededor del modal en pantallas pequeñas
+    box-sizing: border-box !important;
+    background-color: rgba(0, 0, 0, 0.4) !important; // Fondo oscuro para la máscara
+    z-index: 1000 !important; // Asegurar que esté por encima de otros elementos
+  }
+
+  .p-dialog { // Estilos para el modal en sí
+    margin: 0 !important; // Resetear márgenes para el centrado flex
+    max-height: 90vh !important; // Altura máxima general
+    display: flex !important; // Permitir que el contenido del diálogo se flexione verticalmente
+    flex-direction: column !important;
+    box-shadow: 0 5px 15px rgba(0,0,0,.5) !important;
+    border-radius: 8px !important;
+
+    .p-dialog-header {
+      padding: 1rem 1.5rem !important;
+      border-bottom: 1px solid #dee2e6 !important;
+      flex-shrink: 0; // Evitar que el header se encoja
+      .p-dialog-title {
+        font-weight: 600;
+      }
+    }
+
+    .p-dialog-content {
+      padding: 1.5rem !important;
+      overflow-y: auto !important; // Scroll para el contenido si excede la altura
+      flex-grow: 1; // Permitir que el contenido crezca
+    }
+
+    .p-dialog-footer {
+      padding: 1rem 1.5rem !important;
+      border-top: 1px solid #dee2e6 !important;
+      display: flex;
+      justify-content: flex-end;
+      gap: 0.5rem;
+      flex-shrink: 0; // Evitar que el footer se encoja
+    }
+
+    // Breakpoints para el diálogo
+    @media screen and (max-width: 768px) { // Tablets
+      width: 90vw !important;
+      max-width: 500px !important; // Un max-width razonable para tablets
+
+      .p-dialog-header { padding: 1rem !important; }
+      .p-dialog-content { padding: 1rem !important; }
+      .p-dialog-footer {
+        padding: 1rem !important;
+        // Opcional: apilar botones en tablets si son muchos
+        // flex-direction: column !important;
+        // .p-button { width: 100% !important; margin-bottom: 0.5rem !important; &:last-child { margin-bottom: 0 !important;}}
+      }
+    }
+
+    @media screen and (max-width: 576px) { // Móviles
+      width: 95vw !important;
+      max-width: none !important; // Permitir que ocupe casi todo el ancho
+
+      .p-dialog-header {
+        padding: 0.75rem 1rem !important;
+        .p-dialog-title { font-size: 1.1rem !important; }
+      }
+      .p-dialog-content { padding: 1rem !important; }
+      .p-dialog-footer {
+        padding: 0.75rem 1rem !important;
+        flex-direction: column !important; // Apilar botones en móviles
+        .p-button {
+          width: 100% !important;
+          margin-bottom: 0.5rem !important;
+          &:last-child { margin-bottom: 0 !important; }
+        }
       }
     }
   }

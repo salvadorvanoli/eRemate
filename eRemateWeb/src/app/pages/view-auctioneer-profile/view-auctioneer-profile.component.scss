@@ -1,25 +1,30 @@
 @import url('https://fonts.googleapis.com/css2?family=Montserrat:wght@400;500;600;700;800&display=swap');
 
 .view-container {
-  width: 1040px;
+  max-width: 1040px; // Cambiado de width a max-width
+  width: 100%; // Añadido para ocupar el ancho disponible
   margin: 0 auto;
-  padding: 20px 0;
+  padding: 20px; // Ajustado para padding en todos los lados y responsive
+  box-sizing: border-box; // Añadido para mejor manejo del padding
 }
 
 .info-selector-wrapper {
   display: flex;
   justify-content: center; 
   margin-bottom: 20px;
+  width: 100%; // Asegurar que el selector también sea responsive
 }
 
 .titulos {
   margin: 40px auto 10px;
-  padding: 0px 25px;
+  padding: 0px 15px; // Ajustado el padding horizontal
   display: flex;
   align-items: center;
   justify-content: flex-start;
   font-size: 18px;
   font-weight: 600;
+  max-width: 100%; // Asegurar que no desborde
+  box-sizing: border-box;
 }
 
 .empty-state {
@@ -28,10 +33,40 @@
   padding: 40px;
   text-align: center;
   margin: 0 auto 20px;
-  width: 1040px;
+  max-width: 100%; // Cambiado de width a max-width
+  width: 100%; // Para que ocupe el espacio disponible dentro de .view-container
+  box-sizing: border-box;
   
   p {
     color: #666;
     font-size: 1.1rem;
+  }
+}
+
+// Media queries para ajustar paddings y márgenes en pantallas más pequeñas
+@media (max-width: 768px) {
+  .view-container {
+    padding: 15px;
+  }
+
+  .titulos {
+    margin-top: 20px;
+    font-size: 16px;
+  }
+
+  .empty-state {
+    padding: 20px;
+  }
+}
+
+@media (max-width: 480px) {
+  .view-container {
+    padding: 10px;
+  }
+
+  .titulos {
+    margin-top: 15px;
+    font-size: 15px;
+    padding: 0 10px;
   }
 }
