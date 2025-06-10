@@ -579,7 +579,7 @@ class LoteService implements LoteServiceInterface
                 ->first();
 
             if ($siguienteGanador) {
-                /
+                
                 $siguienteGanador->update([
                     'es_ganador_actual' => true,  
                     'fecha_notificacion' => now()
