@@ -33,6 +33,7 @@ export class LoteService extends BaseHttpService<any, Lote> {
       })
     );
   }
+
   getLoteById(loteId: number): Observable<Lote> {
     return this.http.get<any>(`${this.baseUrl}/lot/${loteId}`, {
       headers: this.getAuthHeaders()

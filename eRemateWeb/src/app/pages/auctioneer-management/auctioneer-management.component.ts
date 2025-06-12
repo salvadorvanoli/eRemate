@@ -384,18 +384,24 @@ export class AuctioneerManagementComponent implements OnInit, OnDestroy {
     
     return [];
   }
-  getLotClass(lote: any): string {
-    const classes = ['lot-summary-card'];
-    
-    if (lote.id === this.loteActual?.id) {
-      classes.push('current');
-    } else if (lote.ganador_id) {
-      classes.push('completed');
-    } else {
-      classes.push('pending');
+  
+  getLotClass(lote: Lote): string {
+    const baseClass = 'lot-summary-card';
+
+    if (this.loteActual && lote.id === this.loteActual.id) {
+      return `${baseClass} lot-current`;
     }
     
-    return classes.join(' ');
+    return `${baseClass} lot-not-current`;
+  }
+
+  get indiceLoteActual(): number {
+    if (!this.loteActual || !this.lotes.length) {
+      return 0;
+    }
+    
+    const index = this.lotes.findIndex(lote => lote.id === this.loteActual!.id);
+    return index >= 0 ? index + 1 : 0;
   }
 
   onImageError(event: any): void {

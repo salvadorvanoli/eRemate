@@ -106,7 +106,9 @@
                 {{ formatearMonto((loteActual.oferta || 0)) }}
               </span>
             </div>
-          </div>          <!-- Articles in current lot -->
+          </div>          
+          
+          <!-- Articles in current lot -->
           @if (loteActual.articulos && loteActual.articulos.length) {
             <div class="articles-section">
               <h5>Artículos en este Lote</h5>              <div class="articles-grid">
@@ -194,7 +196,7 @@
           </div>
           <div class="status-item">
             <i class="pi pi-box"></i>
-            <span>Lote {{ loteActual.id }} de {{ lotes.length }}</span>
+            <span>Lote {{ indiceLoteActual }} de {{ lotes.length }}</span>
           </div>
         </div>
       }
@@ -213,10 +215,8 @@
                 <span class="lot-status">
                   @if (lote.id === loteActual?.id) {
                     <i class="pi pi-play-circle"></i> Actual
-                  } @else if (lote.ganador_id) {
-                    <i class="pi pi-check-circle"></i> Completado
                   } @else {
-                    <i class="pi pi-clock"></i> Pendiente
+                    <i class="pi pi-minus-circle"></i> No Actual
                   }
                 </span>
               </div>
