@@ -79,6 +79,12 @@ export class SubastaService extends BaseHttpService<any, Subasta> {
           return response.data;
         }
         throw new Error(response.message || 'Error al realizar la puja');
+      }),
+      catchError((error: any) => {
+        if (error.error && error.error.message) {
+          throw new Error(error.error.message);
+        }
+        throw error;
       })
     );
   }
