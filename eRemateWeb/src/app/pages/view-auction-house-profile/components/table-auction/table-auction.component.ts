@@ -52,10 +52,15 @@ export class TableAuctionComponent implements OnInit, AfterViewInit, OnDestroy {
     auction!: Subasta;
     selectedAuction: Subasta | null = null;
     submitted: boolean = false;
-    globalFilterFields: string[] = [];    rematadorEmail: string = '';
-    selectedRematador: RematadorResponse | null = null;    emailError: string = '';
+    globalFilterFields: string[] = [];    
+    rematadorEmail: string = '';
+    selectedRematador: RematadorResponse | null = null;    
+    emailError: string = '';
     rematadores: RematadorResponse[] = [];
     casaId: number | null = null; 
+    
+    // Map to store rematador id to email for display
+    rematadorEmails: {[key: number]: string} = {};
     
     // Propiedades para tipos de subasta
     tipos: TipoOption[] = [];
@@ -281,21 +286,27 @@ export class TableAuctionComponent implements OnInit, AfterViewInit, OnDestroy {
     }
       private initializeComponent() {
         this.configureTable();
-        this.loadAuctionsData();
         this.loadRematadores();
-        this.loadTipos();
+        // We'll load the auctions after rematadores is loaded to make sure emails are mapped correctly
     }
-    
-    configureTable() {
+      configureTable() {
         this.cols = [
             { field: 'tipoSubasta', header: 'Tipo' },
             { field: 'fechaInicio', header: 'Fecha Inicio' },
             { field: 'fechaCierre', header: 'Fecha Cierre' },
             { field: 'ubicacion', header: 'Ubicación' },
             { field: 'estado', header: 'Estado' },
-            { field: 'rematador_id', header: 'Rematador' }
+            { field: 'rematador_id', header: 'Email Rematador' }
         ];
-        this.globalFilterFields = this.cols.map(col => col.field);
+        this.globalFilterFields = [...this.cols.map(col => col.field), 'rematadorEmail'];
+        
+        // Add a virtual field for the rematador email to make it searchable
+        this.auctions.forEach(auction => {
+            const email = this.rematadorEmails[auction.rematador_id];
+            if (email) {
+                (auction as any).rematadorEmail = email;
+            }
+        });
     }
 
     loadAuctionsData() {
@@ -326,6 +337,14 @@ export class TableAuctionComponent implements OnInit, AfterViewInit, OnDestroy {
                     } else {
                         this.auctions = [];
                     }
+                    
+                    // Add virtual field for rematador email to make it searchable
+                    this.auctions.forEach(auction => {
+                        const email = this.rematadorEmails[auction.rematador_id];
+                        if (email) {
+                            (auction as any).rematadorEmail = email;
+                        }
+                    });
                 },
                 error: (error) => {
                     this.auctions = [];
@@ -355,10 +374,26 @@ export class TableAuctionComponent implements OnInit, AfterViewInit, OnDestroy {
                     } else {
                         this.rematadores = [];
                     }
+                    
+                    // Create a map of rematador IDs to their emails for display
+                    this.rematadorEmails = {};
+                    this.rematadores.forEach(item => {
+                        if (item.rematador && item.rematador.id && item.usuario && item.usuario.email) {
+                            this.rematadorEmails[item.rematador.id] = item.usuario.email;
+                        }
+                    });
+                    
+                    // Now that we have the auctioneers loaded, we can load the auctions
+                    this.loadAuctionsData();
+                    this.loadTipos();
                 },
                 error: (error) => {
                     this.rematadores = [];
-                }            });
+                    // Even if there's an error loading auctioneers, still try to load auctions
+                    this.loadAuctionsData();
+                    this.loadTipos();
+                }            
+            });
     }
 
     loadTipos() {
@@ -670,7 +705,7 @@ export class TableAuctionComponent implements OnInit, AfterViewInit, OnDestroy {
             this.editDateErrors.endDate) {
             return;
         }
-          const updateData = {
+        const updateData = {
             tipoSubasta: this.selectedEditTipo?.value || this.editingAuction.tipoSubasta,
             fechaInicio: this.editingAuction.fechaInicio,
             fechaCierre: this.editingAuction.fechaCierre,
@@ -681,7 +716,8 @@ export class TableAuctionComponent implements OnInit, AfterViewInit, OnDestroy {
         this.auctionHouseService.updateAuction(this.editingAuction.id, updateData)
             .pipe(finalize(() => this.loading = false))
             .subscribe({
-                next: (response) => {                    const index = this.auctions.findIndex(a => a.id === this.editingAuction.id);
+                next: (response) => {
+                    const index = this.auctions.findIndex(a => a.id === this.editingAuction.id);
                     if (index !== -1) {
                         this.auctions[index] = {
                             ...this.auctions[index],
@@ -690,6 +726,12 @@ export class TableAuctionComponent implements OnInit, AfterViewInit, OnDestroy {
                             fechaCierre: new Date(this.editingAuction.fechaCierre),
                             ubicacion: this.editingAuction.ubicacion
                         };
+                        
+                        // Make sure the virtual field for rematadorEmail is kept
+                        if (this.rematadorEmails[this.auctions[index].rematador_id]) {
+                            (this.auctions[index] as any).rematadorEmail = this.rematadorEmails[this.auctions[index].rematador_id];
+                        }
+                        
                         this.auctions = [...this.auctions];
                     }
                     
@@ -711,7 +753,8 @@ export class TableAuctionComponent implements OnInit, AfterViewInit, OnDestroy {
                         detail: 'No se pudo actualizar la subasta',
                         life: 3000
                     });
-                }            });
+                }            
+            });
     }
     
     formatDateForInput(date: Date): string {
@@ -748,7 +791,8 @@ export class TableAuctionComponent implements OnInit, AfterViewInit, OnDestroy {
     }
 
     saveAuction() {
-        this.submitted = true;        this.validateDates();
+        this.submitted = true;        
+        this.validateDates();
         
         if (!this.selectedTipo || 
             !this.auction.ubicacion?.trim() || 
@@ -761,7 +805,6 @@ export class TableAuctionComponent implements OnInit, AfterViewInit, OnDestroy {
         }
         
         const currentUser = this.securityService.actualUser;
-
         if (!currentUser || !currentUser.id) {
             this.messageService.clear();
             this.messageService.add({ 
@@ -776,7 +819,7 @@ export class TableAuctionComponent implements OnInit, AfterViewInit, OnDestroy {
         
         this.auction.rematador_id = this.selectedRematador.rematador?.id || 0;
         const casaIdToSave = currentUser.id;
-          const subastaData = {
+        const subastaData = {
             casaDeRemates_id: casaIdToSave, 
             rematador_id: this.auction.rematador_id,
             urlTransmision: this.auction.urlTransmision,
@@ -803,6 +846,12 @@ export class TableAuctionComponent implements OnInit, AfterViewInit, OnDestroy {
                         this.auctions.push(response);
                     }
                     
+                    // Add the email to the virtual field for the new auction
+                    const newAuction = this.auctions[this.auctions.length - 1];
+                    if (newAuction && this.rematadorEmails[newAuction.rematador_id]) {
+                        (newAuction as any).rematadorEmail = this.rematadorEmails[newAuction.rematador_id];
+                    }
+                    
                     this.auctions = [...this.auctions];
                     this.messageService.clear();
                     this.messageService.add({ 
@@ -811,7 +860,7 @@ export class TableAuctionComponent implements OnInit, AfterViewInit, OnDestroy {
                         detail: 'Subasta creada correctamente', 
                         life: 3000 
                     });
-                      this.auctionDialog = false;
+                    this.auctionDialog = false;
                 },
                 error: (error) => {
                     this.messageService.clear();
