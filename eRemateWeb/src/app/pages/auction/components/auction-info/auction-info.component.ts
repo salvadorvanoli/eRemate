@@ -6,6 +6,7 @@ import { interval, Subscription } from 'rxjs';
 import { PrimaryButtonComponent } from '../../../../shared/components/buttons/primary-button/primary-button.component';
 import { DomSanitizer, SafeResourceUrl } from '@angular/platform-browser';
 import * as L from 'leaflet';
+import { SecurityService } from '../../../../core/services/security.service';
 
 @Component({
   selector: 'app-auction-info',
@@ -31,6 +32,7 @@ countdown: string = '';
 private timerSub?: Subscription;
 safeYoutubeUrl?: SafeResourceUrl;
 showLocationDialog: boolean = false;
+isAuctionHouse: boolean = false;
 
 // Leaflet Map properties (exactamente igual a table-auction)
 private map: L.Map | null = null;
@@ -38,7 +40,10 @@ private marker: L.Marker | null = null;
 mapVisible: boolean = false;
 private defaultLatLng: [number, number] = [-34.9011, -56.1645]; // Montevideo, Uruguay por defecto
 
-constructor(private sanitizer: DomSanitizer) {}
+constructor(
+    private sanitizer: DomSanitizer,
+    private securityService: SecurityService
+) {}
 
 ngOnChanges(changes: SimpleChanges): void {
     if (changes['youtubeUrl']) {
@@ -129,6 +134,10 @@ getLoteImageUrl(lote: any): string {        if (this.getImageUrl && lote) {
 }
 
 ngOnInit(): void {
+    this.securityService.getActualUser().subscribe(user => {
+        this.isAuctionHouse = user?.tipo === 'casa';
+    });
+
     this.timerSub = interval(1000).subscribe(() => this.updateCountdown());
     this.updateYoutubeUrl();
 }

@@ -303,12 +303,14 @@ class PayPalService implements PayPalServiceInterface
             // Si el pago viene de un chat, enviar un mensaje de confirmación
             if ($chatId) {
                 try {
-                    \App\Models\Mensaje::create([
+                    $mensaje = \App\Models\Mensaje::create([
                         'contenido' => "💵 Se ha generado la factura #" . $factura->id . " por un monto de $" . $monto . ". Método de pago: PayPal. Método de entrega: " . $metodoEntrega,
                         'chat_id' => $chatId,
                         'usuario_id' => $usuarioRegistradoId,
                         'tipo' => 'factura'
                     ]);
+
+                    \App\Events\NuevoMensajeEvent::dispatch($mensaje);
                 } catch (\Exception $e) {
                     \Log::error("Error al enviar mensaje de confirmación: " . $e->getMessage());
                     // No detener el proceso por un error en el mensaje

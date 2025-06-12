@@ -83,7 +83,27 @@
                                 <p class="lot-value">Valor base: ${{ item2?.valorBase || '0' }}</p>
                             </div>
                         </div>
-                        <div class="action-buttons">
+                        @if (!isAuctionHouse) {
+                            <div class="action-buttons">
+                                @if (shouldShowViewAllLotsButton()) {
+                                    <app-primary-button 
+                                        label="Ver todos los lotes"
+                                        (onClick)="verTodosLosLotes()" 
+                                        class="view-lots-button"> 
+                                    </app-primary-button>
+                                }
+                                <app-primary-button 
+                                    label="Pujar por el lote en vivo"
+                                    (onClick)="pujar()" 
+                                    class="bid-button"> 
+                                </app-primary-button>
+                            </div>
+                        }
+                    </div>      
+                } @else {
+                    @if(!isAuctionHouse) {
+                        <div class="no-lot-section">
+                            <p class="no-lot-message">Actualmente no hay un lote siendo subastado</p>
                             @if (shouldShowViewAllLotsButton()) {
                                 <app-primary-button 
                                     label="Ver todos los lotes"
@@ -91,23 +111,8 @@
                                     class="view-lots-button"> 
                                 </app-primary-button>
                             }
-                            <app-primary-button 
-                                label="Pujar por el lote en vivo"
-                                (onClick)="pujar()" 
-                                class="bid-button"> 
-                            </app-primary-button>
                         </div>
-                    </div>                } @else {
-                    <div class="no-lot-section">
-                        <p class="no-lot-message">Actualmente no hay un lote siendo subastado</p>
-                        @if (shouldShowViewAllLotsButton()) {
-                            <app-primary-button 
-                                label="Ver todos los lotes"
-                                (onClick)="verTodosLosLotes()" 
-                                class="view-lots-button"> 
-                            </app-primary-button>
-                        }
-                    </div>
+                    }
                 }
                   
             </div>

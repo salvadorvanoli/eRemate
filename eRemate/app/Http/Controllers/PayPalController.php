@@ -225,12 +225,14 @@ class PayPalController extends Controller
                     
                     // Si hay un chat asociado, enviar un mensaje de confirmación
                     if ($paymentRequest->chat_id) {
-                        \App\Models\Mensaje::create([
+                        $mensaje = \App\Models\Mensaje::create([
                             'contenido' => '✅ El pago de $' . $paymentRequest->monto . ' ha sido procesado exitosamente.',
                             'chat_id' => $paymentRequest->chat_id,
                             'usuario_id' => $paymentRequest->usuario_registrado_id,
                             'tipo' => 'confirmacion_pago'
                         ]);
+                        
+                        \App\Events\NuevoMensajeEvent::dispatch($mensaje);
                         
                         \Log::info('Mensaje de confirmación enviado al chat: ' . $paymentRequest->chat_id);
                     }
