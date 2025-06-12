@@ -20,4 +20,5 @@ interface LoteServiceInterface
     public function rechazarLote(int $loteId, int $usuarioId): mixed;
     public function obtenerGanadoresPotenciales(int $loteId): mixed;
     public function obtenerSiguienteGanadorPendiente(int $loteId): mixed;
+    public function obtenerImagenAleatoria(int $loteId);
 }

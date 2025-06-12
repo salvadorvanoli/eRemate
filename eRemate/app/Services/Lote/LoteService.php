@@ -721,4 +721,60 @@ class LoteService implements LoteServiceInterface
             ], 500);
         }
     }
+
+    public function obtenerImagenAleatoria(int $loteId)
+    {
+        $lote = Lote::with('articulos')->find($loteId);
+        
+        if (!$lote) {
+            return response()->json([
+                'success' => false,
+                'message' => 'Lote no encontrado'
+            ], 404);
+        }
+
+        $todasLasImagenes = [];
+        
+        foreach ($lote->articulos as $articulo) {
+            if (!empty($articulo->imagenes)) {
+                $imagenes = is_string($articulo->imagenes) 
+                    ? json_decode($articulo->imagenes, true) 
+                    : $articulo->imagenes;
+                
+                if (is_array($imagenes)) {
+                    foreach ($imagenes as $index => $imagen) {
+                        $todasLasImagenes[] = [
+                            'imagen' => $imagen,
+                            'articulo_id' => $articulo->id,
+                            'articulo_descripcion' => $articulo->descripcion,
+                            'imagen_index' => $index + 1
+                        ];
+                    }
+                }
+            }
+        }
+
+        if (empty($todasLasImagenes)) {
+            return response()->json([
+                'success' => false,
+                'message' => 'No hay imágenes disponibles en este lote'
+            ], 404);
+        }
+
+        $imagenAleatoria = $todasLasImagenes[array_rand($todasLasImagenes)];
+
+        return response()->json([
+            'success' => true,
+            'data' => [
+                'imagen' => $imagenAleatoria['imagen'],
+                'contexto' => [
+                    'lote_id' => $lote->id,
+                    'lote_nombre' => $lote->nombre,
+                    'articulo_id' => $imagenAleatoria['articulo_id'],
+                    'articulo_descripcion' => $imagenAleatoria['articulo_descripcion'],
+                    'imagen_index' => $imagenAleatoria['imagen_index']
+                ]
+            ]
+        ]);
+    }
 }

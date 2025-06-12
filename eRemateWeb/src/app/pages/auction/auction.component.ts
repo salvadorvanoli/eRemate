@@ -52,6 +52,8 @@ export class AuctionComponent implements OnInit {
 
   // Nueva propiedad para el enlace de YouTube Live
   youtubeUrl?: string;
+  // Nueva propiedad para las imágenes aleatorias de los lotes
+  imagenesAleatorias: { [id: number]: string } = {};
 
   private subscriptions: Subscription[] = [];
 
@@ -140,11 +142,10 @@ export class AuctionComponent implements OnInit {
           this.lotes = data;
           console.log('Lotes cargados:', this.lotes);
           console.log('Subasta loteActual_id:', this.subasta?.loteActual_id);
+          this.cargarImagenesAleatorias();
           
-          // Seleccionar el lote actual basado en loteActual_id de la subasta
           if (this.lotes.length > 0) {
             if (this.subasta?.loteActual_id) {
-              // Buscar el lote que coincida con loteActual_id
               const loteActual = this.lotes.find(lote => lote.id === this.subasta?.loteActual_id);
               if (loteActual) {
                 this.loteSeleccionado = loteActual;
@@ -176,6 +177,8 @@ export class AuctionComponent implements OnInit {
       this.loteService.getLotesBySubasta(this.subasta.id).subscribe({
         next: (lotes: Lote[]) => {
           this.lotes = lotes;
+            // Cargar imágenes aleatorias para los lotes actualizados
+          this.cargarImagenesAleatorias();
           
           if (nuevoLoteActualId) {
             this.loteSeleccionado = this.lotes.find(lote => lote.id === nuevoLoteActualId);
@@ -248,13 +251,31 @@ export class AuctionComponent implements OnInit {
 
   getPrice(lote: Lote): string {
     return `$${lote.valorBase}`;
-  }
-
-  getImageUrl(item: any): string {
-    if (!item?.imagenUrl || item.imagenUrl.trim() === '') {
+  }  
+  
+  getImage = (item: any): string => {
+    if (!item || !item.id) {
       return 'https://developers.elementor.com/docs/assets/img/elementor-placeholder-image.png';
     }
-    return item.imagenUrl;
+
+    return this.imagenesAleatorias[item.id] || 'https://developers.elementor.com/docs/assets/img/elementor-placeholder-image.png';
+  }
+  private cargarImagenesAleatorias(): void {
+    this.lotes.forEach(lote => {
+      if (lote.id) {
+        this.loteService.obtenerImagenAleatoria(lote.id).subscribe(
+          (response) => {
+            if (response && response.imagen) {
+              this.imagenesAleatorias[lote.id!] = response.imagen;
+            }
+          },
+          (error) => {
+            console.log(`No se pudo cargar imagen aleatoria para lote ${lote.id}:`, error);
+            this.imagenesAleatorias[lote.id!] = '/remate.jpg';
+          }
+        );
+      }
+    });
   }
   
   seleccionarLote(lote: Lote): void {
