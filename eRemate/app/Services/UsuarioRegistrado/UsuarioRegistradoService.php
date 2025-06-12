@@ -127,7 +127,7 @@ class UsuarioRegistradoService implements UsuarioRegistradoServiceInterface
                     ")
                 ])
                 ->groupBy([
-                    'lotes.id', 'lotes.subasta_id', 'lotes.nombre', 'lotes.descripcion',
+                    'lotes.id', 'lotes.subasta_id', 'lotes.compra_id', 'lotes.fechaUltimaPuja', 'lotes.nombre', 'lotes.descripcion',
                     'lotes.valorBase', 'lotes.pujaMinima', 'lotes.oferta', 
                     'lotes.disponibilidad', 'lotes.condicionesDeEntrega', 
                     'lotes.vendedorExterno', 'lotes.ganador_id', 
