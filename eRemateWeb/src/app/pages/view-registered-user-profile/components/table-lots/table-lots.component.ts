@@ -60,6 +60,11 @@ export class TableLotsComponent implements OnInit {
     rating: number = 0;
     hasExistingRating: boolean = false;
     
+    // Nuevas variables para los modales de confirmación
+    confirmDialog: boolean = false;
+    confirmAction: 'aceptar' | 'rechazar' | null = null;
+    selectedLotForAction: LoteConEstado | null = null;
+    
     @Input() userId: number | null = null;
     @ViewChild('dt') dt!: Table;
     
@@ -303,7 +308,60 @@ export class TableLotsComponent implements OnInit {
         this.hasExistingRating = false;
     }
 
+    // Métodos modificados para mostrar confirmación
     aceptarLote(lote: LoteConEstado) {
+        this.selectedLotForAction = lote;
+        this.confirmAction = 'aceptar';
+        this.confirmDialog = true;
+    }
+
+    rechazarLote(lote: LoteConEstado) {
+        this.selectedLotForAction = lote;
+        this.confirmAction = 'rechazar';
+        this.confirmDialog = true;
+    }
+
+    // Nuevos métodos para manejar la confirmación
+    confirmActionLote() {
+        if (!this.selectedLotForAction || !this.confirmAction) {
+            return;
+        }
+
+        if (this.confirmAction === 'aceptar') {
+            this.executeAceptarLote(this.selectedLotForAction);
+        } else if (this.confirmAction === 'rechazar') {
+            this.executeRechazarLote(this.selectedLotForAction);
+        }
+
+        this.closeConfirmDialog();
+    }
+
+    closeConfirmDialog() {
+        this.confirmDialog = false;
+        this.confirmAction = null;
+        this.selectedLotForAction = null;
+    }
+
+    getConfirmTitle(): string {
+        return this.confirmAction === 'aceptar' ? 'Confirmar Aceptación' : 'Confirmar Rechazo';
+    }
+
+    getConfirmMessage(): string {
+        if (!this.selectedLotForAction) return '';
+        
+        if (this.confirmAction === 'aceptar') {
+            return `¿Estás seguro que deseas aceptar el lote "${this.selectedLotForAction.nombre}"?`;
+        } else {
+            return `¿Estás seguro que deseas rechazar el lote "${this.selectedLotForAction.nombre}"?`;
+        }
+    }
+
+    getConfirmIcon(): string {
+        return this.confirmAction === 'aceptar' ? 'pi pi-check-circle' : 'pi pi-exclamation-triangle';
+    }
+
+    // Métodos que ejecutan las acciones (renombrados)
+    private executeAceptarLote(lote: LoteConEstado) {
         if (!lote.id) {
             this.messageService.add({
                 severity: 'error',
@@ -347,7 +405,7 @@ export class TableLotsComponent implements OnInit {
             });
     }
 
-    rechazarLote(lote: LoteConEstado) {
+    private executeRechazarLote(lote: LoteConEstado) {
         if (!lote.id) {
             this.messageService.add({
                 severity: 'error',

@@ -164,4 +164,25 @@ aceptarLote(loteId: string | number): Observable<any> {
     );
   }
 
+updateUserProfile(userId: string | number, userData: any): Observable<any> {
+  const url = this.baseUrl.includes('/registered-users') 
+    ? `${this.baseUrl}/${userId}`
+    : `${this.baseUrl}/registered-users/${userId}`;
+  
+  console.log('URL para actualizar usuario:', url);
+  console.log('Datos enviados:', userData);
+  
+  return this.http.put<any>(url, userData, {
+    headers: this.getAuthHeaders()
+  }).pipe(
+    tap(response => {
+      console.log('Usuario actualizado:', response);
+    }),
+    catchError(error => {
+      console.error('Error al actualizar usuario:', error);
+      return throwError(() => error);
+    })
+  );
+}
+
 }

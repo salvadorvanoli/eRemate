@@ -332,7 +332,6 @@ export class TableAuctionAuctioneerComponent implements OnInit, OnChanges {
       return;
     }
     
-    // Use the selected tipo value
     this.auction.tipoSubasta = this.selectedTipo.value;
     
     setTimeout(() => {
@@ -349,7 +348,7 @@ export class TableAuctionAuctioneerComponent implements OnInit, OnChanges {
   
   viewAuctionDetails(auction: Subasta) {
     if (auction.id) {
-      this.router.navigate(['/subasta', auction.id]);
+      this.router.navigate(['/panel-rematador', auction.id]);
     } else {
       this.messageService.add({
         severity: 'warn',
