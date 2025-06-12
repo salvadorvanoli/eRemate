@@ -26,4 +26,5 @@ interface SubastaServiceInterface
     public function realizarPujaInterna(array $puja, int $subastaId, int $usuarioId);
     public function eliminarSubasta(int $id);
     public function obtenerImagenAleatoria(int $subastaId);
+    public function manejarLoteSinGanadores(int $loteId): mixed;
 }

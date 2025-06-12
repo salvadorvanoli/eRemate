@@ -1,7 +1,7 @@
 <?php
 
 namespace App\Http\Controllers;
-
+use App\Models\UsuarioRegistrado; 
 use Illuminate\Http\Request;
 use App\Services\UsuarioRegistrado\UsuarioRegistradoServiceInterface;
 use Illuminate\Database\Eloquent\ModelNotFoundException;
@@ -215,6 +215,59 @@ class UsuarioRegistradoController extends Controller
             return response()->json(['mensaje' => 'Lote eliminado de favoritos exitosamente']);
         } catch (Exception $e) {
             return response()->json(['error' => 'Error al quitar lote de favoritos: ' . $e->getMessage()], 500);
+        }
+    }
+    
+    /**
+     * Actualizar un usuario registrado
+     */
+    public function update(Request $request, $id)
+    {
+        try {
+            $data = $request->validate([
+                'nombre' => 'sometimes|string|max:255',
+                'apellido' => 'sometimes|string|max:255',
+                'email' => 'sometimes|email|max:255',
+                'telefono' => 'sometimes|string|max:20',
+                'password' => 'sometimes|string|min:8',
+                'metodos_pago' => 'sometimes|array'
+            ]);
+
+            $resultado = $this->usuarioRegistradoService->actualizarUsuarioRegistrado($id, $data);
+
+            if (!$resultado) {
+                return response()->json([
+                    'success' => false,
+                    'message' => 'Error al actualizar usuario'
+                ], 500);
+            }
+
+            $usuarioActualizado = UsuarioRegistrado::with('usuario')->find($id);
+
+            return response()->json([
+                'success' => true,
+                'data' => $usuarioActualizado,
+                'message' => 'Usuario actualizado correctamente'
+            ]);
+
+        } catch (\Illuminate\Validation\ValidationException $e) {
+            return response()->json([
+                'success' => false,
+                'errors' => $e->errors(),
+                'message' => 'Error de validación'
+            ], 422);
+            
+        } catch (ModelNotFoundException $e) {
+            return response()->json([
+                'success' => false,
+                'message' => 'Usuario no encontrado'
+            ], 404);
+            
+        } catch (Exception $e) {
+            return response()->json([
+                'success' => false,
+                'message' => 'Error al actualizar usuario: ' . $e->getMessage()
+            ], 500);
         }
     }
 }

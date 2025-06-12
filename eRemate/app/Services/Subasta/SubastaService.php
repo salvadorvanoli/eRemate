@@ -218,7 +218,7 @@ class SubastaService implements SubastaServiceInterface
 
         $subasta->update($data);
 
-        return Subasta::find($id)->first();
+        return Subasta::find($id);
     }
     
     public function obtenerSubastas() 
@@ -1192,6 +1192,44 @@ class SubastaService implements SubastaServiceInterface
             }
         } catch (\Exception $e) {
             \Log::error('Error checking threshold and sending notification: ' . $e->getMessage());
+        }
+    }
+
+    public function manejarLoteSinGanadores(int $loteId): mixed
+    {
+        try {
+            \Log::info("Manejando lote sin ganadores", ['lote_id' => $loteId]);
+            
+            $lote = Lote::with('subasta')->find($loteId);
+            
+            if (!$lote) {
+                return response()->json([
+                    'success' => false,
+                    'message' => 'Lote no encontrado'
+                ], 404);
+            }
+
+            // Marcar lote como sin ganador
+            $lote->update(['ganador_id' => null]);
+            
+            // Opcional: Notificar a la casa de remates
+            // ...
+            
+            return response()->json([
+                'success' => true,
+                'message' => 'Lote marcado como sin ganador disponible'
+            ], 200);
+            
+        } catch (\Exception $e) {
+            \Log::error('Error manejando lote sin ganadores', [
+                'lote_id' => $loteId,
+                'error' => $e->getMessage()
+            ]);
+            
+            return response()->json([
+                'success' => false,
+                'error' => 'Error al manejar lote sin ganadores'
+            ], 500);
         }
     }
 }

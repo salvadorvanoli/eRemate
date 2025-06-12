@@ -1,21 +1,20 @@
 <?php
 
 namespace App\Services\UsuarioRegistrado;
-
-use App\Models\UsuarioRegistrado;
+use App\Models\UsuarioRegistrado; 
 use App\Enums\MetodoPago;
 use Illuminate\Support\Facades\DB;
 
 class UsuarioRegistradoService implements UsuarioRegistradoServiceInterface
 {
-    // Obtener métodos de pago registrados
+    
     public function obtenerMetodosPago($id)
     {
         $usuario = UsuarioRegistrado::findOrFail($id);
         return $usuario->metodos_pago ?? [];
     }
 
-    // Agregar un método de pago (si no existe ya)
+    
     public function agregarMetodoPago($id, string $metodoPago)
     {
         if (!in_array($metodoPago, array_column(MetodoPago::cases(), 'value'))) {
@@ -138,6 +137,55 @@ class UsuarioRegistradoService implements UsuarioRegistradoServiceInterface
             return $lotes;
         } catch (\Exception $e) {
             return ['error' => 'No se pudieron obtener los lotes con pujas: ' . $e->getMessage()];
+        }
+    }
+    
+  
+    public function actualizarUsuarioRegistrado(int $id, array $data): bool
+    {
+        $usuarioRegistrado = UsuarioRegistrado::findOrFail($id);
+        
+        
+        DB::beginTransaction();
+        
+        try {
+            $datosUsuario = [];
+            
+          
+            if (isset($data['email'])) {
+                $datosUsuario['email'] = $data['email'];
+                unset($data['email']); 
+            }
+            
+            if (isset($data['telefono'])) {
+                $datosUsuario['telefono'] = $data['telefono'];
+                unset($data['telefono']);
+            }
+            
+            if (isset($data['password'])) {
+                $datosUsuario['password'] = bcrypt($data['password']);
+                unset($data['password']);
+            }
+            
+          
+            $usuarioRegistrado->update($data);
+            
+          
+            if (!empty($datosUsuario)) {
+                $usuario = \App\Models\Usuario::find($id);
+                if (!$usuario) {
+                    throw new \Exception('No se encontró el usuario asociado al usuario registrado');
+                }
+                $usuario->update($datosUsuario);
+            }
+            
+            DB::commit();
+            return true;
+            
+        } catch (\Exception $e) {
+            DB::rollBack();
+            \Log::error('Error al actualizar usuario registrado: ' . $e->getMessage());
+            return false;
         }
     }
 }

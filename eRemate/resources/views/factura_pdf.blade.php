@@ -159,11 +159,7 @@
         @foreach($factura->compra?->lote?->articulos ?? [] as $articulo)
             <tr>
                 <td>
-                    @if(is_array($articulo->imagenes))
-                        {{ $articulo->imagenes[0] ?? '' }}
-                    @else
-                        {{ $articulo->imagenes ?? '' }}
-                    @endif
+                    {{ $articulo->nombre ?? 'Artículo sin nombre' }}
                 </td>
                 <td class="center-align">1</td>
             </tr>

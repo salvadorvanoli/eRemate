@@ -347,7 +347,6 @@ class LoteService implements LoteServiceInterface
                 ], 404);
             }
 
-            
             \Log::info("Paso 3: Inicializando variables");
             $usuariosEncontrados = [];
             $ganadoresPotenciales = [];
@@ -430,9 +429,9 @@ class LoteService implements LoteServiceInterface
                         throw $e;
                     }
                     
-                    // Límite de 10 ganadores
-                    if ($posicion > 10) {
-                        \Log::info("Límite de 10 ganadores alcanzado, terminando");
+                    // ✅ LÍMITE DE 3 GANADORES
+                    if ($posicion > 3) {
+                        \Log::info("Límite de 3 ganadores alcanzado, terminando");
                         break;
                     }
                 } else {
@@ -550,7 +549,7 @@ class LoteService implements LoteServiceInterface
     {
         try {
             DB::beginTransaction();
-        
+    
             $ganadorPotencial = GanadorPotencial::where('lote_id', $loteId)
                 ->where('usuario_registrado_id', $usuarioId)
                 ->where('estado', GanadorPotencial::ESTADO_PENDIENTE)
@@ -564,14 +563,20 @@ class LoteService implements LoteServiceInterface
                 ], 404);
             }
 
-            
+            // Marcar como rechazado y quitar es_ganador_actual
             $ganadorPotencial->update([
                 'estado' => GanadorPotencial::ESTADO_RECHAZADO,
                 'fecha_respuesta' => now(),
-                'es_ganador_actual' => false  
+                'es_ganador_actual' => false  // ✅ Pasar a 0
             ]);
 
-            
+            \Log::info("Ganador potencial rechazado", [
+                'lote_id' => $loteId,
+                'usuario_rechazado' => $usuarioId,
+                'posicion_rechazada' => $ganadorPotencial->posicion
+            ]);
+
+            // ✅ BUSCAR SIGUIENTE CON VALIDACIÓN MEJORADA
             $siguienteGanador = GanadorPotencial::where('lote_id', $loteId)
                 ->where('estado', GanadorPotencial::ESTADO_PENDIENTE)
                 ->where('posicion', '>', $ganadorPotencial->posicion)
@@ -579,8 +584,9 @@ class LoteService implements LoteServiceInterface
                 ->first();
 
             if ($siguienteGanador) {
+                // Marcar al siguiente como ganador actual
                 $siguienteGanador->update([
-                    'es_ganador_actual' => true,  
+                    'es_ganador_actual' => true,  // ✅ Pasar a 1
                     'fecha_notificacion' => now()
                 ]);
 
@@ -590,20 +596,36 @@ class LoteService implements LoteServiceInterface
                     'siguiente_usuario' => $siguienteGanador->usuario_registrado_id,
                     'posicion' => $siguienteGanador->posicion
                 ]);
+
+                $mensaje = 'Lote rechazado. Se ha notificado al siguiente ganador potencial';
             } else {
-                \Log::info("No hay más ganadores potenciales disponibles", [
+               
+                \Log::warning("No hay más ganadores potenciales disponibles", [
                     'lote_id' => $loteId,
-                    'usuario_rechazado' => $usuarioId
+                    'usuario_rechazado' => $usuarioId,
+                    'posicion_rechazada' => $ganadorPotencial->posicion
                 ]);
+
+               
+                $lote = Lote::find($loteId);
+                if ($lote) {
+                    $lote->update(['ganador_id' => null]);
+                    \Log::info("Lote marcado como sin ganador", ['lote_id' => $loteId]);
+                }
+
+                $mensaje = 'Lote rechazado. No hay más ganadores potenciales disponibles. El lote queda sin asignar.';
             }
 
             DB::commit();
 
             return response()->json([
                 'success' => true,
-                'message' => $siguienteGanador 
-                    ? 'Lote rechazado. Se ha notificado al siguiente ganador potencial'
-                    : 'Lote rechazado. No hay más ganadores potenciales disponibles'
+                'message' => $mensaje,
+                'data' => [
+                    'tiene_siguiente_ganador' => !is_null($siguienteGanador),
+                    'siguiente_ganador_id' => $siguienteGanador ? $siguienteGanador->usuario_registrado_id : null,
+                    'lote_sin_ganador' => is_null($siguienteGanador)
+                ]
             ], 200);
 
         } catch (\Exception $e) {
@@ -611,7 +633,9 @@ class LoteService implements LoteServiceInterface
             \Log::error('Error al rechazar lote', [
                 'lote_id' => $loteId,
                 'usuario_id' => $usuarioId,
-                'error' => $e->getMessage()
+                'error' => $e->getMessage(),
+                'file' => $e->getFile(),
+                'line' => $e->getLine()
             ]);
         
             return response()->json([
@@ -718,6 +742,42 @@ class LoteService implements LoteServiceInterface
             return response()->json([
                 'success' => false,
                 'message' => 'Error al obtener valor actual del lote: ' . $e->getMessage()
+            ], 500);
+        }
+    }
+
+    public function manejarLoteSinGanadores(int $loteId): mixed
+    {
+        try {
+            \Log::info("Manejando lote sin ganadores", ['lote_id' => $loteId]);
+            
+            $lote = Lote::with('subasta')->find($loteId);
+            
+            if (!$lote) {
+                return response()->json([
+                    'success' => false,
+                    'message' => 'Lote no encontrado'
+                ], 404);
+            }
+
+          
+            $lote->update(['ganador_id' => null]);
+            
+            
+            return response()->json([
+                'success' => true,
+                'message' => 'Lote marcado como sin ganador disponible'
+            ], 200);
+            
+        } catch (\Exception $e) {
+            \Log::error('Error manejando lote sin ganadores', [
+                'lote_id' => $loteId,
+                'error' => $e->getMessage()
+            ]);
+            
+            return response()->json([
+                'success' => false,
+                'error' => 'Error al manejar lote sin ganadores'
             ], 500);
         }
     }

@@ -113,9 +113,11 @@ class SubastaController extends Controller
                 return $subasta;
             }
 
+            $actualizada = Subasta::with(['casaRemates'])->find($id);
+
             return response()->json([
                 'success' => true,
-                'data' => $subasta,
+                'data' => $actualizada,
                 'message' => 'Subasta actualizada correctamente'
             ], 200);
 
@@ -465,7 +467,7 @@ class SubastaController extends Controller
             $tipos = collect(TipoSubasta::cases())->map(function ($tipo) {
                 return [
                     'value' => $tipo->value,
-                    'label' => $tipo->etiqueta()
+                    'label' => $tipo->label()
                 ];
             });
 

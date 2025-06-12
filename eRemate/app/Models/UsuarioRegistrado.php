@@ -13,6 +13,8 @@ class UsuarioRegistrado extends Model
 
     protected $fillable = [
         'id',
+        'nombre',
+        'apellido', 
         'metodos_pago'
     ];
 
