@@ -127,6 +127,7 @@ export class RegisterFormComponent implements OnInit, OnDestroy {
         this.performRegistration([]);
       }
     } else {
+      this.messageService.clear();
       this.messageService.add({ 
         severity: 'error', 
         summary: 'Error', 
@@ -152,6 +153,7 @@ export class RegisterFormComponent implements OnInit, OnDestroy {
       this.performRegistration(uploadedImages);
     } catch (error) {
       console.error('Error al subir imágenes:', error);
+      this.messageService.clear();
       this.messageService.add({ 
         severity: 'error', 
         summary: 'Error', 
@@ -188,6 +190,7 @@ export class RegisterFormComponent implements OnInit, OnDestroy {
     this.SecurityService.register(usuario).subscribe({
       next: () => {
         this.registrationSuccessful = true;
+        this.messageService.clear();
         this.messageService.add({ 
           severity: 'success', 
           summary: 'Operación exitosa', 
@@ -201,8 +204,10 @@ export class RegisterFormComponent implements OnInit, OnDestroy {
       },
       error: (err: any) => {
         if (err.error.errors) {
+          this.messageService.clear();
           this.messageService.add({ severity: 'error', summary: 'Error', detail: JSON.stringify(err.error.errors), life: 4000 });
         } else {
+          this.messageService.clear();
           this.messageService.add({ severity: 'error', summary: 'Error', detail: 'No fue posible conectar con el servidor', life: 4000 });
         }
       }
@@ -395,6 +400,7 @@ export class RegisterFormComponent implements OnInit, OnDestroy {
             }));
           }
           
+          this.messageService.clear();
           this.messageService.add({ 
             severity: 'success', 
             summary: 'Operación exitosa', 
@@ -409,6 +415,7 @@ export class RegisterFormComponent implements OnInit, OnDestroy {
           if (err.error?.error) {
             errorMessage = err.error.error;
           }
+          this.messageService.clear();
           this.messageService.add({ 
             severity: 'error', 
             summary: 'Error', 

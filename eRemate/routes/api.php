@@ -162,6 +162,7 @@ Route::prefix('lot')->group(function () {
     Route::get('/{id}/status', [LoteController::class, 'obtenerEstadoLote']);
     Route::get('/auction/{id}', [LoteController::class, 'obtenerLotesPorSubasta']);
     Route::get('/{id}/ultima-puja', [LoteController::class, 'obtenerUltimaPuja']);
+    Route::get('/{id}/random-image', [LoteController::class, 'obtenerImagenAleatoria']);
 
     Route::middleware('auth:sanctum')->group(function () {
         Route::post('/', [LoteController::class, 'crearLote']);

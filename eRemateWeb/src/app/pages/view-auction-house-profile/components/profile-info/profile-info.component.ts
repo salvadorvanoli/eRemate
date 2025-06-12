@@ -72,6 +72,7 @@ export class ProfileInfoComponent implements OnInit {
             this.userId = user.id;
             this.casaId = user.id;
           } else {
+            this.messageService.clear();
             this.messageService.add({
               severity: 'warning',
               summary: 'Advertencia',
@@ -110,6 +111,7 @@ export class ProfileInfoComponent implements OnInit {
               telefono: usuario.telefono || ''
             };
           } else {
+            this.messageService.clear();
             this.messageService.add({
               severity: 'warning',
               summary: 'Formato incorrecto',
@@ -119,6 +121,7 @@ export class ProfileInfoComponent implements OnInit {
           }
         },
         error: (error) => {
+          this.messageService.clear();
           this.messageService.add({
             severity: 'warning',
             summary: 'Conexión al servidor',
@@ -159,6 +162,7 @@ export class ProfileInfoComponent implements OnInit {
       .pipe(finalize(() => this.loading = false))
       .subscribe({
         next: (response) => {
+          this.messageService.clear();
           this.messageService.add({
             severity: 'success',
             summary: 'Éxito',
@@ -167,6 +171,7 @@ export class ProfileInfoComponent implements OnInit {
           });
         },
         error: (error) => {
+          this.messageService.clear();
           this.messageService.add({
             severity: 'error',
             summary: 'Error',

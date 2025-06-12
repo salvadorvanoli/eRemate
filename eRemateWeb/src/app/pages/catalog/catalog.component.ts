@@ -128,6 +128,7 @@ export class CatalogComponent {
         this.cargarImagenesAleatorias();
       },
       error: (error: any) => {
+        this.messageService.clear();
         this.messageService.add({ severity: 'error', summary: 'Error', detail: error.error.message, life: 4000 });
       }
     });

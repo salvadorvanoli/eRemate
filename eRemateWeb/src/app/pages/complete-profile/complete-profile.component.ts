@@ -135,6 +135,7 @@ export class CompleteProfileComponent implements OnInit, OnDestroy {
   private checkUserProfileStatus(user: any) {
 
     if (user.perfil_completo === 1 || user.perfil_completo === '1' || user.perfil_completo === true) {
+      this.messageService.clear();
       this.messageService.add({ 
         severity: 'info', 
         summary: 'Perfil completo', 
@@ -153,6 +154,7 @@ export class CompleteProfileComponent implements OnInit, OnDestroy {
   }
 
   private redirectToRegister(message: string) {
+    this.messageService.clear();
     this.messageService.add({ 
       severity: 'warn', 
       summary: 'Advertencia', 
@@ -172,6 +174,7 @@ export class CompleteProfileComponent implements OnInit, OnDestroy {
         this.performProfileCompletion([]);
       }
     } else {
+      this.messageService.clear();
       this.messageService.add({ 
         severity: 'error', 
         summary: 'Error', 
@@ -197,6 +200,7 @@ export class CompleteProfileComponent implements OnInit, OnDestroy {
       this.performProfileCompletion(uploadedImages);
     } catch (error) {
       console.error('Error al subir imágenes:', error);
+      this.messageService.clear();
       this.messageService.add({ 
         severity: 'error', 
         summary: 'Error', 
@@ -231,6 +235,7 @@ export class CompleteProfileComponent implements OnInit, OnDestroy {
     this.securityService.completeProfile(profileData).subscribe({
       next: () => {
         this.profileCompletionSuccessful = true;
+        this.messageService.clear();
         this.messageService.add({ 
           severity: 'success', 
           summary: 'Operación exitosa', 
@@ -248,6 +253,7 @@ export class CompleteProfileComponent implements OnInit, OnDestroy {
       },
       error: (err: any) => {
         if (err.error.errors) {
+          this.messageService.clear();
           this.messageService.add({ 
             severity: 'error', 
             summary: 'Error', 
@@ -255,6 +261,7 @@ export class CompleteProfileComponent implements OnInit, OnDestroy {
             life: 4000 
           });
         } else {
+          this.messageService.clear();
           this.messageService.add({ 
             severity: 'error', 
             summary: 'Error', 

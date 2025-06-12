@@ -56,7 +56,10 @@
             <span *ngIf="col.field === 'fechaInicio' || col.field === 'fechaCierre'">
               {{ auction[col.field] | date:'dd/MM/yyyy HH:mm' }}
             </span>
-            <span *ngIf="col.field !== 'fechaInicio' && col.field !== 'fechaCierre'">
+            <span *ngIf="col.field === 'rematador_id'">
+              {{ rematadorEmails[auction.rematador_id] || auction.rematador_id }}
+            </span>
+            <span *ngIf="col.field !== 'fechaInicio' && col.field !== 'fechaCierre' && col.field !== 'rematador_id'">
               {{ auction[col.field] }}
             </span>
           </td>

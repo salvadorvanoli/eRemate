@@ -117,6 +117,7 @@ export class ProfileInfoComponent implements OnInit {
               this.profileImage = rematador.imagen;
             }
           } else {
+            this.messageService.clear();
             this.messageService.add({
               severity: 'warning',
               summary: 'Formato incorrecto',
@@ -126,6 +127,7 @@ export class ProfileInfoComponent implements OnInit {
           }
         },
         error: (error) => {
+          this.messageService.clear();
           this.messageService.add({
             severity: 'warning',
             summary: 'Conexión al servidor',
@@ -230,6 +232,7 @@ export class ProfileInfoComponent implements OnInit {
     
     if (validationErrors.length > 0) {
       const errorMessage = validationErrors.join('\n');
+      this.messageService.clear();
       this.messageService.add({
         severity: 'error',
         summary: 'Error de validación',
@@ -255,6 +258,7 @@ export class ProfileInfoComponent implements OnInit {
       
       if (!this.rematadorId) {
         this.loading = false;
+        this.messageService.clear();
         this.messageService.add({
           severity: 'error',
           summary: 'Error',
@@ -268,6 +272,7 @@ export class ProfileInfoComponent implements OnInit {
         .pipe(finalize(() => this.loading = false))
         .subscribe({
           next: (response) => {
+            this.messageService.clear();
             this.messageService.add({
               severity: 'success',
               summary: 'Éxito',
@@ -286,6 +291,7 @@ export class ProfileInfoComponent implements OnInit {
             }
           },
           error: (error) => {
+            this.messageService.clear();
             this.messageService.add({
               severity: 'error',
               summary: 'Error',
@@ -296,6 +302,7 @@ export class ProfileInfoComponent implements OnInit {
         });
     }).catch(error => {
       this.loading = false;
+      this.messageService.clear();
       this.messageService.add({
         severity: 'error',
         summary: 'Error',

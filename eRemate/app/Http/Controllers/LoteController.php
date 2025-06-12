@@ -359,4 +359,16 @@ class LoteController extends Controller
             ], 500);
         }
     }
+
+    public function obtenerImagenAleatoria(Request $request, $loteId)
+    {
+        try {
+            return $this->loteService->obtenerImagenAleatoria($loteId);
+        } catch (\Exception $e) {
+            return response()->json([
+                'success' => false,
+                'message' => 'Error al obtener imagen aleatoria: ' . $e->getMessage()
+            ], 500);
+        }
+    }
 }

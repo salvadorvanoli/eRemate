@@ -166,6 +166,7 @@ export class TableComponent implements OnInit {
                     } 
                     else if (response && response.success === false) {
                         this.products = []; 
+                        this.messageService.clear();
                         this.messageService.add({
                             severity: 'error',
                             summary: 'Error',
@@ -191,6 +192,7 @@ export class TableComponent implements OnInit {
                         errorMessage = 'Error de conexión';
                     }
                     
+                    this.messageService.clear();
                     this.messageService.add({ 
                         severity: 'error', 
                         summary: 'Error', 
@@ -254,6 +256,7 @@ export class TableComponent implements OnInit {
             accept: () => {
                 this.products = this.products.filter(val => !this.selectedProducts?.includes(val));
                 this.selectedProducts = null;
+                this.messageService.clear();
                 this.messageService.add({ severity: 'success', summary: 'Éxito', detail: 'Rematadores eliminados', life: 3000 });
             }
         });
@@ -279,10 +282,12 @@ export class TableComponent implements OnInit {
         if (this.product.nombre?.trim() && this.product.apellido?.trim()) {
             if (this.product.id) {
                 this.products[this.findIndexById(this.product.id)] = this.product;
+                this.messageService.clear();
                 this.messageService.add({ severity: 'success', summary: 'Éxito', detail: 'Rematador actualizado', life: 3000 });
             } else {
                 this.product.id = this.createId();
                 this.products.push(this.product);
+                this.messageService.clear();
                 this.messageService.add({ severity: 'success', summary: 'Éxito', detail: 'Rematador creado', life: 3000 });
             }
             
@@ -357,6 +362,7 @@ export class TableComponent implements OnInit {
     this.emailSubmitted = true;
     
     if (!this.rematadorEmail?.trim()) {
+        this.messageService.clear();
         this.messageService.add({
             severity: 'error',
             summary: 'Error',
@@ -367,6 +373,7 @@ export class TableComponent implements OnInit {
     }
     
     if (!this.casaId) {
+        this.messageService.clear();
         this.messageService.add({
             severity: 'error',
             summary: 'Error',
@@ -383,6 +390,7 @@ export class TableComponent implements OnInit {
             .pipe(finalize(() => this.loading = false))
             .subscribe({
                 next: (response) => {
+                    this.messageService.clear();
                     this.messageService.add({
                         severity: 'success',
                         summary: 'Éxito',
@@ -393,6 +401,7 @@ export class TableComponent implements OnInit {
                     this.loadRematadoresData(this.casaId!);
                 },
                 error: (error) => {
+                    this.messageService.clear();
                     this.messageService.add({
                         severity: 'error',
                         summary: 'Error',
@@ -403,6 +412,7 @@ export class TableComponent implements OnInit {
             });
     } catch (error) {
         this.loading = false;
+        this.messageService.clear();
         this.messageService.add({
             severity: 'error',
             summary: 'Error',
@@ -414,6 +424,7 @@ export class TableComponent implements OnInit {
 
 removeRematador(rematador: any) {
     if (!this.casaId) {
+        this.messageService.clear();
         this.messageService.add({
             severity: 'error',
             summary: 'Error',
@@ -434,7 +445,7 @@ removeRematador(rematador: any) {
                 .subscribe({
                     next: (response) => {
                         this.products = this.products.filter(item => item.id !== rematador.id);
-                        
+                        this.messageService.clear();
                         this.messageService.add({
                             severity: 'success',
                             summary: 'Éxito',
@@ -447,6 +458,7 @@ removeRematador(rematador: any) {
                         }, 500);
                     },
                     error: (error) => {
+                        this.messageService.clear();
                         this.messageService.add({
                             severity: 'error',
                             summary: 'Error',

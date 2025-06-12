@@ -2,7 +2,7 @@
 <app-auction-info
     [item]="subasta"
     [item2]="loteSeleccionado"
-    [getImageUrl]="getImageUrl"
+    [getImageUrl]="getImage"
     [youtubeUrl]="youtubeUrl"
     (onPuja)="verPuja()"
     (onVerTodosLosLotes)="verTodosLosLotes()">
@@ -22,7 +22,7 @@
         [getLink]="getLink"
         [getTitle]="getTitle"
         [getPrice]="getPrice"
-        [getImageUrl]="getImageUrl"
+        [getImageUrl]="getImage"
         (itemClick)="verDetalles($event)">
     </app-dynamic-carousel>
 } @else {

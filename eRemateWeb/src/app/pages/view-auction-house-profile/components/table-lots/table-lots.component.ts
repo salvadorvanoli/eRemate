@@ -238,6 +238,7 @@ export class TableLotsComponent implements OnInit, OnChanges {
                 },
                 error: (error) => {
                     if (error.status && error.status !== 404) {
+                        this.messageService.clear();
                         this.messageService.add({
                             severity: 'error',
                             summary: 'Error',
@@ -290,6 +291,7 @@ export class TableLotsComponent implements OnInit, OnChanges {
                     },
                     error: (error) => {
                         if (error.status && error.status !== 404) {
+                            this.messageService.clear();
                             this.messageService.add({
                                 severity: 'error',
                                 summary: 'Error',
@@ -315,6 +317,7 @@ export class TableLotsComponent implements OnInit, OnChanges {
             const index = this.findIndexById(this.selectedLotForArticles.id);
             if (index >= 0) {
                 this.lots[index].articulos = [...this.selectedLotForArticles.articulos];
+                this.messageService.clear();
                 this.messageService.add({ 
                     severity: 'success', 
                     summary: 'Éxito', 
@@ -408,6 +411,7 @@ export class TableLotsComponent implements OnInit, OnChanges {
                 errorMessage += ' y al menos una imagen';
             }
             
+            this.messageService.clear();
             this.messageService.add({
                 severity: 'error',
                 summary: 'Error',
@@ -438,6 +442,7 @@ export class TableLotsComponent implements OnInit, OnChanges {
                 .pipe(finalize(() => this.loading = false))
                 .subscribe({
                     next: (response) => {
+                        this.messageService.clear();
                         this.messageService.add({
                             severity: 'success',
                             summary: 'Éxito',
@@ -459,6 +464,7 @@ export class TableLotsComponent implements OnInit, OnChanges {
                         this.articleDialog = false;
                     },
                     error: (error) => {
+                        this.messageService.clear();
                         this.messageService.add({
                             severity: 'error',
                             summary: 'Error',
@@ -515,6 +521,7 @@ export class TableLotsComponent implements OnInit, OnChanges {
                           this.editingArticleIndex = -1;
                         }, 300);
                         
+                        this.messageService.clear();
                         this.messageService.add({
                           severity: 'success',
                           summary: 'Éxito',
@@ -523,6 +530,7 @@ export class TableLotsComponent implements OnInit, OnChanges {
                         });
                     },
                     error: (error) => {
+                        this.messageService.clear();
                         this.messageService.add({
                             severity: 'error',
                             summary: 'Error',
@@ -536,6 +544,7 @@ export class TableLotsComponent implements OnInit, OnChanges {
     
     deleteSelectedLots() {
         if (!this.selectedLots) {
+            this.messageService.clear();
             this.messageService.add({ 
                 severity: 'warn', 
                 summary: 'Advertencia', 
@@ -553,6 +562,7 @@ export class TableLotsComponent implements OnInit, OnChanges {
                 const lotToDelete = this.selectedLots!;
                 this.lots = this.lots.filter(val => val.id !== lotToDelete.id);
                 this.selectedLots = null;
+                this.messageService.clear();
                 this.messageService.add({ 
                     severity: 'success', 
                     summary: 'Éxito', 
@@ -579,6 +589,7 @@ export class TableLotsComponent implements OnInit, OnChanges {
                         next: (response) => {
                             this.lots = this.lots.filter(val => val.id !== lot.id);
                             
+                            this.messageService.clear();
                             this.messageService.add({
                                 severity: 'success',
                                 summary: 'Éxito',
@@ -587,6 +598,7 @@ export class TableLotsComponent implements OnInit, OnChanges {
                             });
                         },
                         error: (error) => {
+                            this.messageService.clear();
                             this.messageService.add({
                                 severity: 'error',
                                 summary: 'Error',
@@ -616,7 +628,7 @@ export class TableLotsComponent implements OnInit, OnChanges {
           this.lot.incrementoMinimo <= 0 ||
           !this.lot.disponibilidad?.trim() || 
           !this.lot.condicionesEntrega?.trim()) {
-          
+          this.messageService.clear();
           this.messageService.add({ 
               severity: 'error', 
               summary: 'Error', 
@@ -635,6 +647,7 @@ export class TableLotsComponent implements OnInit, OnChanges {
       if (this.lot.articulos && this.lot.articulos.length > 0) {
           const invalidArticles = this.lot.articulos.filter(a => !a.nombre.trim());
           if (invalidArticles.length > 0) {
+            this.messageService.clear();
               this.messageService.add({ 
                   severity: 'error', 
                   summary: 'Error', 
@@ -662,6 +675,7 @@ export class TableLotsComponent implements OnInit, OnChanges {
       if (this.lot.id) {
           const index = this.findIndexById(this.lot.id);
           this.lots[index] = this.lot;
+          this.messageService.clear();
           this.messageService.add({ severity: 'success', summary: 'Éxito', detail: 'Lote actualizado', life: 3000 });
           this.lots = [...this.lots];
           this.lotDialog = false;
@@ -684,6 +698,7 @@ export class TableLotsComponent implements OnInit, OnChanges {
               }))
               .subscribe({
                   next: (response) => {
+                    this.messageService.clear();
                       this.messageService.add({ 
                           severity: 'success', 
                           summary: 'Éxito', 
@@ -709,6 +724,7 @@ export class TableLotsComponent implements OnInit, OnChanges {
                       };
                   },
                   error: (error) => {
+                    this.messageService.clear();
                       this.messageService.add({ 
                           severity: 'error', 
                           summary: 'Error', 
@@ -784,7 +800,7 @@ export class TableLotsComponent implements OnInit, OnChanges {
                         };
                         this.lots = [...this.lots];
                     }
-                    
+                    this.messageService.clear();
                     this.messageService.add({
                         severity: 'success',
                         summary: 'Éxito',
@@ -795,6 +811,7 @@ export class TableLotsComponent implements OnInit, OnChanges {
                     this.hideEditLotDialog();
                 },
                 error: (error) => {
+                    this.messageService.clear();
                     this.messageService.add({
                         severity: 'error',
                         summary: 'Error',
@@ -861,7 +878,7 @@ export class TableLotsComponent implements OnInit, OnChanges {
                     .subscribe({
                         next: (response) => {
                             this.selectedLotForArticles!.articulos.splice(index, 1);
-                            
+                            this.messageService.clear();
                             this.messageService.add({
                                 severity: 'success',
                                 summary: 'Éxito',
@@ -870,6 +887,7 @@ export class TableLotsComponent implements OnInit, OnChanges {
                             });
                         },
                         error: (error) => {
+                            this.messageService.clear();
                             this.messageService.add({
                                 severity: 'error',
                                 summary: 'Error',

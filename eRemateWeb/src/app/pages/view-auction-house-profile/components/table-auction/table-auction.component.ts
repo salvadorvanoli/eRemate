@@ -52,10 +52,15 @@ export class TableAuctionComponent implements OnInit, AfterViewInit, OnDestroy {
     auction!: Subasta;
     selectedAuction: Subasta | null = null;
     submitted: boolean = false;
-    globalFilterFields: string[] = [];    rematadorEmail: string = '';
-    selectedRematador: RematadorResponse | null = null;    emailError: string = '';
+    globalFilterFields: string[] = [];    
+    rematadorEmail: string = '';
+    selectedRematador: RematadorResponse | null = null;    
+    emailError: string = '';
     rematadores: RematadorResponse[] = [];
     casaId: number | null = null; 
+    
+    // Map to store rematador id to email for display
+    rematadorEmails: {[key: number]: string} = {};
     
     // Propiedades para tipos de subasta
     tipos: TipoOption[] = [];
@@ -254,6 +259,7 @@ export class TableAuctionComponent implements OnInit, AfterViewInit, OnDestroy {
                         this.casaId = user.id;
                         this.initializeComponent();
                     } else {
+                        this.messageService.clear();
                         this.messageService.add({ 
                             severity: 'error', 
                             summary: 'Error de autenticación', 
@@ -265,6 +271,7 @@ export class TableAuctionComponent implements OnInit, AfterViewInit, OnDestroy {
                     }
                 },
                 error: (error) => {
+                    this.messageService.clear();
                     this.messageService.add({ 
                         severity: 'error', 
                         summary: 'Error de conexión', 
@@ -279,27 +286,34 @@ export class TableAuctionComponent implements OnInit, AfterViewInit, OnDestroy {
     }
       private initializeComponent() {
         this.configureTable();
-        this.loadAuctionsData();
         this.loadRematadores();
-        this.loadTipos();
+        // We'll load the auctions after rematadores is loaded to make sure emails are mapped correctly
     }
-    
-    configureTable() {
+      configureTable() {
         this.cols = [
             { field: 'tipoSubasta', header: 'Tipo' },
             { field: 'fechaInicio', header: 'Fecha Inicio' },
             { field: 'fechaCierre', header: 'Fecha Cierre' },
             { field: 'ubicacion', header: 'Ubicación' },
             { field: 'estado', header: 'Estado' },
-            { field: 'rematador_id', header: 'Rematador' }
+            { field: 'rematador_id', header: 'Email Rematador' }
         ];
-        this.globalFilterFields = this.cols.map(col => col.field);
+        this.globalFilterFields = [...this.cols.map(col => col.field), 'rematadorEmail'];
+        
+        // Add a virtual field for the rematador email to make it searchable
+        this.auctions.forEach(auction => {
+            const email = this.rematadorEmails[auction.rematador_id];
+            if (email) {
+                (auction as any).rematadorEmail = email;
+            }
+        });
     }
 
     loadAuctionsData() {
         this.loading = true;
         
         if (!this.casaId) {
+            this.messageService.clear();
             this.messageService.add({ 
                 severity: 'error', 
                 summary: 'Error', 
@@ -323,6 +337,14 @@ export class TableAuctionComponent implements OnInit, AfterViewInit, OnDestroy {
                     } else {
                         this.auctions = [];
                     }
+                    
+                    // Add virtual field for rematador email to make it searchable
+                    this.auctions.forEach(auction => {
+                        const email = this.rematadorEmails[auction.rematador_id];
+                        if (email) {
+                            (auction as any).rematadorEmail = email;
+                        }
+                    });
                 },
                 error: (error) => {
                     this.auctions = [];
@@ -332,6 +354,7 @@ export class TableAuctionComponent implements OnInit, AfterViewInit, OnDestroy {
     
     loadRematadores() {
         if (!this.casaId) {
+            this.messageService.clear();
             this.messageService.add({ 
                 severity: 'error', 
                 summary: 'Error', 
@@ -351,10 +374,26 @@ export class TableAuctionComponent implements OnInit, AfterViewInit, OnDestroy {
                     } else {
                         this.rematadores = [];
                     }
+                    
+                    // Create a map of rematador IDs to their emails for display
+                    this.rematadorEmails = {};
+                    this.rematadores.forEach(item => {
+                        if (item.rematador && item.rematador.id && item.usuario && item.usuario.email) {
+                            this.rematadorEmails[item.rematador.id] = item.usuario.email;
+                        }
+                    });
+                    
+                    // Now that we have the auctioneers loaded, we can load the auctions
+                    this.loadAuctionsData();
+                    this.loadTipos();
                 },
                 error: (error) => {
                     this.rematadores = [];
-                }            });
+                    // Even if there's an error loading auctioneers, still try to load auctions
+                    this.loadAuctionsData();
+                    this.loadTipos();
+                }            
+            });
     }
 
     loadTipos() {
@@ -377,6 +416,7 @@ export class TableAuctionComponent implements OnInit, AfterViewInit, OnDestroy {
         const currentUser = this.securityService.actualUser;
 
         if (!currentUser || !currentUser.id) {
+            this.messageService.clear();
             this.messageService.add({ 
                 severity: 'error', 
                 summary: 'Error de autenticación', 
@@ -431,6 +471,7 @@ export class TableAuctionComponent implements OnInit, AfterViewInit, OnDestroy {
                 if (this.selectedAuction) {
                     this.auctions = this.auctions.filter(val => val.id !== this.selectedAuction?.id);
                     this.selectedAuction = null;
+                    this.messageService.clear();
                     this.messageService.add({ severity: 'success', summary: 'Éxito', detail: 'Subasta eliminada', life: 3000 });
                 }
             }
@@ -447,6 +488,7 @@ export class TableAuctionComponent implements OnInit, AfterViewInit, OnDestroy {
                     this.auctionHouseService.deleteAuction(auction.id.toString()).subscribe({
                         next: () => {
                             this.auctions = this.auctions.filter(val => val.id !== auction.id);
+                            this.messageService.clear();
                             this.messageService.add({
                                 severity: 'success',
                                 summary: 'Éxito',
@@ -455,6 +497,7 @@ export class TableAuctionComponent implements OnInit, AfterViewInit, OnDestroy {
                             });
                         },
                         error: () => {
+                            this.messageService.clear();
                             this.messageService.add({
                                 severity: 'error',
                                 summary: 'Error',
@@ -475,6 +518,7 @@ export class TableAuctionComponent implements OnInit, AfterViewInit, OnDestroy {
     
     editAuction(auction: Subasta) {
         if (!this.canEditAuction(auction.estado)) {
+            this.messageService.clear();
             this.messageService.add({
                 severity: 'warn',
                 summary: 'Acción no permitida',
@@ -648,7 +692,9 @@ export class TableAuctionComponent implements OnInit, AfterViewInit, OnDestroy {
         this.editMarker = L.marker([lat, lng]).addTo(this.editMap);
         const popupText = customTitle || this.editingAuction.ubicacion || 'Ubicación seleccionada';
         this.editMarker.bindPopup(popupText).openPopup();
-    }    updateAuction() {
+    }    
+    
+    updateAuction() {
         this.editSubmitted = true;
         
         this.validateEditDates();
@@ -670,67 +716,62 @@ export class TableAuctionComponent implements OnInit, AfterViewInit, OnDestroy {
             urlTransmision: this.editingAuction.urlTransmision || 'https://ejemplo.com/stream' // Add the missing field
         };
         
-        // Add detailed console log showing what is being sent
-        console.log('Enviando datos para actualización de subasta:', {
-            id: this.editingAuction.id,
-            updateData,
-            selectedTipo: this.selectedEditTipo
-        });
-        
         this.loading = true;
         this.auctionHouseService.updateAuction(this.editingAuction.id, updateData)
-            .pipe(finalize(() => this.loading = false))
-            .subscribe({
-                next: (response) => {
-                    console.log('Respuesta exitosa de actualización:', response);
-                    const index = this.auctions.findIndex(a => a.id === this.editingAuction.id);
-                    if (index !== -1) {
-                        this.auctions[index] = {
-                            ...this.auctions[index],
-                            tipoSubasta: this.selectedEditTipo?.value || this.editingAuction.tipoSubasta,
-                            fechaInicio: new Date(this.editingAuction.fechaInicio),
-                            fechaCierre: new Date(this.editingAuction.fechaCierre),
-                            ubicacion: this.editingAuction.ubicacion
-                        };
-                        this.auctions = [...this.auctions];
+        .pipe(finalize(() => this.loading = false))
+        .subscribe({
+            next: (response) => {
+
+                const index = this.auctions.findIndex(a => a.id === this.editingAuction.id);
+                if (index !== -1) {
+                    this.auctions[index] = {
+                        ...this.auctions[index],
+                        tipoSubasta: this.selectedEditTipo?.value || this.editingAuction.tipoSubasta,
+                        fechaInicio: new Date(this.editingAuction.fechaInicio),
+                        fechaCierre: new Date(this.editingAuction.fechaCierre),
+                        ubicacion: this.editingAuction.ubicacion
+                    };
+                    
+                    if (this.rematadorEmails[this.auctions[index].rematador_id]) {
+                        (this.auctions[index] as any).rematadorEmail = this.rematadorEmails[this.auctions[index].rematador_id];
                     }
                     
-                    this.messageService.add({
-                        severity: 'success',
-                        summary: 'Éxito',
-                        detail: 'Subasta actualizada correctamente',
-                        life: 3000
-                    });
-                    
-                    this.hideEditDialog();
-                },
-                error: (error) => {
-                    console.error('Error al actualizar subasta:', error);
-                    console.log('Detalles del error:', {
-                        status: error.status,
-                        message: error.message,
-                        error: error.error
-                    });
-                    
-                    let errorMessage = 'No se pudo actualizar la subasta';
-                    if (error.error && typeof error.error === 'object') {
-                        // Try to extract more specific error information if available
-                        const firstError = Object.values(error.error)[0];
-                        if (Array.isArray(firstError) && firstError.length > 0) {
-                            errorMessage = firstError[0];
-                        } else if (typeof error.error.message === 'string') {
-                            errorMessage = error.error.message;
-                        }
-                    }
-                    
-                    this.messageService.add({
-                        severity: 'error',
-                        summary: 'Error',
-                        detail: errorMessage,
-                        life: 5000
-                    });
+                    this.auctions = [...this.auctions];
                 }
-            });
+                
+                this.messageService.clear();
+                this.messageService.add({
+                    severity: 'success',
+                    summary: 'Éxito',
+                    detail: 'Subasta actualizada correctamente',
+                    life: 3000
+                });
+                
+                this.hideEditDialog();
+            },
+            error: (error) => {
+                console.error('Error al actualizar subasta:', error);
+                
+                let errorMessage = 'No se pudo actualizar la subasta';
+                if (error.error && typeof error.error === 'object') {
+                    
+                    const firstError = Object.values(error.error)[0];
+                    if (Array.isArray(firstError) && firstError.length > 0) {
+                        errorMessage = firstError[0];
+                    } else if (typeof error.error.message === 'string') {
+                        errorMessage = error.error.message;
+                    }
+                }
+                
+                this.messageService.clear();
+                this.messageService.add({
+                    severity: 'error',
+                    summary: 'Error',
+                    detail: errorMessage,
+                    life: 5000
+                });
+            }            
+        });
     }
     
     formatDateForInput(date: Date): string {
@@ -767,7 +808,8 @@ export class TableAuctionComponent implements OnInit, AfterViewInit, OnDestroy {
     }
 
     saveAuction() {
-        this.submitted = true;        this.validateDates();
+        this.submitted = true;        
+        this.validateDates();
         
         if (!this.selectedTipo || 
             !this.auction.ubicacion?.trim() || 
@@ -780,8 +822,8 @@ export class TableAuctionComponent implements OnInit, AfterViewInit, OnDestroy {
         }
         
         const currentUser = this.securityService.actualUser;
-
         if (!currentUser || !currentUser.id) {
+            this.messageService.clear();
             this.messageService.add({ 
                 severity: 'error', 
                 summary: 'Error de autenticación', 
@@ -794,7 +836,7 @@ export class TableAuctionComponent implements OnInit, AfterViewInit, OnDestroy {
         
         this.auction.rematador_id = this.selectedRematador.rematador?.id || 0;
         const casaIdToSave = currentUser.id;
-          const subastaData = {
+        const subastaData = {
             casaDeRemates_id: casaIdToSave, 
             rematador_id: this.auction.rematador_id,
             urlTransmision: this.auction.urlTransmision,
@@ -821,16 +863,24 @@ export class TableAuctionComponent implements OnInit, AfterViewInit, OnDestroy {
                         this.auctions.push(response);
                     }
                     
+                    // Add the email to the virtual field for the new auction
+                    const newAuction = this.auctions[this.auctions.length - 1];
+                    if (newAuction && this.rematadorEmails[newAuction.rematador_id]) {
+                        (newAuction as any).rematadorEmail = this.rematadorEmails[newAuction.rematador_id];
+                    }
+                    
                     this.auctions = [...this.auctions];
+                    this.messageService.clear();
                     this.messageService.add({ 
                         severity: 'success', 
                         summary: 'Éxito', 
                         detail: 'Subasta creada correctamente', 
                         life: 3000 
                     });
-                      this.auctionDialog = false;
+                    this.auctionDialog = false;
                 },
                 error: (error) => {
+                    this.messageService.clear();
                     this.messageService.add({ 
                         severity: 'error', 
                         summary: 'Error', 
