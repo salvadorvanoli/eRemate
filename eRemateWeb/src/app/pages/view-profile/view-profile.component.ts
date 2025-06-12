@@ -41,6 +41,7 @@ export class ViewProfileComponent implements OnInit {
       next: (user: any) => {
         if (user) {
           if (this.isGoogleUserWithIncompleteProfile(user)) {
+            this.messageService.clear();
             this.messageService.add({
               severity: 'info',
               summary: 'Perfil incompleto',
@@ -53,6 +54,7 @@ export class ViewProfileComponent implements OnInit {
           
           this.setUserType(user.tipo);
         } else {
+          this.messageService.clear();
           this.messageService.add({
             severity: 'error',
             summary: 'Error',
@@ -63,6 +65,7 @@ export class ViewProfileComponent implements OnInit {
         this.loading = false;
       },
       error: (error) => {
+        this.messageService.clear();
         this.messageService.add({
           severity: 'error',
           summary: 'Error',
@@ -86,6 +89,7 @@ export class ViewProfileComponent implements OnInit {
     } else if (tipo === 'rematador') {
       this.isAuctioneer = true; 
     } else {
+      this.messageService.clear();
       this.messageService.add({
         severity: 'warn',
         summary: 'Aviso',

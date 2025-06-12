@@ -153,6 +153,7 @@ export class AddItemComponent implements OnInit, OnChanges {
         },
         error: (error) => {
           this.categorias = [];
+          this.messageService.clear();
           this.messageService.add({
             severity: 'error',
             summary: 'Error',
@@ -249,7 +250,7 @@ export class AddItemComponent implements OnInit, OnChanges {
       if (!hasExistingImages && !hasNewImages) {
         errorMessage += ' y al menos una imagen';
       }
-      
+      this.messageService.clear();
       this.messageService.add({
         severity: 'error',
         summary: 'Error',

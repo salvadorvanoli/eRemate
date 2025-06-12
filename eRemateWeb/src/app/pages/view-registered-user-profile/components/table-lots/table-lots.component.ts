@@ -92,6 +92,7 @@ export class TableLotsComponent implements OnInit {
         const userId = this.userId || (currentUser ? currentUser.id : null);
         
         if (!userId) {
+            this.messageService.clear();
             this.messageService.add({ 
                 severity: 'error', 
                 summary: 'Error', 
@@ -139,7 +140,7 @@ export class TableLotsComponent implements OnInit {
                         message: error.message,
                         url: error.url
                     });
-                    
+                    this.messageService.clear();
                     this.messageService.add({ 
                         severity: 'error', 
                         summary: 'Error', 
@@ -255,6 +256,7 @@ export class TableLotsComponent implements OnInit {
         const userId = this.userId || (currentUser ? currentUser.id : null);
 
         if (!userId) {
+            this.messageService.clear();
             this.messageService.add({
                 severity: 'error',
                 summary: 'Error',
@@ -277,6 +279,7 @@ export class TableLotsComponent implements OnInit {
                 next: (response) => {
                     this.hasExistingRating = true;
                     this.loading = false;
+                    this.messageService.clear();
                     this.messageService.add({
                         severity: 'success',
                         summary: 'Éxito',
@@ -286,6 +289,7 @@ export class TableLotsComponent implements OnInit {
                 },
                 error: (error) => {
                     this.loading = false;
+                    this.messageService.clear();
                     this.messageService.add({
                         severity: 'error',
                         summary: 'Error',
@@ -305,6 +309,7 @@ export class TableLotsComponent implements OnInit {
 
     aceptarLote(lote: LoteConEstado) {
         if (!lote.id) {
+            this.messageService.clear();
             this.messageService.add({
                 severity: 'error',
                 summary: 'Error',
@@ -326,6 +331,7 @@ export class TableLotsComponent implements OnInit {
             .pipe(finalize(() => this.loading = false))
             .subscribe({
                 next: (response) => {
+                    this.messageService.clear();
                     console.log('✅ Respuesta de aceptar lote:', response);
                     this.messageService.add({
                         severity: 'success',
@@ -337,6 +343,7 @@ export class TableLotsComponent implements OnInit {
                 },
                 error: (error) => {
                     console.error('❌ Error al aceptar lote:', error);
+                    this.messageService.clear();
                     this.messageService.add({
                         severity: 'error',
                         summary: 'Error',
@@ -349,6 +356,7 @@ export class TableLotsComponent implements OnInit {
 
     rechazarLote(lote: LoteConEstado) {
         if (!lote.id) {
+            this.messageService.clear();
             this.messageService.add({
                 severity: 'error',
                 summary: 'Error',
@@ -371,6 +379,7 @@ export class TableLotsComponent implements OnInit {
             .subscribe({
                 next: (response) => {
                     console.log('✅ Respuesta de rechazar lote:', response);
+                    this.messageService.clear();
                     this.messageService.add({
                         severity: 'success',
                         summary: 'Éxito',
@@ -381,6 +390,7 @@ export class TableLotsComponent implements OnInit {
                 },
                 error: (error) => {
                     console.error('❌ Error al rechazar lote:', error);
+                    this.messageService.clear();
                     this.messageService.add({
                         severity: 'error',
                         summary: 'Error',

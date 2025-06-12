@@ -193,6 +193,7 @@ export class LotProductDetailsComponent implements OnInit, OnChanges {
 
     const currentUser = this.securityService.actualUser;
     if (!currentUser || !currentUser.id) {
+      this.messageService.clear();
       this.messageService.add({
         severity: 'warn',
         summary: 'Acción requerida',
@@ -210,6 +211,7 @@ export class LotProductDetailsComponent implements OnInit, OnChanges {
         next: () => {
           this.isFavorite = false;
           this.favoritesLoading = false;
+          this.messageService.clear();
           this.messageService.add({
             severity: 'success',
             summary: 'Éxito',
@@ -218,6 +220,7 @@ export class LotProductDetailsComponent implements OnInit, OnChanges {
           });
         },        error: (error) => {
           this.favoritesLoading = false;
+          this.messageService.clear();
           this.messageService.add({
             severity: 'error',
             summary: 'Error',
@@ -232,6 +235,7 @@ export class LotProductDetailsComponent implements OnInit, OnChanges {
         next: () => {
           this.isFavorite = true;
           this.favoritesLoading = false;
+          this.messageService.clear();
           this.messageService.add({
             severity: 'success',
             summary: 'Éxito',
@@ -240,6 +244,7 @@ export class LotProductDetailsComponent implements OnInit, OnChanges {
           });
         },        error: (error) => {
           this.favoritesLoading = false;
+          this.messageService.clear();
           this.messageService.add({
             severity: 'error',
             summary: 'Error',

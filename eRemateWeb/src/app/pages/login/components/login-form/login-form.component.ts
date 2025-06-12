@@ -57,6 +57,7 @@ export class LoginFormComponent {
       
       this.securityService.auth(usuario).subscribe({
         next: () => {
+          this.messageService.clear();
           this.messageService.add({ severity: 'success', summary: 'Operación exitosa', detail: "¡Has iniciado sesión exitosamente!", life: 4000 });
           this.resetForm();
           // mandar a inicio
@@ -66,11 +67,13 @@ export class LoginFormComponent {
         },
         error: (err) => {
           if (err.error.error !== undefined) {
+            this.messageService.clear();
             this.messageService.add({ severity: 'error', summary: 'Error', detail: err.error.error, life: 4000 });
             if (err.error.error === "Contraseña incorrecta") {
               this.isPasswordInvalid = true;
             }
           } else {
+            this.messageService.clear();
             this.messageService.add({ severity: 'error', summary: 'Error', detail: "No fue posible conectar con el servidor", life: 4000 });
           }
         }

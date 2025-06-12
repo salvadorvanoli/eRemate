@@ -98,6 +98,7 @@ export class ProfileInfoComponent implements OnInit {
               telefono: usuario.telefono || ''
             };
           } else {
+            this.messageService.clear();
             this.messageService.add({
               severity: 'warning',
               summary: 'Formato incorrecto',
@@ -107,6 +108,7 @@ export class ProfileInfoComponent implements OnInit {
           }
         },
         error: (error) => {
+          this.messageService.clear();
           this.messageService.add({
             severity: 'warning',
             summary: 'Conexión al servidor',
@@ -143,6 +145,7 @@ export class ProfileInfoComponent implements OnInit {
     
     setTimeout(() => {
       this.loading = false;
+      this.messageService.clear();
       this.messageService.add({
         severity: 'success',
         summary: 'Éxito',

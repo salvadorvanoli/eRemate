@@ -181,7 +181,9 @@ export class AuctionLotsModalComponent implements OnInit {
 
     this.subastaService.crearPujaAutomatica(this.subasta.id, pujaAutomatica).subscribe({
       next: () => {
-        this.isCreatingBid = false; // Resetear estado inmediatamente
+        this.isCreatingBid = false; 
+        this.messageService.clear();
+        // Resetear estado inmediatamente
         this.messageService.add({
           severity: 'success',
           summary: 'Éxito',
@@ -208,7 +210,7 @@ export class AuctionLotsModalComponent implements OnInit {
         } else if (error?.message) {
           errorMessage = error.message;
         }
-
+        this.messageService.clear();
         this.messageService.add({
           severity: 'error',
           summary: 'Error',

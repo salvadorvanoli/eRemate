@@ -89,6 +89,7 @@ export class TableAuctionAuctioneerComponent implements OnInit, OnChanges {
       this.rematadorId = currentUser.id;
       this.loadAuctions();
     } else {
+      this.messageService.clear();
       this.messageService.add({
         severity: 'error',
         summary: 'Error',
@@ -140,6 +141,7 @@ export class TableAuctionAuctioneerComponent implements OnInit, OnChanges {
         this.auctions = this.formatDates(auctionsArray);
       },
       error: (error) => {
+        this.messageService.clear();
         this.messageService.add({
           severity: 'error',
           summary: 'Error',
@@ -233,6 +235,7 @@ export class TableAuctionAuctioneerComponent implements OnInit, OnChanges {
           .pipe(finalize(() => this.loading = false))
           .subscribe({
             next: () => {
+              this.messageService.clear();
               this.messageService.add({
                 severity: 'success',
                 summary: 'Éxito',
@@ -242,6 +245,7 @@ export class TableAuctionAuctioneerComponent implements OnInit, OnChanges {
               this.loadAuctions();
             },
             error: (error) => {
+              this.messageService.clear();
               this.messageService.add({
                 severity: 'error',
                 summary: 'Error',
@@ -268,6 +272,7 @@ export class TableAuctionAuctioneerComponent implements OnInit, OnChanges {
           .pipe(finalize(() => this.loading = false))
           .subscribe({
             next: () => {
+              this.messageService.clear();
               this.messageService.add({
                 severity: 'success',
                 summary: 'Éxito',
@@ -277,6 +282,7 @@ export class TableAuctionAuctioneerComponent implements OnInit, OnChanges {
               this.loadAuctions();
             },
             error: (error) => {
+              this.messageService.clear();
               this.messageService.add({
                 severity: 'error',
                 summary: 'Error',
@@ -302,6 +308,7 @@ export class TableAuctionAuctioneerComponent implements OnInit, OnChanges {
           .pipe(finalize(() => this.loading = false))
           .subscribe({
             next: () => {
+              this.messageService.clear();
               this.messageService.add({
                 severity: 'success',
                 summary: 'Éxito',
@@ -311,6 +318,7 @@ export class TableAuctionAuctioneerComponent implements OnInit, OnChanges {
               this.loadAuctions();
             },
             error: (error) => {
+              this.messageService.clear();
               this.messageService.add({
                 severity: 'error',
                 summary: 'Error',
@@ -336,6 +344,7 @@ export class TableAuctionAuctioneerComponent implements OnInit, OnChanges {
     this.auction.tipoSubasta = this.selectedTipo.value;
     
     setTimeout(() => {
+      this.messageService.clear();
       this.messageService.add({
         severity: 'success',
         summary: 'Éxito',
@@ -351,6 +360,7 @@ export class TableAuctionAuctioneerComponent implements OnInit, OnChanges {
     if (auction.id) {
       this.router.navigate(['/subasta', auction.id]);
     } else {
+      this.messageService.clear();
       this.messageService.add({
         severity: 'warn',
         summary: 'Advertencia',

@@ -254,6 +254,7 @@ export class TableAuctionComponent implements OnInit, AfterViewInit, OnDestroy {
                         this.casaId = user.id;
                         this.initializeComponent();
                     } else {
+                        this.messageService.clear();
                         this.messageService.add({ 
                             severity: 'error', 
                             summary: 'Error de autenticación', 
@@ -265,6 +266,7 @@ export class TableAuctionComponent implements OnInit, AfterViewInit, OnDestroy {
                     }
                 },
                 error: (error) => {
+                    this.messageService.clear();
                     this.messageService.add({ 
                         severity: 'error', 
                         summary: 'Error de conexión', 
@@ -300,6 +302,7 @@ export class TableAuctionComponent implements OnInit, AfterViewInit, OnDestroy {
         this.loading = true;
         
         if (!this.casaId) {
+            this.messageService.clear();
             this.messageService.add({ 
                 severity: 'error', 
                 summary: 'Error', 
@@ -332,6 +335,7 @@ export class TableAuctionComponent implements OnInit, AfterViewInit, OnDestroy {
     
     loadRematadores() {
         if (!this.casaId) {
+            this.messageService.clear();
             this.messageService.add({ 
                 severity: 'error', 
                 summary: 'Error', 
@@ -377,6 +381,7 @@ export class TableAuctionComponent implements OnInit, AfterViewInit, OnDestroy {
         const currentUser = this.securityService.actualUser;
 
         if (!currentUser || !currentUser.id) {
+            this.messageService.clear();
             this.messageService.add({ 
                 severity: 'error', 
                 summary: 'Error de autenticación', 
@@ -431,6 +436,7 @@ export class TableAuctionComponent implements OnInit, AfterViewInit, OnDestroy {
                 if (this.selectedAuction) {
                     this.auctions = this.auctions.filter(val => val.id !== this.selectedAuction?.id);
                     this.selectedAuction = null;
+                    this.messageService.clear();
                     this.messageService.add({ severity: 'success', summary: 'Éxito', detail: 'Subasta eliminada', life: 3000 });
                 }
             }
@@ -447,6 +453,7 @@ export class TableAuctionComponent implements OnInit, AfterViewInit, OnDestroy {
                     this.auctionHouseService.deleteAuction(auction.id.toString()).subscribe({
                         next: () => {
                             this.auctions = this.auctions.filter(val => val.id !== auction.id);
+                            this.messageService.clear();
                             this.messageService.add({
                                 severity: 'success',
                                 summary: 'Éxito',
@@ -455,6 +462,7 @@ export class TableAuctionComponent implements OnInit, AfterViewInit, OnDestroy {
                             });
                         },
                         error: () => {
+                            this.messageService.clear();
                             this.messageService.add({
                                 severity: 'error',
                                 summary: 'Error',
@@ -475,6 +483,7 @@ export class TableAuctionComponent implements OnInit, AfterViewInit, OnDestroy {
     
     editAuction(auction: Subasta) {
         if (!this.canEditAuction(auction.estado)) {
+            this.messageService.clear();
             this.messageService.add({
                 severity: 'warn',
                 summary: 'Acción no permitida',
@@ -684,6 +693,7 @@ export class TableAuctionComponent implements OnInit, AfterViewInit, OnDestroy {
                         this.auctions = [...this.auctions];
                     }
                     
+                    this.messageService.clear();
                     this.messageService.add({
                         severity: 'success',
                         summary: 'Éxito',
@@ -694,6 +704,7 @@ export class TableAuctionComponent implements OnInit, AfterViewInit, OnDestroy {
                     this.hideEditDialog();
                 },
                 error: (error) => {
+                    this.messageService.clear();
                     this.messageService.add({
                         severity: 'error',
                         summary: 'Error',
@@ -752,6 +763,7 @@ export class TableAuctionComponent implements OnInit, AfterViewInit, OnDestroy {
         const currentUser = this.securityService.actualUser;
 
         if (!currentUser || !currentUser.id) {
+            this.messageService.clear();
             this.messageService.add({ 
                 severity: 'error', 
                 summary: 'Error de autenticación', 
@@ -792,6 +804,7 @@ export class TableAuctionComponent implements OnInit, AfterViewInit, OnDestroy {
                     }
                     
                     this.auctions = [...this.auctions];
+                    this.messageService.clear();
                     this.messageService.add({ 
                         severity: 'success', 
                         summary: 'Éxito', 
@@ -801,6 +814,7 @@ export class TableAuctionComponent implements OnInit, AfterViewInit, OnDestroy {
                       this.auctionDialog = false;
                 },
                 error: (error) => {
+                    this.messageService.clear();
                     this.messageService.add({ 
                         severity: 'error', 
                         summary: 'Error', 

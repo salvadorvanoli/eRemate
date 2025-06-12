@@ -112,7 +112,7 @@ export class ChatDetailComponent implements OnInit, AfterViewChecked, OnDestroy 
       next: (event) => {
         console.log('Nueva solicitud de pago recibida via WebSocket:', event);        if (this.isUsuarioRegistrado) {
           this.paymentRequests.push(event.payment_request);
-          
+          this.messageService.clear();
           this.messageService.add({
             severity: 'info',
             summary: 'Nueva Solicitud de Pago',
