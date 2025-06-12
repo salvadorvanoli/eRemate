@@ -9,12 +9,12 @@
 }
 
 .profile-container {
-  display: flex; // Mantenido por si se añade más estructura, pero no esencial para un solo .profile-content
-  flex-direction: column; // Cambiado para un solo hijo principal
+  display: flex; 
+  flex-direction: column; 
   width: 100%;
-  max-width: 1000px; // Puede ajustarse o heredarse
-  min-height: auto; // Ajustado ya que no hay imagen fija
-  padding: 1rem;
+  max-width: 1000px; 
+  min-height: auto; 
+  padding: 1.5rem;
   background: #FAFAFA;
   border-radius: 1.5rem;
   margin: 0 auto;
@@ -119,14 +119,15 @@
 .loading-container {
   display: flex;
   justify-content: center;
-  align-items: center;
-  min-height: 300px; // Altura mínima para el spinner
+  padding: 2rem;
 }
 
 .profile-content { // Este es el contenedor principal del formulario
   display: flex;
   flex-direction: column; // El formulario es una columna de campos
   width: 100%;
+  max-width: 600px;
+  margin: 0 auto;
   gap: 1rem; // Espacio entre elementos si hubiera más además de form-section
 }
 
@@ -134,6 +135,7 @@
   flex: 1; // Ocupa el espacio disponible
   width: 100%; // Asegura que ocupe todo el ancho del contenedor
   padding: 1rem; // Padding interno para el formulario
+  margin-bottom: 2rem;
   box-sizing: border-box;
 }
 
@@ -143,15 +145,15 @@
 
 .form-label {
   display: block;
-  font-weight: 600;
   margin-bottom: 0.5rem;
+  font-weight: 500;
   color: #444444;
   font-size: 0.875rem;
   font-family: "Source Sans 3", Arial, sans-serif;
 }
 
-.form-input { // Aplicado a los inputs pInputText a través de la clase en el HTML
-  width: 100%; // Inputs ocupan todo el ancho disponible
+.form-input { 
+  width: 100%; 
   height: 3rem;
   border: 2px solid #D6D6D6;
   padding: 0.625rem;
@@ -165,13 +167,13 @@
   width: 100%;
   margin-top: 1.5rem;
   display: flex;
-  justify-content: center; // Centrar el botón
+  justify-content: center; 
 }
 
 .update-button {
   min-width: 180px;
-  width: auto; // El botón se ajusta a su contenido
-  max-width: 100%; // Pero no excede el contenedor
+  width: auto; 
+  max-width: 100%;
   height: 3rem;
   padding: 0 1.25rem;
   background: #6334E3;
@@ -191,11 +193,11 @@
   }
 }
 
-// Sobrescribir estilos de PrimeNG para que coincidan y sean responsivos
+
 :host ::ng-deep {
-  .p-inputtext { // Asegurar que los pInputText también sean responsivos
-    width: 100% !important; // Forzar ancho completo
-    // Altura y otros estilos ya se manejan por .form-input si la clase está aplicada
+  .p-inputtext {
+    width: 100% !important; 
+  
   }
 }
 
@@ -223,7 +225,7 @@
 @media (max-width: 480px) {
   .profile-container {
     padding: 0.5rem;
-    box-shadow: none; // Opcional: quitar sombra en móviles muy pequeños
+    box-shadow: none;
   }
 
   .form-section {
@@ -240,7 +242,7 @@
   }
   
   .update-button {
-    width: 100%; // Botón ocupa todo el ancho en móviles
+    width: 100%; 
     font-size: 0.9rem;
   }
 
@@ -249,9 +251,3 @@
   }
 }
 
-// Eliminar estilos no utilizados o irrelevantes para esta estructura HTML específica
-// .rectangle-6, .right-column, .left-column, .avatar-container, .avatar-2, 
-// .upload-button-container, .nombre-legal, .text-input-1, .input-group,
-// .image-section, .profile-image-container, .profile-image, .no-image
-// han sido omitidos ya que el HTML de profile-info.component.html para este contexto no los usa.
-// Si fueran necesarios para otras instancias de este componente, se deberían mantener y ajustar.

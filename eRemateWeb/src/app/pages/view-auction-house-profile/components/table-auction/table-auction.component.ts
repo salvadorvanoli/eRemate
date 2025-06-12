@@ -661,18 +661,29 @@ export class TableAuctionComponent implements OnInit, AfterViewInit, OnDestroy {
             this.editDateErrors.endDate) {
             return;
         }
-          const updateData = {
+        
+        const updateData = {
             tipoSubasta: this.selectedEditTipo?.value || this.editingAuction.tipoSubasta,
             fechaInicio: this.editingAuction.fechaInicio,
             fechaCierre: this.editingAuction.fechaCierre,
-            ubicacion: this.editingAuction.ubicacion
+            ubicacion: this.editingAuction.ubicacion,
+            urlTransmision: this.editingAuction.urlTransmision || 'https://ejemplo.com/stream' // Add the missing field
         };
+        
+        // Add detailed console log showing what is being sent
+        console.log('Enviando datos para actualización de subasta:', {
+            id: this.editingAuction.id,
+            updateData,
+            selectedTipo: this.selectedEditTipo
+        });
         
         this.loading = true;
         this.auctionHouseService.updateAuction(this.editingAuction.id, updateData)
             .pipe(finalize(() => this.loading = false))
             .subscribe({
-                next: (response) => {                    const index = this.auctions.findIndex(a => a.id === this.editingAuction.id);
+                next: (response) => {
+                    console.log('Respuesta exitosa de actualización:', response);
+                    const index = this.auctions.findIndex(a => a.id === this.editingAuction.id);
                     if (index !== -1) {
                         this.auctions[index] = {
                             ...this.auctions[index],
@@ -694,13 +705,32 @@ export class TableAuctionComponent implements OnInit, AfterViewInit, OnDestroy {
                     this.hideEditDialog();
                 },
                 error: (error) => {
+                    console.error('Error al actualizar subasta:', error);
+                    console.log('Detalles del error:', {
+                        status: error.status,
+                        message: error.message,
+                        error: error.error
+                    });
+                    
+                    let errorMessage = 'No se pudo actualizar la subasta';
+                    if (error.error && typeof error.error === 'object') {
+                        // Try to extract more specific error information if available
+                        const firstError = Object.values(error.error)[0];
+                        if (Array.isArray(firstError) && firstError.length > 0) {
+                            errorMessage = firstError[0];
+                        } else if (typeof error.error.message === 'string') {
+                            errorMessage = error.error.message;
+                        }
+                    }
+                    
                     this.messageService.add({
                         severity: 'error',
                         summary: 'Error',
-                        detail: 'No se pudo actualizar la subasta',
-                        life: 3000
+                        detail: errorMessage,
+                        life: 5000
                     });
-                }            });
+                }
+            });
     }
     
     formatDateForInput(date: Date): string {

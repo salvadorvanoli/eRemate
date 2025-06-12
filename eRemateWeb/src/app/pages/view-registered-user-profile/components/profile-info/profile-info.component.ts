@@ -10,13 +10,21 @@ import { finalize } from 'rxjs';
 import { MessageService } from 'primeng/api';
 import { ToastModule } from 'primeng/toast';
 import { SecurityService } from '../../../../core/services/security.service'; 
+import { RegisteredUsersService } from '../../../../core/services/registered-users.service';
 
 interface UserProfile {
   nombre: string;
-  direccion: string;
+  apellido: string;
   telefono: string;
   email: string;
   imagen?: string;
+}
+
+interface FormErrors {
+  nombre: string;
+  apellido: string;
+  telefono: string;
+  email: string;
 }
 
 @Component({
@@ -39,18 +47,31 @@ export class ProfileInfoComponent implements OnInit {
   profileImage: string = '';
   profile: UserProfile = {
     nombre: '',
-    direccion: '',
+    apellido: '',
     telefono: '',
     email: ''
   };
   loading: boolean = false;
   
+  formErrors: FormErrors = {
+    nombre: '',
+    apellido: '',
+    telefono: '',
+    email: ''
+  };
+  
   private userId: number | null = null;
+  
+  // Expresiones regulares para validación
+  private nameRegex = /^[A-Za-záéíóúÁÉÍÓÚñÑüÜ\s]+$/;
+  private emailRegex = /^[a-zA-Z0-9._%+-]+@[a-zA-Z0-9.-]+\.[a-zA-Z]{2,}$/;
+  private phoneRegex = /^\d{9}$/;
 
   constructor(
     private userService: UserService,
     private messageService: MessageService,
-    private securityService: SecurityService 
+    private securityService: SecurityService,
+    private registeredUsersService: RegisteredUsersService
   ) { }
 
   ngOnInit(): void {
@@ -88,16 +109,36 @@ export class ProfileInfoComponent implements OnInit {
       .pipe(finalize(() => this.loading = false))
       .subscribe({
         next: (response) => {
-          if (response && response.usuario) {
-            const { usuario } = response;
+          console.log('Respuesta del perfil:', response);
+          
+          // Estructura donde usuario y usuarioRegistrado están al mismo nivel
+          if (response && response.usuario && response.usuarioRegistrado) {
+            const { usuario, usuarioRegistrado } = response;
+            
+            // Combinar datos de ambos objetos
+            this.profile = {
+              nombre: usuarioRegistrado?.nombre || '',
+              apellido: usuarioRegistrado?.apellido || '',
+              email: usuario?.email || '',
+              telefono: usuario?.telefono || ''
+            };
+            
+            console.log('Perfil cargado:', this.profile);
+          } 
+          // Estructura donde están dentro de data
+          else if (response && response.data) {
+            const { usuarioRegistrado, usuario } = response.data;
             
             this.profile = {
-              nombre: usuario.nombre || '',
-              direccion: usuario.direccion || '',
-              email: usuario.email || '',
-              telefono: usuario.telefono || ''
+              nombre: usuarioRegistrado?.nombre || '',
+              apellido: usuarioRegistrado?.apellido || '',
+              email: usuario?.email || '',
+              telefono: usuario?.telefono || ''
             };
+            
+            console.log('Perfil cargado (estructura data):', this.profile);
           } else {
+            console.warn('Estructura de respuesta inesperada:', response);
             this.messageService.add({
               severity: 'warning',
               summary: 'Formato incorrecto',
@@ -107,6 +148,7 @@ export class ProfileInfoComponent implements OnInit {
           }
         },
         error: (error) => {
+          console.error('Error al cargar datos del perfil:', error);
           this.messageService.add({
             severity: 'warning',
             summary: 'Conexión al servidor',
@@ -114,9 +156,10 @@ export class ProfileInfoComponent implements OnInit {
             life: 5000
           });
           
+          // Datos de prueba
           this.profile = {
             nombre: 'Usuario Ejemplo',
-            direccion: 'Av. Ejemplo 1234, Ciudad',
+            apellido: 'Apellido Ejemplo',
             email: 'usuario@ejemplo.com',
             telefono: '+54 11 4567-8900'
           };
@@ -127,28 +170,146 @@ export class ProfileInfoComponent implements OnInit {
   onImageUpload(event: any): void {
   }
   
+  validateName(): void {
+    if (!this.profile.nombre || this.profile.nombre.trim() === '') {
+      this.formErrors.nombre = 'El nombre es obligatorio';
+    } else if (!this.nameRegex.test(this.profile.nombre)) {
+      this.formErrors.nombre = 'El nombre debe contener solo letras';
+    } else if (this.profile.nombre.length > 50) {
+      this.formErrors.nombre = 'El nombre no debe exceder 50 caracteres';
+    } else {
+      this.formErrors.nombre = '';
+    }
+  }
+  
+  validateLastName(): void {
+    if (!this.profile.apellido || this.profile.apellido.trim() === '') {
+      this.formErrors.apellido = 'El apellido es obligatorio';
+    } else if (!this.nameRegex.test(this.profile.apellido)) {
+      this.formErrors.apellido = 'El apellido debe contener solo letras';
+    } else if (this.profile.apellido.length > 50) {
+      this.formErrors.apellido = 'El apellido no debe exceder 50 caracteres';
+    } else {
+      this.formErrors.apellido = '';
+    }
+  }
+  
+  validateEmail(): void {
+    if (!this.profile.email || this.profile.email.trim() === '') {
+      this.formErrors.email = 'El email es obligatorio';
+    } else if (!this.emailRegex.test(this.profile.email)) {
+      this.formErrors.email = 'El formato del email no es válido';
+    } else if (this.profile.email.length > 100) {
+      this.formErrors.email = 'El email no debe exceder 100 caracteres';
+    } else {
+      this.formErrors.email = '';
+    }
+  }
+  
+  validatePhone(): void {
+    if (!this.profile.telefono || this.profile.telefono.trim() === '') {
+      this.formErrors.telefono = 'El teléfono es obligatorio';
+    } else if (!this.phoneRegex.test(this.profile.telefono)) {
+      this.formErrors.telefono = 'El teléfono debe contener exactamente 9 dígitos';
+    } else {
+      this.formErrors.telefono = '';
+    }
+  }
+  
+  validateAll(): boolean {
+    this.validateName();
+    this.validateLastName();
+    this.validateEmail();
+    this.validatePhone();
+    
+    return !this.hasErrors();
+  }
+  
+  hasErrors(): boolean {
+    return !!(this.formErrors.nombre || 
+             this.formErrors.apellido || 
+             this.formErrors.email || 
+             this.formErrors.telefono);
+  }
+  
   updateProfile(): void {
     if (!this.userId) {
-      this.userId = 1;
+      this.messageService.add({
+        severity: 'error',
+        summary: 'Error',
+        detail: 'No se pudo identificar al usuario',
+        life: 3000
+      });
+      return;
+    }
+    
+    // Validar todos los campos antes de enviar
+    if (!this.validateAll()) {
+      this.messageService.add({
+        severity: 'error',
+        summary: 'Error de validación',
+        detail: 'Por favor, corrija los errores en el formulario',
+        life: 3000
+      });
+      return;
     }
     
     this.loading = true;
     
     const userData = {
-      nombre: this.profile.nombre,
-      direccion: this.profile.direccion,
-      telefono: this.profile.telefono,
-      email: this.profile.email
+      nombre: this.profile.nombre.trim(),
+      apellido: this.profile.apellido.trim(),
+      email: this.profile.email.trim(),
+      telefono: this.profile.telefono.trim()
     };
     
-    setTimeout(() => {
-      this.loading = false;
-      this.messageService.add({
-        severity: 'success',
-        summary: 'Éxito',
-        detail: 'Información del usuario actualizada correctamente',
-        life: 3000
+    this.registeredUsersService.updateUserProfile(this.userId, userData)
+      .pipe(finalize(() => this.loading = false))
+      .subscribe({
+        next: (response) => {
+          console.log('Respuesta de actualización:', response);
+          
+          this.messageService.add({
+            severity: 'success',
+            summary: 'Éxito',
+            detail: 'Información del usuario actualizada correctamente',
+            life: 3000
+          });
+          
+          // Si la respuesta contiene datos actualizados, actualizar el perfil local
+          if (response && response.data) {
+            const { usuarioRegistrado, usuario } = response.data;
+            
+            this.profile = {
+              nombre: usuarioRegistrado?.nombre || this.profile.nombre,
+              apellido: usuarioRegistrado?.apellido || this.profile.apellido,
+              email: usuario?.email || this.profile.email,
+              telefono: usuario?.telefono || this.profile.telefono
+            };
+          }
+        },
+        error: (error) => {
+          console.error('Error al actualizar el perfil:', error);
+          
+          let errorMsg = 'No se pudo actualizar la información del usuario';
+          
+          if (error.error && error.error.message) {
+            errorMsg = error.error.message;
+          } else if (error.error && error.error.errors) {
+            // Si hay errores de validación, mostrar el primero
+            const firstErrorField = Object.keys(error.error.errors)[0];
+            if (firstErrorField && error.error.errors[firstErrorField][0]) {
+              errorMsg = error.error.errors[firstErrorField][0];
+            }
+          }
+          
+          this.messageService.add({
+            severity: 'error',
+            summary: 'Error',
+            detail: errorMsg,
+            life: 5000
+          });
+        }
       });
-    }, 1000);
   }
 }

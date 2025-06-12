@@ -8,31 +8,42 @@
     <div class="form-section">
       <div class="form-group">
         <label class="form-label">Nombre</label>
-        <input type="text" pInputText [(ngModel)]="profile.nombre" class="form-input" />
+        <input type="text" pInputText [(ngModel)]="profile.nombre" maxlength="50" 
+               (blur)="validateName()" class="form-input" 
+               [ngClass]="{'invalid-input': formErrors.nombre}" />
+        <small class="error-message" *ngIf="formErrors.nombre">{{ formErrors.nombre }}</small>
       </div>
       
       <div class="form-group">
-        <label class="form-label">Dirección</label>
-        <input type="text" pInputText [(ngModel)]="profile.direccion" class="form-input" />
+        <label class="form-label">Apellido</label>
+        <input type="text" pInputText [(ngModel)]="profile.apellido" maxlength="50" 
+               (blur)="validateLastName()" class="form-input" 
+               [ngClass]="{'invalid-input': formErrors.apellido}" />
+        <small class="error-message" *ngIf="formErrors.apellido">{{ formErrors.apellido }}</small>
       </div>
       
       <div class="form-group">
         <label class="form-label">Email</label>
-        <input type="email" pInputText [(ngModel)]="profile.email" class="form-input" />
+        <input type="email" pInputText [(ngModel)]="profile.email" maxlength="100" 
+               (blur)="validateEmail()" class="form-input" 
+               [ngClass]="{'invalid-input': formErrors.email}" />
+        <small class="error-message" *ngIf="formErrors.email">{{ formErrors.email }}</small>
       </div>
       
       <div class="form-group">
         <label class="form-label">Teléfono</label>
-        <input type="tel" pInputText [(ngModel)]="profile.telefono" class="form-input" />
+        <input type="tel" pInputText [(ngModel)]="profile.telefono" maxlength="9" 
+               (blur)="validatePhone()" class="form-input" 
+               [ngClass]="{'invalid-input': formErrors.telefono}" />
+        <small class="error-message" *ngIf="formErrors.telefono">{{ formErrors.telefono }}</small>
       </div>
 
       <div class="button-container">
-        <button (click)="updateProfile()" class="update-button">
+        <button class="update-button" (click)="updateProfile()" [disabled]="loading || hasErrors()">
           Actualizar datos
         </button>
       </div>
     </div>
-
   </div>
 </div>
 
