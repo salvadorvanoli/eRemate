@@ -214,25 +214,6 @@ class CasaDeRematesService implements CasaDeRematesServiceInterface
             $year = now()->year;
         }
 
-        Log::info('Buscando estadísticas para casa: ' . $id . ', año: ' . $year);
-        
-        // DEBUG 1: Ver TODAS las subastas para esta casa
-        $todasSubastas = \App\Models\Subasta::where('casaDeRemates_id', $id)->get();
-        Log::info('TODAS las subastas para casa ' . $id . ':', $todasSubastas->toArray());
-        
-        // DEBUG 2: Ver solo las cerradas SIN filtro de año
-        $cerradasSinAno = \App\Models\Subasta::where('casaDeRemates_id', $id)
-            ->where('estado', 'cerrada')
-            ->get();
-        Log::info('Subastas cerradas SIN filtro de año:', $cerradasSinAno->toArray());
-        
-        // DEBUG 3: Ver las cerradas CON filtro de año
-        $cerradasConAno = \App\Models\Subasta::where('casaDeRemates_id', $id)
-            ->where('estado', 'cerrada')
-            ->whereYear('fechaCierre', $year)
-            ->get();
-        Log::info('Subastas cerradas CON filtro de año ' . $year . ':', $cerradasConAno->toArray());
-
         // Query con debug del SQL
         $query = \App\Models\Subasta::where('casaDeRemates_id', $id)
             ->where('estado', 'cerrada')
@@ -240,13 +221,8 @@ class CasaDeRematesService implements CasaDeRematesServiceInterface
             ->selectRaw('MONTH(fechaCierre) as month, COUNT(*) as count')
             ->groupBy('month');
     
-        Log::info('SQL Query: ' . $query->toSql());
-        Log::info('Query bindings: ', $query->getBindings());
-    
         $ventasPorMes = $query->pluck('count', 'month');
     
-        Log::info('Resultado crudo de la consulta:', $ventasPorMes->toArray());
-
         // Crear array con todos los meses
         $mesesDelAno = [
             1 => 'Enero', 2 => 'Febrero', 3 => 'Marzo', 4 => 'Abril',
@@ -258,7 +234,6 @@ class CasaDeRematesService implements CasaDeRematesServiceInterface
         
         foreach ($mesesDelAno as $numeroMes => $nombreMes) {
             $count = isset($ventasPorMes[$numeroMes]) ? (int)$ventasPorMes[$numeroMes] : 0;
-            Log::info("Procesando mes {$numeroMes} ({$nombreMes}): valor en array = " . ($ventasPorMes[$numeroMes] ?? 'null') . ", count final = {$count}");
             
             $estadisticas[] = [
                 'month' => $nombreMes,
@@ -285,7 +260,6 @@ class CasaDeRematesService implements CasaDeRematesServiceInterface
         Log::info('Buscando estadísticas por categoría para casa: ' . $id . ', año: ' . $year);
         
         try {
-            // Consulta corregida usando la estructura real de la base de datos
             $estadisticas = \DB::table('subastas as s')
                 ->join('lotes as l', 's.id', '=', 'l.subasta_id')
                 ->join('articulos as a', 'l.id', '=', 'a.lote_id')
@@ -297,15 +271,7 @@ class CasaDeRematesService implements CasaDeRematesServiceInterface
                 ->groupBy('c.id', 'c.nombre')
                 ->orderBy('cantidad_articulos', 'desc')
                 ->get();
-
-            Log::info('SQL ejecutado:', [
-                'query' => 'subastas -> lotes -> articulos -> categorias',
-                'casa_id' => $id,
-                'year' => $year
-            ]);
             
-            Log::info('Estadísticas por categoría encontradas:', $estadisticas->toArray());
-
             // Formatear los resultados
             $resultados = $estadisticas->map(function ($item) {
                 return [
@@ -317,7 +283,6 @@ class CasaDeRematesService implements CasaDeRematesServiceInterface
 
             // Si no hay datos, devolver array vacío con mensaje informativo
             if ($resultados->isEmpty()) {
-                Log::info('No se encontraron datos para las estadísticas por categoría');
                 
                 return [
                     'success' => true,
@@ -333,11 +298,6 @@ class CasaDeRematesService implements CasaDeRematesServiceInterface
 
             // Calcular totales
             $totalArticulos = $resultados->sum('cantidad');
-
-            Log::info('Estadísticas procesadas correctamente:', [
-                'total_categorias' => $resultados->count(),
-                'total_articulos' => $totalArticulos
-            ]);
 
             return [
                 'success' => true,

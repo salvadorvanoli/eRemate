@@ -23,29 +23,16 @@ class NuevaPujaEvent implements ShouldBroadcastNow
         $this->nuevaPujaData = $pujaData;
     }
 
-    /**
-     * Get the channels the event should broadcast on.
-     *
-     * @return array<int, \Illuminate\Broadcasting\Channel>
-     */
     public function broadcastOn(): Channel|array
     {
         return new Channel('subasta.'.$this->nuevaPujaData['subasta_id']);
     }
 
-    /**
-     * The event's broadcast name.
-     */
     public function broadcastAs(): string
     {
         return 'nueva.puja';
     }
 
-    /**
-     * Get the data to broadcast.
-     *
-     * @return array
-     */
     public function broadcastWith(): array
     {
         return [

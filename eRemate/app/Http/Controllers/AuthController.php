@@ -11,13 +11,11 @@ class AuthController extends Controller
 {
     protected $authService;
 
-    // Inyectamos el service por constructor
     public function __construct(AuthServiceInterface $authService)
     {
         $this->authService = $authService;
     }
 
-    // Método para registrar un usuario
     public function register(Request $request)
     {
         return $this->authService->register($request);

@@ -181,8 +181,6 @@ class ArticuloService implements ArticuloServiceInterface
         return $articulos;
     }
 
-
-   
     public function obtenerArticulosOrdenados() 
     {
         $query = Articulo::query()
@@ -341,7 +339,6 @@ class ArticuloService implements ArticuloServiceInterface
         return $catalogElements;
     }
 
-    
     public function obtenerCategorias()
     {
         $categorias = Categoria::select('id', 'nombre')
@@ -365,14 +362,6 @@ class ArticuloService implements ArticuloServiceInterface
         return $categorias;
     }
 
-    
-
-    /**
-     * Elimina las imágenes anteriores del servidor
-     * 
-     * @param array|null $imagenesAnteriores Array de URLs de imágenes
-     * @return bool
-     */
     private function eliminarImagenesAnteriores(?array $imagenesAnteriores): bool
     {
         if (!$imagenesAnteriores || empty($imagenesAnteriores)) {

@@ -432,11 +432,6 @@ class PayPalController extends Controller
         }
     }
 
-    /**
-     * Verifica la configuración y validez de las credenciales de PayPal
-     * 
-     * @return \Illuminate\Http\JsonResponse
-     */
     public function verificarCredenciales()
     {
         try {
@@ -461,12 +456,6 @@ class PayPalController extends Controller
         }
     }
 
-    /**
-     * Verifica si un pago ya fue procesado
-     * 
-     * @param string $paymentId
-     * @return \Illuminate\Http\JsonResponse
-     */
     public function verificarPagoProcesado($paymentId)
     {
         try {

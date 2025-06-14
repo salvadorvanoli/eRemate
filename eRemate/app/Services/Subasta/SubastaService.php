@@ -476,10 +476,8 @@ class SubastaService implements SubastaServiceInterface
 
         $this->iniciarProcesoDeAutomatizacion($subasta, $primerLote);
 
-        // Send notifications to interested users
         $this->sendComienzoSubastaNotification($subasta);
 
-        // Broadcast auction start event
         $inicioSubastaData = [
             'subasta_id' => $subasta->id,
             'estado' => EstadoSubasta::INICIADA->value,
@@ -496,9 +494,6 @@ class SubastaService implements SubastaServiceInterface
         ]);
     }
 
-    /**
-     * Send ComienzoSubastaNotification to all users interested in the auction lots
-     */
     private function sendComienzoSubastaNotification(Subasta $subasta)
     {
         try {
@@ -523,9 +518,6 @@ class SubastaService implements SubastaServiceInterface
         }
     }
 
-    /**
-     * Send NuevaPujaNotification to all users interested in the specific lot
-     */
     private function sendNuevaPujaNotification(Subasta $subasta, $puja, Lote $lote)
     {
         try {
@@ -581,13 +573,9 @@ class SubastaService implements SubastaServiceInterface
 
     public function cerrarSubasta(int $id)
     {
-        try {
-            Log::info("=== INICIO CERRAR SUBASTA ===", ['id' => $id]);
-            
+        try {            
             $rematador = $this->validarUsuario();
-            Log::info("Usuario validado", ['usuario' => $rematador instanceof Usuario]);
             
-
             $subasta = $this->buscarSubastaPorId($id);
             if (!$subasta instanceof Subasta) {
                 return $subasta;
@@ -613,14 +601,6 @@ class SubastaService implements SubastaServiceInterface
                     'message' => 'No se puede cerrar la subasta porque no se han realizado pujas en el lote actual'
                 ], 422);
             }
-
-            // === CÓDIGO ANTERIOR (COMENTADO) ===
-            // $ganadorId = $loteActual->pujas()->latest()->first()->usuarioRegistrado_id;
-            // $loteActual->update([
-            //     'ganador_id' => $ganadorId
-            // ]);
-
-            // === NUEVO CÓDIGO: GANADORES POTENCIALES ===
           
             $loteService = app(LoteServiceInterface::class);
             $resultadoGanadores = $loteService->generarListaGanadoresPotenciales($loteActual->id);
@@ -639,21 +619,14 @@ class SubastaService implements SubastaServiceInterface
                 ->first();
             
             $ganadorId = $primerGanadorPotencial ? $primerGanadorPotencial->usuario_registrado_id : null;
-            // === FIN NUEVO CÓDIGO ===
-
         
             PujaAutomatica::where('lote_id', $loteActual->id)->delete();
 
-            // === CÓDIGO ANTERIOR (COMENTADO) ===
-            // $lotesSinGanador = $subasta->lotes()->where('ganador_id', null)->count();
-
-            // === NUEVO CÓDIGO: VERIFICAR LOTES SIN GANADOR CONFIRMADO ===
             $lotesSinGanador = $subasta->lotes()
                 ->whereDoesntHave('ganadoresPotenciales', function($query) {
                     $query->where('es_ganador_actual', true);
                 })
                 ->count();
-            // === FIN NUEVO CÓDIGO ===
 
             if ($lotesSinGanador == 0) {
                 $subasta->update([
@@ -664,7 +637,6 @@ class SubastaService implements SubastaServiceInterface
 
                 $this->sendSubastaFinalizadaNotification($subasta);
 
-                // Broadcast auction close event - auction completely finished
                 $cierreSubastaData = [
                     'subasta_id' => $subasta->id,
                     'estado' => EstadoSubasta::CERRADA->value,
@@ -684,15 +656,9 @@ class SubastaService implements SubastaServiceInterface
                 ]);
             }
 
-            // === CÓDIGO ANTERIOR (COMENTADO) ===
-            // $nuevoLoteActual = $subasta->lotes()->where('ganador_id', null)->first();
-
-            // === NUEVO CÓDIGO: BUSCAR SIGUIENTE LOTE SIN GANADORES POTENCIALES ===
-            
             $nuevoLoteActual = $subasta->lotes()
                 ->whereDoesntHave('ganadoresPotenciales')
                 ->first();
-            // === FIN NUEVO CÓDIGO ===
 
             $subasta->update([
                 'loteActual_id' => $nuevoLoteActual->id
@@ -700,7 +666,6 @@ class SubastaService implements SubastaServiceInterface
 
             $this->iniciarProcesoDeAutomatizacion($subasta, $nuevoLoteActual);
 
-            // Broadcast auction close event - moving to next lot
             $cierreSubastaData = [
                 'subasta_id' => $subasta->id,
                 'estado' => EstadoSubasta::INICIADA->value,
@@ -832,12 +797,10 @@ class SubastaService implements SubastaServiceInterface
             
         }
 
-        // Send notification to interested users
         if ($loteActual instanceof Lote){
             $this->sendNuevaPujaNotification($subasta, $pujaCreada, $loteActual);
         }
 
-        // Check if the current offer reaches any threshold and send notification to auction house
         $this->checkThresholdAndNotify($subasta, $loteActual, $nuevoTotal);
 
         return response()->json([
@@ -1048,12 +1011,11 @@ class SubastaService implements SubastaServiceInterface
 
         event(new NuevaPujaEvent($nuevaPujaData));
 
-        // Mandar notis
+        // Mandar notificación de nueva puja
          if ($loteActual instanceof Lote){
             $this->sendNuevaPujaNotification($subasta, $pujaCreada, $loteActual);
         }
 
-        // Check if the current offer reaches any threshold and send notification to auction house
         $this->checkThresholdAndNotify($subasta, $loteActual, $nuevoTotal);
         
         return $pujaCreada;
@@ -1139,9 +1101,6 @@ class SubastaService implements SubastaServiceInterface
         ]);
     }
 
-    /**
-     * Check if the current offer reaches any threshold and send notification to auction house
-     */
     private function checkThresholdAndNotify(Subasta $subasta, Lote $lote, $nuevoTotal)
     {
         try {
@@ -1150,24 +1109,18 @@ class SubastaService implements SubastaServiceInterface
                 return; 
             }
 
-            // Define thresholds to check (2x, 3x, 5x, 7x, 10x)
             $thresholds = [2, 3, 5, 7, 10];
             
-            // Calculate the current multiplier (with some tolerance for "a little bit over")
             $currentMultiplier = $nuevoTotal / $valorBase;
             
             foreach ($thresholds as $threshold) {
-                // Check if we've just crossed this threshold (0% tolerance below, 25% tolerance above)
                 $lowerBound = $threshold; 
                 $upperBound = $threshold * 1.25;
                 
                 if ($currentMultiplier >= $lowerBound && $currentMultiplier <= $upperBound) {
-                    // Check if we haven't already sent this notification for this threshold
-                    // We can use cache or a simple check to avoid duplicate notifications
                     $cacheKey = "threshold_notification_{$subasta->id}_{$lote->id}_{$threshold}";
                     
                     if (!\Cache::has($cacheKey)) {
-                        // Send notification to auction house
                         $casaDeRemates = CasaDeRemates::find($subasta->casaDeRemates_id);
                         if ($casaDeRemates) {
                             $usuarioCasa = Usuario::find($casaDeRemates->id);
@@ -1180,13 +1133,12 @@ class SubastaService implements SubastaServiceInterface
                                     $valorBase
                                 ));
                                 
-                                // Cache this notification for 1 hour to avoid duplicates
                                 \Cache::put($cacheKey, true, now()->addHour());
                                 
                                 \Log::info("Threshold notification sent for auction {$subasta->id}, lot {$lote->id}, threshold {$threshold}x");
                             }
                         }
-                        break; // Only send one notification per bid
+                        break;
                     }
                 }
             }
@@ -1198,7 +1150,6 @@ class SubastaService implements SubastaServiceInterface
     public function manejarLoteSinGanadores(int $loteId): mixed
     {
         try {
-            \Log::info("Manejando lote sin ganadores", ['lote_id' => $loteId]);
             
             $lote = Lote::with('subasta')->find($loteId);
             
@@ -1211,9 +1162,6 @@ class SubastaService implements SubastaServiceInterface
 
             // Marcar lote como sin ganador
             $lote->update(['ganador_id' => null]);
-            
-            // Opcional: Notificar a la casa de remates
-            // ...
             
             return response()->json([
                 'success' => true,

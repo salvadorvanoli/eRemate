@@ -15,37 +15,21 @@ class InicioSubastaEvent implements ShouldBroadcastNow
     
     public $subastaData;
 
-    /**
-     * Create a new event instance.
-     */
     public function __construct($subastaData)
     {
         $this->subastaData = $subastaData;
     }
 
-    /**
-     * Get the channels the event should broadcast on.
-     *
-     * @return array<int, \Illuminate\Broadcasting\Channel>
-     */
     public function broadcastOn(): Channel|array
     {
         return new Channel('subasta.'.$this->subastaData['subasta_id']);
     }
 
-    /**
-     * The event's broadcast name.
-     */
     public function broadcastAs(): string
     {
         return 'subasta.iniciada';
     }
 
-    /**
-     * Get the data to broadcast.
-     *
-     * @return array
-     */
     public function broadcastWith(): array
     {
         return [

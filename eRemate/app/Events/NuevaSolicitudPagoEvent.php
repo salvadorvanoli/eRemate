@@ -18,32 +18,17 @@ class NuevaSolicitudPagoEvent implements ShouldBroadcast
     public $paymentRequest;
     public $chat_id;
 
-    /**
-     * Create a new event instance.
-     *
-     * @return void
-     */
     public function __construct($paymentRequest, $chat_id)
     {
         $this->paymentRequest = $paymentRequest;
         $this->chat_id = $chat_id;
     }
 
-    /**
-     * Get the channels the event should broadcast on.
-     *
-     * @return \Illuminate\Broadcasting\Channel|array
-     */
     public function broadcastOn()
     {
         return new Channel('payment-request.' . $this->chat_id);
     }
 
-    /**
-     * Get the data to broadcast.
-     *
-     * @return array
-     */
     public function broadcastWith()
     {
         return [
@@ -53,11 +38,6 @@ class NuevaSolicitudPagoEvent implements ShouldBroadcast
         ];
     }
 
-    /**
-     * The event's broadcast name.
-     *
-     * @return string
-     */
     public function broadcastAs()
     {
         return 'nueva-solicitud-pago';

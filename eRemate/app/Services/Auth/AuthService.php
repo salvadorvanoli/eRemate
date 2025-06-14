@@ -52,7 +52,6 @@ class AuthService implements AuthServiceInterface
 
         $usuario->update(['perfil_completo' => true]);
 
-        // Send welcome notification
         $this->sendBienvenidaNotification($usuario);
 
         // Generar token con Sanctum
@@ -122,15 +121,11 @@ class AuthService implements AuthServiceInterface
         ]);
     }
 
-    /**
-     * Send BienvenidaUsuarioNotification to the newly registered user
-     */
     private function sendBienvenidaNotification(Usuario $usuario)
     {
         try {
             $usuario->notify(new BienvenidaUsuarioNotification());
         } catch (\Exception $e) {
-            // Log the error but don't fail the registration process
             \Log::error('Error sending BienvenidaUsuarioNotification: ' . $e->getMessage());
         }
     }

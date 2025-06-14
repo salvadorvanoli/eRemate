@@ -200,12 +200,7 @@ class ArticuloController extends Controller
     
     private function verificarUsuario($usuario, $subasta)
     {
-        // Comentamos toda la lógica de verificación para pruebas
-        // $casaDeRemates = CasaDeRemates::where('id', $usuario->id)->first();
-        // $casaDeRematesSubasta = $subasta->casaRemates ?? null;
-        // if (($casaDeRemates && $casaDeRemates->id !== $casaDeRematesSubasta?->id)) {
-        //     return response()->json(['error' => 'No tienes permiso para acceder a este artículo'], 403);
-        // 
+        // Función de legado
     }
 
 

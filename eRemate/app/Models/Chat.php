@@ -9,8 +9,8 @@ class Chat extends Model
 {
     use HasFactory;
 
-    public $incrementing = false; // El ID no es auto-incremental
-    protected $keyType = 'int'; // El tipo de la clave primaria
+    public $incrementing = false;
+    protected $keyType = 'int';
 
     protected $fillable = [
         'id',

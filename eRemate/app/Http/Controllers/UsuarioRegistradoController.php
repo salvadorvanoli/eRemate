@@ -218,9 +218,6 @@ class UsuarioRegistradoController extends Controller
         }
     }
     
-    /**
-     * Actualizar un usuario registrado
-     */
     public function update(Request $request, $id)
     {
         try {

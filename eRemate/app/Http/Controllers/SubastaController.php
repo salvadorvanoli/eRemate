@@ -458,9 +458,6 @@ class SubastaController extends Controller
         }
     }
 
-    /**
-     * Obtener tipos de subasta disponibles
-     */
     public function obtenerTipos()
     {
         try {

@@ -10,39 +10,31 @@ use Illuminate\Database\Eloquent\Collection;
 class RematadorService implements RematadorServiceInterface
 {
 
-
     public function crearRematador(array $data): Rematador
-{
-    // si ya existe
-    $rematador = Rematador::where('numeroMatricula', $data['numeroMatricula'])->first();
+    {
+        // Si ya existe
+        $rematador = Rematador::where('numeroMatricula', $data['numeroMatricula'])->first();
 
-    if ($rematador) {
-        return $rematador;
+        if ($rematador) {
+            return $rematador;
+        }
+
+        // Si no existe
+        return Rematador::create([
+            'id' => $data['id'],
+            'nombre' => $data['nombre'],
+            'apellido' => $data['apellido'],
+            'numeroMatricula' => $data['numeroMatricula'],
+            'direccionFiscal' => $data['direccionFiscal'],
+            'imagen' => $data['imagen'] ?? null
+        ]);
     }
-
-    // si no existe
-    return Rematador::create([
-        'id' => $data['id'],
-        'nombre' => $data['nombre'],
-        'apellido' => $data['apellido'],
-        'numeroMatricula' => $data['numeroMatricula'],
-        'direccionFiscal' => $data['direccionFiscal'],
-        'imagen' => $data['imagen'] ?? null
-    ]);
-}
 
     public function obtenerRematadorPorId(int $id): ?Rematador
     {
         return Rematador::findOrFail($id);
     }
 
-    /**
-     * Actualiza los datos de un rematador y, opcionalmente, el email y teléfono en la tabla usuario
-     * 
-     * @param int $id ID del rematador
-     * @param array $data Datos para actualizar
-     * @return bool
-     */
     public function actualizarRematador(int $id, array $data): bool
     {
         $rematador = $this->obtenerRematadorPorId($id);
@@ -123,10 +115,6 @@ class RematadorService implements RematadorServiceInterface
             throw new \Exception('Esta subasta no está asignada a este rematador');
         }
         
-        // Logs corregidos - acceder al valor del enum con ->value
-        \Log::info('Estado actual de la subasta: ' . $subasta->estado->value);
-        \Log::info('Valor esperado: ' . EstadoSubasta::PENDIENTE_APROBACION->value);
-        
         // Comparar objetos enum directamente
         if ($subasta->estado !== EstadoSubasta::PENDIENTE_APROBACION) {
             throw new \Exception('La subasta no está en estado pendiente de aprobación (estado actual: ' . $subasta->estado->value . ')');
@@ -147,9 +135,6 @@ class RematadorService implements RematadorServiceInterface
         if ($subasta->rematador_id != $rematadorId) {
             throw new \Exception('Esta subasta no está asignada a este rematador');
         }
-        
-        // Log para depuración
-        \Log::info('Estado actual de la subasta a cancelar: ' . $subasta->estado->value);
         
         // Comparar objetos enum directamente, no valores
         if (!in_array($subasta->estado, [
@@ -176,7 +161,6 @@ class RematadorService implements RematadorServiceInterface
             $partesUrl = parse_url($imagenUrl);
             
             if (!$partesUrl || !isset($partesUrl['path'])) {
-                \Log::warning('URL de imagen inválida para eliminar: ' . $imagenUrl);
                 return false;
             }
             
@@ -191,14 +175,11 @@ class RematadorService implements RematadorServiceInterface
                 
                 $responseData = json_decode($response->getContent(), true);
                 if ($responseData && isset($responseData['success']) && $responseData['success']) {
-                    \Log::info('Imagen anterior eliminada correctamente: ' . $imagenUrl);
                     return true;
                 } else {
-                    \Log::warning('No se pudo eliminar la imagen anterior: ' . $imagenUrl);
                     return false;
                 }
             } else {
-                \Log::warning('Formato de URL de imagen no reconocido: ' . $imagenUrl);
                 return false;
             }
             

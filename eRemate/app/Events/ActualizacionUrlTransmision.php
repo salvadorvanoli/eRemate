@@ -15,37 +15,21 @@ class ActualizacionUrlTransmision implements ShouldBroadcastNow
     use Dispatchable, InteractsWithSockets, SerializesModels;
     public $actualizacionUrlTransmisionData;
 
-    /**
-     * Create a new event instance.
-     */
     public function __construct($actualizacionUrlTransmisionData)
     {
         $this->actualizacionUrlTransmisionData = $actualizacionUrlTransmisionData;
     }
 
-    /**
-     * Get the channels the event should broadcast on.
-     *
-     * @return array<int, \Illuminate\Broadcasting\Channel>
-     */
     public function broadcastOn(): Channel|array
     {
         return new Channel('subasta.'.$this->actualizacionUrlTransmisionData['subasta_id']);
     }
 
-    /**
-     * The event's broadcast name.
-     */
     public function broadcastAs(): string
     {
         return 'actualizacion.url.transmision';
     }
 
-    /**
-     * Get the data to broadcast.
-     *
-     * @return array
-     */
     public function broadcastWith(): array
     {
         return [

@@ -12,7 +12,7 @@ class BienvenidaUsuarioNotification extends Notification
 
     public function __construct()
     {
-        //
+        // Constructor vacío, no se necesitan datos adicionales
     }
 
     public function via($notifiable)

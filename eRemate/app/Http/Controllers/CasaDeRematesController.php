@@ -184,7 +184,6 @@ class CasaDeRematesController extends Controller
                 return response()->json($estadisticas, 200);
             }
 
-            // Si el service devuelve una respuesta de error (JsonResponse)
             return $estadisticas;
 
         } catch (\Exception $e) {
@@ -214,7 +213,6 @@ class CasaDeRematesController extends Controller
                 return response()->json($estadisticas, 200);
             }
 
-            // Si el service devuelve una respuesta de error
             return response()->json($estadisticas, 500);
 
         } catch (\Exception $e) {
@@ -234,7 +232,6 @@ class CasaDeRematesController extends Controller
                 return response()->json($estadisticas, 200);
             }
 
-            // Si el service devuelve una respuesta de error
             return response()->json($estadisticas, 500);
 
         } catch (\Exception $e) {

@@ -17,18 +17,12 @@ class AuctionReminderMail extends Mailable
     public Subasta $subasta;
     public string $nombreRematador;
 
-    /**
-     * Create a new message instance.
-     */
     public function __construct(Subasta $subasta, string $nombreRematador)
     {
         $this->subasta = $subasta;
         $this->nombreRematador = $nombreRematador;
     }
 
-    /**
-     * Get the message envelope.
-     */
     public function envelope(): Envelope
     {
         return new Envelope(
@@ -36,9 +30,6 @@ class AuctionReminderMail extends Mailable
         );
     }
 
-    /**
-     * Get the message content definition.
-     */
     public function content(): Content
     {
         return new Content(
@@ -51,11 +42,6 @@ class AuctionReminderMail extends Mailable
         );
     }
 
-    /**
-     * Get the attachments for the message.
-     *
-     * @return array<int, \Illuminate\Mail\Mailables\Attachment>
-     */
     public function attachments(): array
     {
         return [];

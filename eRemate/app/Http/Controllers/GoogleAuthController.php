@@ -181,8 +181,7 @@ class GoogleAuthController extends Controller
 
             $user->refresh();
 
-        
-            // Mandar noti
+            // Mandar notificación de bienvenida si es un usuario registrado
             if ($user instanceof Usuario) {
                 $this->sendBienvenidaNotification($user);
             }
@@ -198,15 +197,11 @@ class GoogleAuthController extends Controller
         }
     }
 
-    /**
-     * Send BienvenidaUsuarioNotification to the user
-     */
     private function sendBienvenidaNotification(Usuario $usuario)
     {
         try {
             $usuario->notify(new BienvenidaUsuarioNotification());
         } catch (\Exception $e) {
-            // Log the error but don't fail the profile completion process
             \Log::error('Error sending BienvenidaUsuarioNotification: ' . $e->getMessage());
         }
     }

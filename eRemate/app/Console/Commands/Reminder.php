@@ -10,23 +10,10 @@ use Carbon\Carbon;
 
 class Reminder extends Command
 {
-    /**
-     * The name and signature of the console command.
-     *
-     * @var string
-     */
     protected $signature = 'auctions:send-reminders';
 
-    /**
-     * The console command description.
-     *
-     * @var string
-     */
     protected $description = 'Envía correos recordatorios para subastas próximas a sus rematadores.';
 
-    /**
-     * Execute the console command.
-     */
     public function handle()
     {
         $this->info('Iniciando proceso de envío de recordatorios de subastas...');

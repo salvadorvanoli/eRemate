@@ -34,9 +34,6 @@ use App\Services\PayPal\PayPalService;
 
 class AppServiceProvider extends ServiceProvider
 {
-    /**
-     * Register any application services.
-     */
     public function register(): void
     {
         //Servicio para Articulo
@@ -124,11 +121,8 @@ class AppServiceProvider extends ServiceProvider
         );
     }
 
-    /**
-     * Bootstrap any application services.
-     */
     public function boot(): void
     {
-        //
+        // No se necesita lógica de arranque
     }
 }

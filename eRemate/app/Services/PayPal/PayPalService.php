@@ -162,27 +162,15 @@ class PayPalService implements PayPalServiceInterface
 
             $accessToken = $this->obtenerAccessToken();
             $paymentData = $this->buildPaymentData($monto, $metodoEntrega, $usuarioRegistradoId, $chatId);
-
-            // Log the payment data being sent for debugging
-            Log::debug('PayPal payment request data', ['paymentData' => $paymentData]);
             
             $response = Http::withToken($accessToken)
                 ->withOptions([
                     'verify' => false, 
                 ])
                 ->post($this->baseUrl . '/v1/payments/payment', $paymentData);
-            
-            // Log the raw response for debugging
-            Log::debug('PayPal API response', [
-                'status' => $response->status(),
-                'body' => $response->body()
-            ]);
 
             if ($response->successful()) {
                 $payment = $response->json();
-                
-                // Log the payment response for debugging
-                Log::debug('PayPal payment response', ['payment' => $payment]);
                 
                 // Verificar que approval_url existe
                 $approvalLink = collect($payment['links'] ?? [])->firstWhere('rel', 'approval_url');
@@ -237,7 +225,6 @@ class PayPalService implements PayPalServiceInterface
             // Verificar si este pago ya fue procesado anteriormente
             $facturaExistente = Factura::where('payment_id', $paymentId)->first();
             if ($facturaExistente) {
-                Log::info("Pago ya procesado anteriormente: {$paymentId}");
                 
                 // Obtener la compra asociada
                 $compra = $facturaExistente->compra;
@@ -385,11 +372,6 @@ class PayPalService implements PayPalServiceInterface
         }
     }
 
-    /**
-     * Verifica la configuración de PayPal y la validez de las credenciales
-     * 
-     * @return bool
-     */
     public function verificarCredenciales(): bool
     {
         try {
