@@ -28,29 +28,25 @@ export class GoogleAuthService {
       this.waitForGoogleScript();
     }
   }
-
   private loadGoogleScript(): Promise<void> {
     return new Promise((resolve) => {
       if (this.isGoogleLoaded || typeof google !== 'undefined') {
-        console.log('Google script already loaded');
         this.isGoogleLoaded = true;
         resolve();
         return;
       }
 
-      console.log('Loading Google script...');
       const script = document.createElement('script');
       script.src = 'https://accounts.google.com/gsi/client';
       script.async = true;
       script.defer = true;
       script.onload = () => {
-        console.log('Google script loaded successfully');
         this.initializeGoogleAuth();
         this.isGoogleLoaded = true;
         resolve();
       };
       script.onerror = (error) => {
-        console.error('Failed to load Google script:', error);
+        console.error('Fallo al cargar el script de google:', error);
       };
       document.head.appendChild(script);
     });
@@ -59,11 +55,9 @@ export class GoogleAuthService {
   private waitForGoogleScript(): void {
     const checkForGoogle = () => {
       if (typeof google !== 'undefined') {
-        console.log('Google script detected, initializing...');
         this.initializeGoogleAuth();
         this.isGoogleLoaded = true;
       } else {
-        console.log('Waiting for Google script...');
         setTimeout(checkForGoogle, 100);
       }
     };
@@ -72,7 +66,6 @@ export class GoogleAuthService {
 
   private initializeGoogleAuth(): void {
     if (typeof google !== 'undefined') {
-      console.log('Initializing Google Auth with client ID:', this.clientId);
       google.accounts.id.initialize({
         client_id: this.clientId,
         callback: this.handleCredentialResponse.bind(this),
@@ -80,7 +73,7 @@ export class GoogleAuthService {
         cancel_on_tap_outside: true
       });
     } else {
-      console.error('Google object not available');
+      console.error('Google object no disponible');
     }
   }
 
@@ -95,7 +88,6 @@ export class GoogleAuthService {
   renderButton(element: HTMLElement, buttonText?: string): void {
     
     if (!this.isGoogleLoaded) {
-      console.warn('Google not loaded yet, retrying in 500ms...');
       setTimeout(() => this.renderButton(element, buttonText), 500);
       return;
     }
@@ -103,7 +95,7 @@ export class GoogleAuthService {
     if (typeof google !== 'undefined' && google.accounts?.id) {
       try {
         
-        let googleTextType = 'signin_with'; // Default
+        let googleTextType = 'signin_with';
         if (buttonText) {
           if (buttonText.toLowerCase().includes('registr')) {
             googleTextType = 'signup_with';
@@ -129,19 +121,17 @@ export class GoogleAuthService {
   prompt(): void {
     
     if (!this.isGoogleLoaded) {
-      console.warn('Google not loaded yet for prompt');
       return;
     }
 
     if (typeof google !== 'undefined' && google.accounts?.id) {
       try {
         google.accounts.id.prompt();
-        console.log('Google prompt shown');
       } catch (error) {
-        console.error('Error showing Google prompt:', error);
+        console.error('Error:', error);
       }
     } else {
-      console.error('Google accounts not available for prompt');
+      console.error('Google accounts no está disponible');
     }
   }
 
@@ -161,7 +151,7 @@ export class GoogleAuthService {
       );
       return JSON.parse(jsonPayload);
     } catch (error) {
-      console.error('Error parsing JWT:', error);
+      console.error('Error parseando JWT:', error);
       return null;
     }
   }

@@ -14,8 +14,7 @@ export class ControlPanelService {
     private userService: UserService,
     private categoryService: CategoryService,
     private productService: ProductService,
-    private publicationService: PublicationService,
-    //private orderService: OrderService
+    private publicationService: PublicationService
   ) {}
 
   getDataByType(type: string, page: number, size: number): Observable<any[]> | null {
@@ -28,8 +27,6 @@ export class ControlPanelService {
         return this.productService.getPaginated(page, size);
       case 'Publicacion':
         return this.publicationService.getPaginated(page, size);
-      //case 'Pedido':
-        //return this.orderService.getPaginated(page, size);
       default:
         return null;
     }

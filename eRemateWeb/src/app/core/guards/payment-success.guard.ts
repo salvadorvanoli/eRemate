@@ -26,7 +26,6 @@ export class PaymentSuccessGuard implements CanActivate {
     const payerId = route.queryParams['PayerID'];
 
     if (!paymentId || !payerId) {
-      console.warn('Payment Success Guard: Parámetros de pago faltantes');
       this.router.navigate(['/inicio']);
       return of(false);
     }
@@ -42,10 +41,6 @@ export class PaymentSuccessGuard implements CanActivate {
         }
 
         if (user.tipo !== 'registrado') {
-          console.warn('Payment Success Guard: Solo usuarios registrados pueden ver páginas de pago', {
-            userId: user.id,
-            userType: user.tipo
-          });
           this.router.navigate(['/inicio']);
           return of(false);
         }
@@ -61,22 +56,12 @@ export class PaymentSuccessGuard implements CanActivate {
               return true;
             } else {
               // Error de autorización o pago no encontrado
-              console.warn('Payment Success Guard: Sin autorización para este pago', {
-                paymentId,
-                userId: user.id,
-                response
-              });
               this.router.navigate(['/inicio']);
               return false;
             }
           }),
           catchError(error => {
             if (error.status === 403) {
-              console.warn('Payment Success Guard: Usuario sin permisos para este pago', {
-                paymentId,
-                userId: user.id,
-                error
-              });
               this.router.navigate(['/inicio'], {
                 queryParams: { error: 'payment_access_denied' }
               });

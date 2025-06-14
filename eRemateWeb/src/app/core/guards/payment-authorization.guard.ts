@@ -31,10 +31,6 @@ export class PaymentAuthorizationGuard implements CanActivate {
         }
 
         if (user.tipo !== 'registrado') {
-          console.warn('Payment Auth Guard: Solo usuarios registrados pueden realizar pagos', {
-            userId: user.id,
-            userType: user.tipo
-          });
           this.router.navigate(['/inicio']);
           return of(false);
         }
@@ -50,11 +46,6 @@ export class PaymentAuthorizationGuard implements CanActivate {
               }
 
               if (chat.usuarioRegistrado_id !== user.id) {
-                console.warn('Payment Auth Guard: Usuario no autorizado para pagar en este chat', {
-                  chatId,
-                  userId: user.id,
-                  chatUsuarioRegistrado: chat.usuarioRegistrado_id
-                });
                 this.router.navigate(['/inicio']);
                 return false;
               }

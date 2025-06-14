@@ -12,5 +12,5 @@ export interface Lote {
     es_ganador?: boolean;
     oferta?: number;
     imagenUrl?: string;
-    articulos?: any[]; // Array de artículos con sus imágenes
+    articulos?: any[];
 }

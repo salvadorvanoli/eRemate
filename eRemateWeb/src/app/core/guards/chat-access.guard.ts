@@ -31,7 +31,6 @@ export class ChatAccessGuard implements CanActivate {
     return this.securityService.getActualUser().pipe(
       switchMap(user => {
         if (!user) {
-          console.log('Chat Access Guard: Usuario no autenticado');
           this.router.navigate(['/inicio-sesion'], { 
             queryParams: { returnUrl: state.url }
           });
@@ -54,13 +53,6 @@ export class ChatAccessGuard implements CanActivate {
             );
 
             if (!hasAccess) {
-              console.warn('Chat Access Guard: Usuario sin acceso al chat', {
-                chatId,
-                userId: user.id,
-                userType: user.tipo,
-                chatUsuarioRegistrado: chat.usuarioRegistrado_id,
-                chatCasaDeRemate: chat.casa_de_remate_id
-              });
               this.router.navigate(['/inicio']);
               return false;
             }

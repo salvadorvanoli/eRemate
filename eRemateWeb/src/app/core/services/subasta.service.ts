@@ -67,6 +67,7 @@ export class SubastaService extends BaseHttpService<any, Subasta> {
       })
     );
   }
+
   realizarPuja(subastaId: number, loteId: number, monto: number): Observable<any> {
     return this.http.post<any>(`${this.baseUrl}/auction/${subastaId}/bid`, {
       lote_id: loteId,
@@ -173,7 +174,8 @@ export class SubastaService extends BaseHttpService<any, Subasta> {
           return response.data;
         }
         throw new Error(response.message || 'Error al crear la puja automática');
-      }),      catchError((error: any) => {
+      }),      
+      catchError((error: any) => {
         // Si es un error HTTP (como 422), extraer el mensaje del backend
         if (error.error && error.error.message) {
           throw new Error(error.error.message);

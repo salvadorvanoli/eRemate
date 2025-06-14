@@ -34,7 +34,9 @@ export class PaypalService {
     return this.http.post<PaymentResponse>(`${this.baseUrl}/paypal/create-payment-from-chat`, paymentData, {
       headers: this.getAuthHeaders()
     });
-  }  ejecutarPago(executionData: PaymentExecution): Observable<PaymentResult> {
+  }  
+  
+  ejecutarPago(executionData: PaymentExecution): Observable<PaymentResult> {
     // Si hay un ID de solicitud almacenado, incluirlo en la petición
     if (!executionData.payment_request_id) {
       const storedRequestId = sessionStorage.getItem('payment_request_id');
@@ -140,9 +142,7 @@ export class PaypalService {
         next: (response) => {
           if (response.success && response.data) {
             const solicitud = response.data;
-            
-            console.log('Procesando pago desde solicitud:', solicitud);
-            
+                        
             if (!solicitud.monto || !solicitud.metodo_entrega) {
               reject(new Error('La solicitud de pago no contiene los datos necesarios'));
               return;
@@ -155,19 +155,15 @@ export class PaypalService {
               chatId
             ).subscribe({
               next: (paymentResponse) => {
-                console.log('Respuesta del servidor:', paymentResponse);
                   if (paymentResponse.success && paymentResponse.data) {
                   // Almacenamos el ID de la solicitud en sessionStorage para recuperarlo después del pago
-                  console.log('Guardando payment_request_id en sessionStorage:', solicitudId.toString());
                   sessionStorage.setItem('payment_request_id', solicitudId.toString());
                   
                   // Verificar que se guardó correctamente
                   const stored = sessionStorage.getItem('payment_request_id');
-                  console.log('Verificación - payment_request_id guardado:', stored);
                   
                   // Asegurarnos que tenemos la URL de aprobación
                   if (paymentResponse.data.approval_url) {
-                    console.log('Redirigiendo a PayPal con URL:', paymentResponse.data.approval_url);
                     // Redirigir a PayPal
                     window.location.href = paymentResponse.data.approval_url;
                     resolve();

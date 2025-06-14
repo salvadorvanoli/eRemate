@@ -46,15 +46,12 @@ export class RegisteredUsersService extends BaseHttpService<UsuarioRegistrado, U
     );
   }
 
-  /**
-   * Get authentication headers with Bearer token
-   */
   private getAuthHeaders(): { [header: string]: string } {
     const token = localStorage.getItem('token');
     return token ? { Authorization: `Bearer ${token}` } : {};
   }
 
-   // Métodos para gestión de favoritos
+  // Métodos para gestión de favoritos
   getFavoriteLots(userId: string | number): Observable<Lote[]> {
     const url = `${this.baseUrl}/registered-users/${userId}/favorite-lots`;
     return this.http.get<Lote[]>(url).pipe(
@@ -63,6 +60,7 @@ export class RegisteredUsersService extends BaseHttpService<UsuarioRegistrado, U
       })
     );
   }
+
   addToFavorites(userId: string | number, loteId: string | number): Observable<any> {
     const url = `${this.baseUrl}/registered-users/${userId}/favorite-lots`;
     const body = { lote_id: loteId };
@@ -72,6 +70,7 @@ export class RegisteredUsersService extends BaseHttpService<UsuarioRegistrado, U
       })
     );
   }
+
   removeFromFavorites(userId: string | number, loteId: string | number): Observable<any> {
     const url = `${this.baseUrl}/registered-users/${userId}/favorite-lots/${loteId}`;
     return this.http.delete(url).pipe(
@@ -93,8 +92,7 @@ export class RegisteredUsersService extends BaseHttpService<UsuarioRegistrado, U
     );
   }
 
-
-   getFavoriteLotsAuth(): Observable<any[]> {
+  getFavoriteLotsAuth(): Observable<any[]> {
     return this.http.get<any[]>(`${this.baseUrl}/lotes-favoritos`, {
       headers: this.getAuthHeaders()
     }).pipe(
@@ -104,7 +102,7 @@ export class RegisteredUsersService extends BaseHttpService<UsuarioRegistrado, U
     );
   }
 
-    addToFavoritesAuth(loteId: number): Observable<any> {
+  addToFavoritesAuth(loteId: number): Observable<any> {
     return this.http.post<any>(`${this.baseUrl}/lotes-favoritos`, { lote_id: loteId }, {
       headers: this.getAuthHeaders()
     }).pipe(
@@ -113,9 +111,7 @@ export class RegisteredUsersService extends BaseHttpService<UsuarioRegistrado, U
       })
     );
   }
-  /**
-   * Remove a lot from user's favorites (using the authenticated API)
-   */
+
   removeFromFavoritesAuth(loteId: number): Observable<any> {
     return this.http.delete<any>(`${this.baseUrl}/lotes-favoritos/${loteId}`, {
       headers: this.getAuthHeaders()
@@ -125,9 +121,7 @@ export class RegisteredUsersService extends BaseHttpService<UsuarioRegistrado, U
       })
     );
   }
-  /**
-   * Check if a specific lot is in user's favorites (using the authenticated API)
-   */
+
   checkIfFavoriteAuth(loteId: number): Observable<boolean> {
     return this.getFavoriteLotsAuth().pipe(
       map(favorites => {
@@ -140,7 +134,7 @@ export class RegisteredUsersService extends BaseHttpService<UsuarioRegistrado, U
     );
   }
 
-aceptarLote(loteId: string | number): Observable<any> {
+  aceptarLote(loteId: string | number): Observable<any> {
     const url = `${this.baseUrl.replace('/registered-users', '')}/lot/${loteId}/accept`;
     
     return this.http.post<any>(url, {}, {
@@ -164,25 +158,21 @@ aceptarLote(loteId: string | number): Observable<any> {
     );
   }
 
-updateUserProfile(userId: string | number, userData: any): Observable<any> {
-  const url = this.baseUrl.includes('/registered-users') 
-    ? `${this.baseUrl}/${userId}`
-    : `${this.baseUrl}/registered-users/${userId}`;
-  
-  console.log('URL para actualizar usuario:', url);
-  console.log('Datos enviados:', userData);
-  
-  return this.http.put<any>(url, userData, {
-    headers: this.getAuthHeaders()
-  }).pipe(
-    tap(response => {
-      console.log('Usuario actualizado:', response);
-    }),
-    catchError(error => {
-      console.error('Error al actualizar usuario:', error);
-      return throwError(() => error);
-    })
-  );
-}
+  updateUserProfile(userId: string | number, userData: any): Observable<any> {
+    const url = this.baseUrl.includes('/registered-users') 
+      ? `${this.baseUrl}/${userId}`
+      : `${this.baseUrl}/registered-users/${userId}`;
+    
+    return this.http.put<any>(url, userData, {
+      headers: this.getAuthHeaders()
+    }).pipe(
+      tap(response => {
+      }),
+      catchError(error => {
+        console.error('Error al actualizar usuario:', error);
+        return throwError(() => error);
+      })
+    );
+  }
 
 }

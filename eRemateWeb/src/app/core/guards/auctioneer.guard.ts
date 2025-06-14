@@ -58,11 +58,6 @@ export class AuctioneerGuard implements CanActivate {
             }
 
             if (subasta.rematador_id !== user.id) {
-              console.warn('Auctioneer Guard: Rematador no asignado a esta subasta', {
-                userId: user.id,
-                subastaId: subastaId,
-                rematadorAsignado: subasta.rematador_id
-              });
               this.router.navigate(['/inicio'], { 
                 queryParams: { error: 'unauthorized_auction_access' }
               });

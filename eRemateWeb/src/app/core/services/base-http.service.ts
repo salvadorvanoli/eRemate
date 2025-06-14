@@ -6,8 +6,6 @@ export abstract class BaseHttpService<TRequest, TResponse> {
 
   protected baseUrl = 'http://127.0.0.1:8000/api';
 
-  //protected baseUrl = 'http://localhost:8000/api';
-
   constructor(
     protected http: HttpClient,
     protected end: string

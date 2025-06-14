@@ -54,23 +54,17 @@ export class WebsocketService {
         
         window.Echo.channel(channelName)
           .listen('.nueva.puja', (event: any) => {
-            console.log('Nueva puja recibida:', event);
             this.nuevaPujaSubject.next(event);
           })
           .listen('.actualizacion.url.transmision', (event: any) => {
-            console.log('Nueva URL transmisión recibida:', event);
             this.actualizacionUrlTransmisionSubject.next(event);
           })
           .listen('.subasta.iniciada', (event: any) => {
-            console.log('Subasta iniciada:', event);
             this.inicioSubastaSubject.next(event);
           })
           .listen('.subasta.cerrada', (event: any) => {
-            console.log('Subasta cerrada/lote cerrado:', event);
             this.cierreSubastaSubject.next(event);
           });
-          
-        console.log(`Suscrito al canal ${channelName}`);
       } else {
         console.error('Echo no está inicializado');
       }
@@ -84,7 +78,6 @@ export class WebsocketService {
   leaveChannel(subastaId: number): void {
     if (window.Echo) {
       window.Echo.leaveChannel(`subasta.${subastaId}`);
-      console.log(`Desuscrito del canal de subasta.${subastaId}`);
     }
   }
 
@@ -110,7 +103,6 @@ export class WebsocketService {
   leaveChatChannel(chatId: number): void {
     if (window.Echo) {
       window.Echo.leaveChannel(`chat.${chatId}`);
-      console.log(`Desuscrito del canal de chat.${chatId}`);
     }
   }
 
@@ -121,11 +113,9 @@ export class WebsocketService {
         
         window.Echo.channel(channelName)
           .listen('.nueva-solicitud-pago', (event: any) => {
-            console.log('Nueva solicitud de pago recibida:', event);
             this.nuevaSolicitudPagoSubject.next(event);
           })
           .listen('.estado-solicitud-pago', (event: any) => {
-            console.log('Estado de solicitud de pago actualizado:', event);
             this.estadoSolicitudPagoSubject.next(event);
           });
           
@@ -148,11 +138,9 @@ export class WebsocketService {
         if (!window.Echo.connector.channels[channelName]) {
           window.Echo.channel(channelName)
             .listen('.nueva-solicitud-pago', (event: any) => {
-              console.log('Nueva solicitud de pago recibida:', event);
               this.nuevaSolicitudPagoSubject.next(event);
             })
             .listen('.estado-solicitud-pago', (event: any) => {
-              console.log('Estado de solicitud de pago actualizado:', event);
               this.estadoSolicitudPagoSubject.next(event);
             });
         }
@@ -168,7 +156,6 @@ export class WebsocketService {
   leavePaymentRequestChannel(chatId: number): void {
     if (window.Echo) {
       window.Echo.leaveChannel(`payment-request.${chatId}`);
-      console.log(`Desuscrito del canal de solicitudes de pago.${chatId}`);
     }
   }
 
