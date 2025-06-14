@@ -107,35 +107,17 @@ export class TableLotsComponent implements OnInit {
             this.loading = false;
             return;
         }
-        
-        console.log('🚀 Cargando lotes para usuario ID:', userId);
-        
+                
         this.registeredUsersService.getBiddedLotsByUserId(String(userId))
             .pipe(finalize(() => this.loading = false))
             .subscribe({
                 next: (data: LoteConEstado[]) => {
-                    console.log('✅ Datos recibidos del backend:', data);
-                    console.log('📊 Cantidad de lotes recibidos:', data.length);
-                    
-                    data.forEach((lote, index) => {
-                        console.log(`📦 Lote ${index + 1}:`, {
-                            id: lote.id,
-                            nombre: lote.nombre,
-                            estado_usuario_lote: lote.estado_usuario_lote,
-                            es_ganador_potencial: lote.es_ganador_potencial,
-                            valorBase: lote.valorBase,
-                            puja_maxima: lote.puja_maxima,
-                            oferta: lote.oferta,
-                            ganador_id: lote.ganador_id
-                        });
-                    });
                     
                     this.lots = data.map(lot => ({
                         ...lot,
                         resultado_texto: this.getResultadoTag(lot.estado_usuario_lote).value
                     }));
                     
-                    console.log('🔄 Datos procesados para la tabla:', this.lots);
                 },
                 error: (error) => {
                     console.error('❌ Error al cargar lotes:', error);
@@ -377,12 +359,6 @@ export class TableLotsComponent implements OnInit {
             return;
         }
 
-        console.log('✅ Aceptando lote:', {
-            id: lote.id,
-            nombre: lote.nombre,
-            es_ganador_potencial: lote.es_ganador_potencial
-        });
-
         this.loading = true;
         
         this.registeredUsersService.aceptarLote(lote.id)
@@ -390,7 +366,6 @@ export class TableLotsComponent implements OnInit {
             .subscribe({
                 next: (response) => {
                     this.messageService.clear();
-                    console.log('✅ Respuesta de aceptar lote:', response);
                     this.messageService.add({
                         severity: 'success',
                         summary: 'Éxito',
@@ -424,19 +399,12 @@ export class TableLotsComponent implements OnInit {
             return;
         }
 
-        console.log('❌ Rechazando lote:', {
-            id: lote.id,
-            nombre: lote.nombre,
-            es_ganador_potencial: lote.es_ganador_potencial
-        });
-
         this.loading = true;
         
         this.registeredUsersService.rechazarLote(lote.id)
             .pipe(finalize(() => this.loading = false))
             .subscribe({
                 next: (response) => {
-                    console.log('✅ Respuesta de rechazar lote:', response);
                     this.messageService.clear();
                     this.messageService.add({
                         severity: 'success',

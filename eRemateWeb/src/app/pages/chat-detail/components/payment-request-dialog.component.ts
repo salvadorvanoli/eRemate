@@ -129,8 +129,8 @@ export class PaymentRequestDialogComponent implements OnInit {
       this.chatId
     ).subscribe({
       next: (response) => {
-        console.log('Solicitud de pago creada:', response);
-          // Enviar un mensaje al chat informando de la solicitud
+        
+        // Enviar un mensaje al chat informando de la solicitud
         this.chatService.sendMessage({
           contenido: `💰 Se ha enviado una solicitud de pago por $${this.monto}. El cliente puede procesar el pago accediendo a "Solicitudes de Pago" desde el chat.`,
           chat_id: this.chatId,

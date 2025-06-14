@@ -256,8 +256,6 @@ class CasaDeRematesService implements CasaDeRematesServiceInterface
         if (!$year) {
             $year = now()->year;
         }
-
-        Log::info('Buscando estadísticas por categoría para casa: ' . $id . ', año: ' . $year);
         
         try {
             $estadisticas = \DB::table('subastas as s')
@@ -321,9 +319,7 @@ class CasaDeRematesService implements CasaDeRematesServiceInterface
     }
 
     public function estadisticasPujas(int $id): mixed
-    {
-        Log::info('Buscando estadísticas de pujas para casa: ' . $id);
-        
+    {        
         try {
             // Obtener las últimas 6 subastas cerradas y sus pujas
             $estadisticas = \DB::select("

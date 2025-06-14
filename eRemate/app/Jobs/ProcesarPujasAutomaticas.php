@@ -89,16 +89,14 @@ class ProcesarPujasAutomaticas implements ShouldQueue
             ], $this->subasta->id, $pujaAutomaticaActual['usuarioRegistrado_id']);
             
             if (!$respuesta instanceof JsonResponse) {
-                Log::info("Puja automática realizada: Lote #{$loteActualizado->id}, Usuario #{$pujaAutomaticaActual['usuarioRegistrado_id']}, Monto: $montoNecesario");
+                Log::info(message: "Puja automática realizada: Lote #{$loteActualizado->id}, Usuario #{$pujaAutomaticaActual['usuarioRegistrado_id']}, Monto: $montoNecesario");
             } else {
                 Log::warning("Error en puja automática: " . $respuesta->getData()->message ?? 'Error desconocido');
             }
         } else {
             PujaAutomatica::find($pujaAutomaticaActual['id'])->delete();
             array_splice($this->pujasAutomaticas, $this->indiceActual, 1);
-            
-            Log::info("Puja automática eliminada por falta de presupuesto: #{$pujaAutomaticaActual['id']}");
-            
+                        
             if ($this->indiceActual >= count($this->pujasAutomaticas)) {
                 $this->indiceActual = 0;
             }

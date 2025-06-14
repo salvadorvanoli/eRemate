@@ -108,9 +108,7 @@ export class ProfileInfoComponent implements OnInit {
     this.userService.getUserProfile(this.userId)
     .pipe(finalize(() => this.loading = false))
     .subscribe({
-      next: (response) => {
-        console.log('Respuesta del perfil:', response);
-        
+      next: (response) => {        
 
         if (response && response.usuario && response.usuarioRegistrado) {
           const { usuario, usuarioRegistrado } = response;
@@ -122,7 +120,6 @@ export class ProfileInfoComponent implements OnInit {
             telefono: usuario?.telefono || ''
           };
           
-          console.log('Perfil cargado:', this.profile);
         } 
 
         else if (response && response.data) {
@@ -135,7 +132,6 @@ export class ProfileInfoComponent implements OnInit {
             telefono: usuario?.telefono || ''
           };
           
-          console.log('Perfil cargado (estructura data):', this.profile);
         } else {
           this.messageService.clear();
           this.messageService.add({
@@ -265,9 +261,7 @@ export class ProfileInfoComponent implements OnInit {
     this.registeredUsersService.updateUserProfile(this.userId, userData)
       .pipe(finalize(() => this.loading = false))
       .subscribe({
-        next: (response) => {
-          console.log('Respuesta de actualización:', response);
-          
+        next: (response) => {          
           this.messageService.add({
             severity: 'success',
             summary: 'Éxito',

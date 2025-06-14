@@ -67,7 +67,6 @@ export class AuctionComponent implements OnInit {
   ) {}
 
   verDetalles(lote: Lote): void {
-    console.log('Mostrando detalles del lote:', lote.id, lote);
     this.loteSeleccionadoModal = { ...lote }; // Crear una copia para forzar la detección de cambios
     this.showDetallesModal = true;
   }
@@ -265,7 +264,6 @@ export class AuctionComponent implements OnInit {
             }
           },
           (error) => {
-            console.log(`No se pudo cargar imagen aleatoria para lote ${lote.id}:`, error);
             this.imagenesAleatorias[lote.id!] = '/remate.jpg';
           }
         );

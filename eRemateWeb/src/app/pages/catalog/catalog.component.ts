@@ -212,7 +212,7 @@ export class CatalogComponent {
             }
           },
           (error) => {
-            console.log(`No se pudo cargar imagen para subasta ${element.id}:`, error);
+            console.error(`No se pudo cargar imagen para subasta ${element.id}:`, error);
             this.imagenesAleatorias[element.id] = '/remate.jpg';
           }
         );

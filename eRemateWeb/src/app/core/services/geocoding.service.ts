@@ -85,13 +85,6 @@ export class GeocodingService {
     // Si no, priorizar Argentina
     const countrycodes = detectedCountry ? undefined : 'ar';
     
-    console.log('Geocoding search:', {
-      address,
-      detectedCountry,
-      countrycodes,
-      prioritizingArgentina: !detectedCountry
-    });
-    
     return this.geocodeAddress(address, countrycodes);
   }
 }

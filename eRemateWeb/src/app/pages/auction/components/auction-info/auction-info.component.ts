@@ -154,7 +154,6 @@ updateMapVisibility() {
 }
 
 initializeMap() {
-    console.log('Inicializando mapa Leaflet...');
     
     // Configurar iconos de Leaflet para corregir iconos faltantes
     delete (L.Icon.Default.prototype as any)._getIconUrl;
@@ -172,8 +171,6 @@ initializeMap() {
         attribution: '© OpenStreetMap contributors'
     }).addTo(this.map);
 
-    console.log('Mapa Leaflet inicializado correctamente');
-
     // Si ya hay una ubicación, buscarla
     if (this.item?.ubicacion && this.item.ubicacion.trim()) {
         setTimeout(() => {
@@ -183,7 +180,6 @@ initializeMap() {
 }
 
 private async searchLocation(address: string) {
-    console.log('Buscando ubicación:', address);
     
     try {
         // Detectar si se especifica un país en la dirección
@@ -203,11 +199,9 @@ private async searchLocation(address: string) {
         if (detectedCountry) {
             // Si se detecta un país específico, buscar sin restricción de país
             searchUrl = `https://nominatim.openstreetmap.org/search?format=json&q=${encodeURIComponent(address)}&limit=3&addressdetails=1`;
-            console.log(`País detectado: ${detectedCountry}, buscando sin restricción geográfica`);
         } else {
             // Si no se especifica país, priorizar Argentina
             searchUrl = `https://nominatim.openstreetmap.org/search?format=json&q=${encodeURIComponent(address)}&countrycodes=ar&limit=3&addressdetails=1`;
-            console.log('No se detectó país específico, priorizando Argentina');
         }
         
         const response = await fetch(searchUrl);
@@ -217,7 +211,6 @@ private async searchLocation(address: string) {
         }
         
         const results: any[] = await response.json();
-        console.log('Resultado de geocoding:', results);
         
         if (results && results.length > 0) {
             // Si se detectó un país, filtrar resultados por ese país
@@ -234,33 +227,26 @@ private async searchLocation(address: string) {
                 
                 if (countryFilteredResult) {
                     bestResult = countryFilteredResult;
-                    console.log('Resultado filtrado por país:', bestResult);
                 }
             }
             
             const lat = parseFloat(bestResult.lat);
             const lng = parseFloat(bestResult.lon);
             
-            console.log('Nueva ubicación encontrada:', { 
-                lat, 
-                lng, 
-                display_name: bestResult.display_name,
-                country: bestResult.address?.country 
-            });
-            
             // Actualizar la vista del mapa
             if (this.map) {
                 this.map.setView([lat, lng], 15);
                 this.updateMarker(lat, lng, bestResult.display_name);
-            }        } else {
-            console.log('No se encontraron resultados para la dirección');
+            }        
+        } else {
             // Mantener el mapa en Montevideo por defecto
             if (this.map) {
                 this.map.setView(this.defaultLatLng, 13);
                 // Agregar un marcador temporal indicando que no se encontró la ubicación
                 this.updateMarker(this.defaultLatLng[0], this.defaultLatLng[1], 'Ubicación no encontrada - Montevideo (por defecto)');
             }
-        }    } catch (error) {
+        }    
+    } catch (error) {
         console.error('Error en geocoding:', error);
         // En caso de error, mantener el mapa en la ubicación por defecto
         if (this.map) {
@@ -272,7 +258,6 @@ private async searchLocation(address: string) {
 
 private updateMarker(lat: number, lng: number, customTitle?: string) {
     if (!this.map) {
-        console.log('Mapa no está disponible para agregar marcador');
         return;
     }
 
@@ -287,8 +272,6 @@ private updateMarker(lat: number, lng: number, customTitle?: string) {
     // Agregar popup con la dirección
     const popupText = customTitle || this.item?.ubicacion || 'Ubicación seleccionada';
     this.marker.bindPopup(popupText).openPopup();
-    
-    console.log('Marcador agregado en:', { lat, lng });
 }
 
 onMapResize() {

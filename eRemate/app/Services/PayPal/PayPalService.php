@@ -326,9 +326,7 @@ class PayPalService implements PayPalServiceInterface
 
     public function cancelarPago(string $paymentId): mixed
     {
-        try {
-            Log::info("Pago cancelado: {$paymentId}");
-            
+        try {            
             return [
                 'success' => true,
                 'message' => 'Pago cancelado correctamente'

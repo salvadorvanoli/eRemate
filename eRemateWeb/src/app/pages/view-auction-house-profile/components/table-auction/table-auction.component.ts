@@ -213,7 +213,6 @@ export class TableAuctionComponent implements OnInit, AfterViewInit, OnDestroy {
                 }
             } else {
 
-                console.log('No se encontraron resultados para la dirección');                // Mantener el mapa en Montevideo por defecto
                 if (this.map) {
                     this.map.setView(this.defaultLatLng, 13);
                     // Agregar un marcador temporal indicando que no se encontró la ubicación

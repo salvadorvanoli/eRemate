@@ -91,10 +91,6 @@ class PayPalController extends Controller
             // Verificar si este pago ya fue procesado anteriormente
             $facturaExistente = \App\Models\Factura::where('payment_id', $paymentId)->first();
             if ($facturaExistente) {
-                \Log::info('Pago ya procesado anteriormente:', [
-                    'payment_id' => $paymentId,
-                    'factura_id' => $facturaExistente->id
-                ]);
                 
                 // Retornar los datos de la factura existente
                 $compra = \App\Models\Compra::where('factura_id', $facturaExistente->id)->first();
@@ -120,16 +116,6 @@ class PayPalController extends Controller
                 ], 401);
             }
             
-            \Log::info('Datos recibidos en ejecutarPago:', [
-                'payment_id' => $paymentId,
-                'payer_id' => $payerId,
-                'usuario_registrado_id' => $usuarioRegistradoId,
-                'chat_id' => $request->input('chat_id'),
-                'payment_request_id' => $request->input('payment_request_id'),
-                'usuario_autenticado_id' => $usuarioAutenticado->id,
-                'all_input' => $request->all()
-            ]);
-            
             // Si hay un chat_id, verificar permisos
             if ($request->has('chat_id')) {
                 $chatId = $request->input('chat_id');
@@ -141,10 +127,6 @@ class PayPalController extends Controller
                         'error' => 'Chat no encontrado'
                     ], 404);
                 }
-                
-                \Log::info('Verificando permisos - Usuario autenticado: ' . $usuarioAutenticado->id . 
-                          ', Chat usuario_registrado_id: ' . $chat->usuarioRegistrado_id . 
-                          ', Chat casa_de_remate_id: ' . $chat->casa_de_remate_id);
                 
                 // Verificar permisos basado en el tipo de usuario
                 $tienePermiso = false;
@@ -180,23 +162,14 @@ class PayPalController extends Controller
             // Si hay un id de solicitud de pago, validar y actualizar estado
             if ($request->has('payment_request_id')) {
                 $paymentRequestId = $request->input('payment_request_id');
-                
-                \Log::info('Intentando actualizar payment_request_id: ' . $paymentRequestId);
-                
+                                
                 // Buscar la solicitud de pago
                 $paymentRequest = \App\Models\PaymentRequest::find($paymentRequestId);
                 
                 if ($paymentRequest) {
-                    \Log::info('PaymentRequest encontrado, estado actual: ' . $paymentRequest->estado);
                     
                     // Verificar que el usuario autenticado sea el usuario registrado de la solicitud
                     if ($paymentRequest->usuario_registrado_id !== $usuarioAutenticado->id) {
-                        \Log::warning('Intento de pago no autorizado - usuario no coincide', [
-                            'payment_request_id' => $paymentRequestId,
-                            'payment_request_usuario_id' => $paymentRequest->usuario_registrado_id,
-                            'usuario_autenticado_id' => $usuarioAutenticado->id,
-                            'usuario_autenticado_tipo' => $usuarioAutenticado->tipo
-                        ]);
                         
                         return response()->json([
                             'success' => false,
@@ -220,9 +193,7 @@ class PayPalController extends Controller
                     // Actualizar el estado a 'pagado'
                     $paymentRequest->estado = 'pagado';
                     $saved = $paymentRequest->save();
-                    
-                    \Log::info('PaymentRequest guardado: ' . ($saved ? 'SI' : 'NO') . ', nuevo estado: ' . $paymentRequest->estado);
-                    
+                                        
                     // Si hay un chat asociado, enviar un mensaje de confirmación
                     if ($paymentRequest->chat_id) {
                         $mensaje = \App\Models\Mensaje::create([
@@ -234,7 +205,6 @@ class PayPalController extends Controller
                         
                         \App\Events\NuevoMensajeEvent::dispatch($mensaje);
                         
-                        \Log::info('Mensaje de confirmación enviado al chat: ' . $paymentRequest->chat_id);
                     }
                 } else {
                     \Log::error('PaymentRequest no encontrado con ID: ' . $paymentRequestId);
@@ -272,10 +242,6 @@ class PayPalController extends Controller
             $frontendUrl = config('app.frontend_url') . "/pago/exitoso";
             $redirectUrl = $frontendUrl . "?paymentId={$paymentId}&PayerID={$payerId}";
             
-            Log::info('Redirecting to frontend after PayPal success', [
-                'redirectUrl' => $redirectUrl
-            ]);
-            
             return redirect($redirectUrl);
         } catch (\Exception $e) {
             Log::error('Error in PayPal success callback: ' . $e->getMessage());
@@ -295,10 +261,6 @@ class PayPalController extends Controller
 
             // Redirigir al frontend
             $frontendUrl = config('app.frontend_url') . "/pago/cancelado";
-            
-            Log::info('Redirecting to frontend after PayPal cancel', [
-                'redirectUrl' => $frontendUrl
-            ]);
             
             return redirect($frontendUrl);
         } catch (\Exception $e) {

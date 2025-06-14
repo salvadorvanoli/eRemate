@@ -41,7 +41,6 @@ export class WebsocketService {
         enabledTransports: ['ws', 'wss']
       });
       
-      console.log('Echo inicializado correctamente');
     } catch (error) {
       console.error('Error al inicializar Echo:', error);
     }
