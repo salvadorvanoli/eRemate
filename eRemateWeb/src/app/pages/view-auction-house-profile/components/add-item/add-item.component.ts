@@ -112,7 +112,6 @@ export class AddItemComponent implements OnInit, OnChanges {
       this.selectedCategoria = null;
     }
 
-    // Initialize estado data
     if (this.estadosArticulo.length > 0) {
       this.initializeEstadoData();
     }
@@ -174,10 +173,8 @@ export class AddItemComponent implements OnInit, OnChanges {
           this.initializeEstadoData();
         },
         error: (error) => {
-          // Fall back to local enum data if API fails
           this.estadosArticulo = ESTADOS_ARTICULO;
           this.initializeEstadoData();
-          console.warn('Could not load estados from API, using local data:', error);
         }
       });
   }
@@ -233,6 +230,7 @@ export class AddItemComponent implements OnInit, OnChanges {
       reader.readAsDataURL(file);
     }
   }
+  
   async onSave() {
     this.formSubmitted.set(true);
     

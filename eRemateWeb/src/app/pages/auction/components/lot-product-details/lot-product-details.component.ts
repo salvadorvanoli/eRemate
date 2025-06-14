@@ -69,7 +69,8 @@ export class LotProductDetailsComponent implements OnInit, OnChanges {
         this.articulos = articulos;
         this.articuloSeleccionado = articulos.length > 0 ? articulos[0] : undefined;
         this.loading = false;
-      },      error: (error) => {
+      },      
+      error: (error) => {
         
         if (error.status === 404 && error.error?.message === 'No hay artículos para este lote') {
           this.articulos = [];
@@ -160,7 +161,9 @@ export class LotProductDetailsComponent implements OnInit, OnChanges {
   }
   getCarouselImageUrl = (image: string): string => {
     return this.getImageUrl(image);
-  }  // Métodos para gestión de favoritos
+  }  
+  
+  // Métodos para gestión de favoritos
   checkFavoriteStatus() {
     if (!this.lote || !this.lote.id) {
       this.isFavorite = false;
@@ -186,6 +189,7 @@ export class LotProductDetailsComponent implements OnInit, OnChanges {
       }
     });
   }
+
   toggleFavorite() {
     if (this.favoritesLoading || !this.lote || !this.lote.id) {
       return;
@@ -218,7 +222,8 @@ export class LotProductDetailsComponent implements OnInit, OnChanges {
             detail: 'Lote removido de favoritos',
             life: 3000
           });
-        },        error: (error) => {
+        },        
+        error: (error) => {
           this.favoritesLoading = false;
           this.messageService.clear();
           this.messageService.add({
@@ -242,7 +247,8 @@ export class LotProductDetailsComponent implements OnInit, OnChanges {
             detail: 'Lote agregado a favoritos',
             life: 3000
           });
-        },        error: (error) => {
+        },        
+        error: (error) => {
           this.favoritesLoading = false;
           this.messageService.clear();
           this.messageService.add({

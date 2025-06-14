@@ -43,7 +43,6 @@ export class OptionsPanelComponent {
   @Output() dataType = new EventEmitter<string>();
 
   sendDataType(type: string) {
-    console.log(type);
     this.dataType.emit(type);
   }
 

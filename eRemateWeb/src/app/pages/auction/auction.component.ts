@@ -112,7 +112,6 @@ export class AuctionComponent implements OnInit {
 
   getSubasta(id: number | undefined): void {
     if (id) {
-      console.log('Obteniendo subasta con ID:', id);
       this.subastaService.getSubastaById(id).subscribe(
         (data) => {
           this.subasta = {
@@ -140,8 +139,6 @@ export class AuctionComponent implements OnInit {
       this.loteService.getLotesBySubasta(id).subscribe({
         next: (data: Lote[]) => {
           this.lotes = data;
-          console.log('Lotes cargados:', this.lotes);
-          console.log('Subasta loteActual_id:', this.subasta?.loteActual_id);
           this.cargarImagenesAleatorias();
           
           if (this.lotes.length > 0) {
@@ -150,18 +147,15 @@ export class AuctionComponent implements OnInit {
               if (loteActual) {
                 this.loteSeleccionado = loteActual;
                 this.loadLoteArticulos(loteActual);
-                console.log('Lote actual seleccionado:', loteActual);
               } else {
                 // Si no se encuentra el lote actual, usar el primero como fallback
                 this.loteSeleccionado = this.lotes[0];
                 this.loadLoteArticulos(this.loteSeleccionado);
-                console.warn('Lote actual no encontrado, usando el primero como fallback');
               }
             } else {
               // Si no hay loteActual_id, usar el primero
               this.loteSeleccionado = this.lotes[0];
               this.loadLoteArticulos(this.loteSeleccionado);
-              console.log('No hay loteActual_id, usando el primer lote');
             }
           }
         },
@@ -177,7 +171,7 @@ export class AuctionComponent implements OnInit {
       this.loteService.getLotesBySubasta(this.subasta.id).subscribe({
         next: (lotes: Lote[]) => {
           this.lotes = lotes;
-            // Cargar imágenes aleatorias para los lotes actualizados
+          // Cargar imágenes aleatorias para los lotes actualizados
           this.cargarImagenesAleatorias();
           
           if (nuevoLoteActualId) {
@@ -260,6 +254,7 @@ export class AuctionComponent implements OnInit {
 
     return this.imagenesAleatorias[item.id] || 'https://developers.elementor.com/docs/assets/img/elementor-placeholder-image.png';
   }
+
   private cargarImagenesAleatorias(): void {
     this.lotes.forEach(lote => {
       if (lote.id) {
@@ -305,7 +300,6 @@ export class AuctionComponent implements OnInit {
 
       const urlTransmisionSub = this.websocketService.subscribeToTransmissionUrlUpdate(id).subscribe({
         next: (event) => {
-          console.log('Nueva URL de transmisión recibida:', event);
           this.youtubeUrl = event.urlTransmision || undefined;
         },
         error: (error) => {
@@ -331,7 +325,6 @@ export class AuctionComponent implements OnInit {
       
       const cierreSub = this.websocketService.subscribeToAuctionClose(id).subscribe({
         next: (event) => {
-          console.log('Evento de cierre recibido:', event);
             if (event.subasta_finalizada) {
             this.showAuctionClosedModal();
             if (this.subasta) {
@@ -361,7 +354,6 @@ export class AuctionComponent implements OnInit {
                 this.cargarLotesYActualizarActual(event.siguiente_lote_id);
               }
             } else {
-              console.warn('Datos incompletos en evento de cierre:', event);
               this.messageService.clear();
               this.messageService.add({severity: 'error', summary: 'Error', detail: `Error al procesar el cierre del lote`, life: 4000});
             }

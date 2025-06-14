@@ -110,7 +110,7 @@ export class ChatDetailComponent implements OnInit, AfterViewChecked, OnDestroy 
   private subscribeToPaymentRequests() {
     this.paymentRequestSubscription = this.websocketService.subscribeToPaymentRequests(this.chatId).subscribe({
       next: (event) => {
-        console.log('Nueva solicitud de pago recibida via WebSocket:', event);        if (this.isUsuarioRegistrado) {
+        if (this.isUsuarioRegistrado) {
           this.paymentRequests.push(event.payment_request);
           this.messageService.clear();
           this.messageService.add({
@@ -127,7 +127,6 @@ export class ChatDetailComponent implements OnInit, AfterViewChecked, OnDestroy 
     });
     this.paymentRequestUpdateSubscription = this.websocketService.subscribeToPaymentRequestUpdates(this.chatId).subscribe({
       next: (event) => {
-        console.log('Actualización de solicitud de pago recibida via WebSocket:', event);
         this.onPaymentRequestsUpdated(event);
       },
       error: (error) => {

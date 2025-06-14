@@ -41,14 +41,12 @@ export class ViewAuctionHouseProfileComponent implements OnInit {
     
     if (currentUser) {
       this.casaId = currentUser.id;
-      console.log('ID de casa obtenido del BehaviorSubject:', this.casaId);
     } else {
      
       this.securityService.getActualUser().subscribe({
         next: (user) => {
           if (user) { 
             this.casaId = user.id;
-            console.log('ID de casa obtenido de la API:', this.casaId);
           } else {
             console.warn('No se pudo obtener el usuario');
             this.casaId = 1; 
@@ -63,7 +61,6 @@ export class ViewAuctionHouseProfileComponent implements OnInit {
   }
 
   onAuctionSelected(id: number) {
-    console.log('Subasta seleccionada en el componente padre:', id);
     this.selectedAuctionId = id;
   }
 

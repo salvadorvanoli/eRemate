@@ -37,8 +37,6 @@ export class CategoryTreeComponent {
 
   changedSelectedCategories() {
     const newSelectedIds = this.getProductIdsFromCategories(this.selectedCategories);
-
-    console.log('Selected categories:', newSelectedIds);
   
     if (!this.areArraysEqual(this.lastEmittedIds, newSelectedIds)) {
       this.lastEmittedIds = [...newSelectedIds];

@@ -52,8 +52,6 @@ export class PaymentComponent implements OnInit {
             this.error = 'Las credenciales de PayPal no son válidas. Por favor, contacte al administrador.';
             console.error('Credenciales de PayPal inválidas:', response.data);
           }
-        } else {
-          console.warn('No se pudo verificar las credenciales de PayPal:', response);
         }
       },
       error: (err) => {
@@ -120,15 +118,9 @@ export class PaymentComponent implements OnInit {
   verificarChat() {
     if (!this.chatId) return;
     
-    console.log('Verificando chat ID:', this.chatId);
-    console.log('Usuario actual:', this.currentUser);
-    
     this.chatService.getChatById(this.chatId).subscribe({
       next: (chat) => {
-        console.log('Chat obtenido:', chat);
-        
         if (!this.currentUser) {
-          console.log('No hay usuario autenticado, esperando...');
           return; // No verificar permisos hasta que tengamos usuario
         }
         
@@ -137,14 +129,7 @@ export class PaymentComponent implements OnInit {
           this.chatId = null;
           return;
         }
-        
-        // Log detallado para debugging
-        console.log('Verificando permisos:');
-        console.log('- Usuario ID:', this.currentUser.id);
-        console.log('- Usuario tipo:', this.currentUser.tipo);
-        console.log('- Chat usuarioRegistrado_id:', chat.usuarioRegistrado_id);
-        console.log('- Chat casa_de_remate_id:', chat.casa_de_remate_id);
-        
+
         // Verificar que el usuario actual pertenece a este chat
         const tienePermiso = (
           chat.usuarioRegistrado_id === this.currentUser.id || 
@@ -152,13 +137,11 @@ export class PaymentComponent implements OnInit {
         );
         
         if (tienePermiso) {
-          console.log('Chat verificado correctamente - Usuario tiene permisos');
           // Limpiar cualquier error previo
           if (this.error === 'No tiene permisos para realizar pagos en este chat') {
             this.error = '';
           }
         } else {
-          console.log('Usuario sin permisos para este chat');
           this.error = 'No tiene permisos para realizar pagos en este chat';
           this.chatId = null;
         }
@@ -198,11 +181,8 @@ export class PaymentComponent implements OnInit {
     try {
       // Si tenemos un chatId, usamos ese método
       if (this.chatId) {
-        console.log('Procesando pago desde chat ID:', this.chatId);
-        
         // Si venimos de una solicitud, procesamos el pago desde la solicitud
         if (this.solicitudId) {
-          console.log('Procesando pago desde solicitud ID:', this.solicitudId);
           await this.paypalService.procesarPagoDesdeSolicitud(
             this.solicitudId,
             this.chatId
@@ -216,7 +196,6 @@ export class PaymentComponent implements OnInit {
         }
       } else {
         // Si no tenemos chat, intentamos usar el ID del usuario directamente
-        console.log('No hay chat ID, procesando pago directo con usuario ID');
         // No necesitamos obtenerIdUsuario ya que la identidad se manejará en el backend
         await this.paypalService.procesarPagoPayPal(
           this.monto,
@@ -224,7 +203,6 @@ export class PaymentComponent implements OnInit {
           this.currentUser.id  // El backend verificará la identidad con el token
         );
       }
-      // No necesitamos manejar el redireccionamiento aquí, ya que PayPal lo hará
     } catch (error: any) {
       this.loading = false;
       this.error = error.message || 'Error al procesar el pago. Intente nuevamente.';

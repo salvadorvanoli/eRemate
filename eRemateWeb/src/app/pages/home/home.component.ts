@@ -54,7 +54,8 @@ export class HomeComponent implements OnInit, OnDestroy {
               fechaCierre: new Date(s.fechaCierre)
             }))
         })
-      )      .subscribe(
+      )      
+      .subscribe(
         (data: Subasta[]) => {
           this.subastas = data;
           this.updateCountdowns();
@@ -94,7 +95,7 @@ export class HomeComponent implements OnInit, OnDestroy {
           }
         },
         (error) => {
-          console.log(`No se pudo cargar imagen para subasta ${subasta.id}:`, error);
+          console.error(`No se pudo cargar imagen para subasta ${subasta.id}:`, error);
           this.imagenesAleatorias[subasta.id] = '/remate.jpg';
         }
       );

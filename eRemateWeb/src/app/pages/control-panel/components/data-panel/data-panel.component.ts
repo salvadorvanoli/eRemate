@@ -49,8 +49,6 @@ export class DataPanelComponent {
         return item.nombre;
       case 'Publicacion':
         return item.titulo;
-      // case 'Pedido':
-      //   return item.usuario.nombre;
       default:
         return '';
     }
@@ -66,8 +64,6 @@ export class DataPanelComponent {
         return '$' + item.precio;
       case 'Publicacion':
         return item.titulo;
-      // case 'Pedido':
-      //   return item.usuario.nombre;
       default:
         return '';
     }
@@ -77,14 +73,11 @@ export class DataPanelComponent {
     switch (this.itemType) {
       case 'Usuario':
       case 'Categoria':
-      // case 'Pedido':
         return ""
       case 'Producto':
         return item.imagenes ? item.imagenes[0] : '';
       case 'Publicacion':
         return item.imagen ? item.imagen : '';
-      // case 'Pedido':
-      //   return item.usuario.nombre;
       default:
         return '';
     }

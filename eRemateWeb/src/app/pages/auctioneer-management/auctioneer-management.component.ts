@@ -143,7 +143,6 @@ export class AuctioneerManagementComponent implements OnInit, OnDestroy {
             });
             this.cargarArticulosDelLoteActual(this.loteActual.id);
           } else {
-            console.warn('No se encontró el lote con ID:', nuevoLoteActualId);
             this.loteActual = undefined;
           }
         } else if (this.subasta?.loteActual_id) {
@@ -222,7 +221,6 @@ export class AuctioneerManagementComponent implements OnInit, OnDestroy {
               this.cargarLotesYActualizarActual(event.siguiente_lote_id);
             }
           } else {
-            console.warn('Datos incompletos en evento de cierre:', event);
             this.errorMessage = 'Error al procesar el cierre del lote';
           }
         }

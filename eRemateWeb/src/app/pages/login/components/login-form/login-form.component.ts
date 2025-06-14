@@ -60,7 +60,7 @@ export class LoginFormComponent {
           this.messageService.clear();
           this.messageService.add({ severity: 'success', summary: 'Operación exitosa', detail: "¡Has iniciado sesión exitosamente!", life: 4000 });
           this.resetForm();
-          // mandar a inicio
+          // Mandar a inicio
           setTimeout(() => {
             this.router.navigate(['/inicio']);
           }, 1000);
@@ -107,7 +107,7 @@ export class LoginFormComponent {
           life: 4000 
         });
         this.resetForm();
-        // mandar a inicio
+        // Mandar a inicio
         setTimeout(() => {
           this.router.navigate(['/inicio']);
         }, 1000);

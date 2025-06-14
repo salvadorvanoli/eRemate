@@ -52,13 +52,10 @@ export class GoogleSigninComponent implements OnInit, OnDestroy {
       if (this.googleButton?.nativeElement) {
         this.googleAuthService.renderButton(this.googleButton.nativeElement, this.buttonText);
         this.showFallback = false;
-        console.log('Google button initialized successfully');
       } else {
-        console.warn('Google button element not found, using fallback');
         this.showFallback = true;
       }
     } catch (error) {
-      console.warn('Google button failed to initialize, using fallback:', error);
       this.showFallback = true;
     }
   }
@@ -71,7 +68,6 @@ export class GoogleSigninComponent implements OnInit, OnDestroy {
 
     try {
       const userData = this.googleAuthService.parseJwt(credential);
-      console.log('Google credential received:', userData);
       
       // Emitir el evento con el token y datos del usuario
       this.onAuth.emit({
@@ -94,7 +90,6 @@ export class GoogleSigninComponent implements OnInit, OnDestroy {
     this.errorMessage = '';
     
     try {
-      console.log('Manual Google sign-in triggered');
       this.googleAuthService.prompt();
     } catch (error) {
       console.error('Error al iniciar sesión manual con Google:', error);

@@ -154,9 +154,6 @@ export class AuctionLotsModalComponent implements OnInit {
     return 'https://developers.elementor.com/docs/assets/img/elementor-placeholder-image.png';
   }
 
-  /**
-   * Maneja el error de carga de imagen y establece una imagen por defecto
-   */
   onImageError(event: any): void {
     event.target.src = 'https://developers.elementor.com/docs/assets/img/elementor-placeholder-image.png';
   }

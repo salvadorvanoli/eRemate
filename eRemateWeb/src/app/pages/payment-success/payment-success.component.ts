@@ -59,7 +59,9 @@ export class PaymentSuccessComponent implements OnInit, OnDestroy {
         this.error = 'Parámetros de pago inválidos o faltantes';
       }
     });
-  }  getCurrentUser() {
+  }  
+  
+  getCurrentUser() {
     this.loadingUser = true;
     this.securityService.getActualUser().subscribe({
       next: (user) => {
@@ -196,25 +198,21 @@ export class PaymentSuccessComponent implements OnInit, OnDestroy {
     // Si tenemos un chat ID, lo incluimos
     if (this.chatId) {
       executionData.chat_id = this.chatId;
-    }    // Incluir el payment_request_id si está disponible en sessionStorage
+    }    
+    // Incluir el payment_request_id si está disponible en sessionStorage
     const storedRequestId = sessionStorage.getItem('payment_request_id');
-    console.log('Verificando payment_request_id en sessionStorage:', storedRequestId);
     
     if (storedRequestId) {
       executionData.payment_request_id = parseInt(storedRequestId, 10);
-      console.log('Payment request ID agregado a executionData:', executionData.payment_request_id);
-    } else {
-      console.log('No se encontró payment_request_id en sessionStorage');
     }
-
-    console.log('Datos completos para ejecutar pago:', executionData);
 
     this.paypalService.ejecutarPago(executionData).subscribe({
       next: (response) => {
-        this.loading = false;        if (response && response.success) {
+        this.loading = false;        
+        if (response && response.success) {
           this.success = true;
           this.paymentData = response.data;
-            // Guardar el estado del pago procesado y los datos en localStorage (permanente)
+          // Guardar el estado del pago procesado y los datos en localStorage (permanente)
           const paymentProcessedKey = `payment_processed_${this.paymentId}`;
           const paymentDataKey = `payment_data_${this.paymentId}`;
           localStorage.setItem(paymentProcessedKey, 'true');
@@ -237,14 +235,18 @@ export class PaymentSuccessComponent implements OnInit, OnDestroy {
         this.error = error.error?.error || error.message || 'Error al ejecutar el pago';
       }
     });
-  }  volverAlInicio() {
+  }  
+  
+  volverAlInicio() {
     // No limpiar los datos del pago para mantenerlos permanentemente
     if (this.chatId) {
       this.router.navigate(['/chat-detail/', this.chatId]);
     } else {
       this.router.navigate(['/inicio']);
     }
-  }  verFactura() {
+  }  
+  
+  verFactura() {
     // Verificar que el usuario autenticado es el propietario de la factura
     if (!this.currentUser || this.currentUser.tipo !== 'registrado') {
       this.error = 'Debe estar autenticado como usuario registrado para descargar la factura';
