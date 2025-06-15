@@ -1,6 +1,6 @@
 import { Injectable } from '@angular/core';
 import { HttpClient, HttpHeaders } from '@angular/common/http';
-import { map, Observable, switchMap, catchError } from 'rxjs';
+import { map, Observable, switchMap, catchError, of } from 'rxjs';
 import { BaseHttpService } from './base-http.service';
 import { Subasta } from '../models/subasta';
 import { CatalogElement } from '../models/catalog-element';
@@ -110,6 +110,44 @@ export class SubastaService extends BaseHttpService<any, Subasta> {
   }
   getLocations(): Observable<string[]> {
     return this.http.get<string[]>(`${this.baseUrl}/auction/locations`);
+  }
+
+  getSubastasParaMapa(): Observable<{id: number, ubicacion: string, titulo: string}[]> {
+    return this.http.get<any>(`${this.baseUrl}/auction/map-data`).pipe(
+      map(response => {
+        console.log('Respuesta del backend para mapa:', response);
+        
+        if (response.success && response.data) {
+          return response.data.map((item: any) => ({
+            id: item.id,
+            ubicacion: item.ubicacion || '',
+            titulo: `Subasta #${item.id}`
+          })).filter((item: any) => item.ubicacion && item.ubicacion.trim());
+        }
+        
+        if (Array.isArray(response)) {
+          return response.map((item: any) => ({
+            id: item.id,
+            ubicacion: item.ubicacion || '',
+            titulo: `Subasta #${item.id}`
+          })).filter((item: any) => item.ubicacion && item.ubicacion.trim());
+        }
+        
+        throw new Error('Formato de respuesta no válido');
+      }),
+      catchError((error: any) => {
+        console.warn('Endpoint /map-data no disponible, usando método alternativo', error);
+        return this.getAllOrdered().pipe(
+          map((auctions: any[]) => {
+            return auctions.map((auction: any) => ({
+              id: auction.id,
+              ubicacion: auction.ubicacion || auction.texto2 || '',
+              titulo: auction.etiqueta || auction.titulo || `Subasta #${auction.id}`
+            })).filter((item: any) => item.ubicacion && item.ubicacion.trim());
+          })
+        );
+      })
+    );
   }
 
   getTipos(): Observable<any[]> {

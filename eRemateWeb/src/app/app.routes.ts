@@ -17,7 +17,7 @@ import { AuctioneerManagementComponent } from './pages/auctioneer-management/auc
 import { ViewAuctionHouseProfileComponent } from './pages/view-auction-house-profile/view-auction-house-profile.component';
 import { ViewRegisteredUserProfileComponent } from './pages/view-registered-user-profile/view-registered-user-profile.component';
 import { ViewProfileComponent } from './pages/view-profile/view-profile.component';
-
+import { MapPageComponent } from './pages/map/map.component';
 
 import { ChatDetailComponent } from './pages/chat-detail/chat-detail.component';
 
@@ -36,6 +36,7 @@ export const routes: Routes = [
     { path: 'panel', component: ControlPanelComponent },
     { path: 'articulos', component: ItemsCatalogComponent },
     { path: 'subastas', component: AuctionsCatalogComponent },
+    { path: 'mapa', component: MapPageComponent },
     { path: 'producto/:id', component: ViewProductComponent },
     { path: 'contacto', component: ContactUsComponent },    { path: 'subasta/:id', component: AuctionComponent },    { 
         path: 'panel-rematador/:id', 

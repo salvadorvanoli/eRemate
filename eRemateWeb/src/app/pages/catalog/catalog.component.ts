@@ -1,5 +1,6 @@
 import { Component, EventEmitter, Input, Output } from '@angular/core';
 import { CommonModule } from '@angular/common';
+import { Router } from '@angular/router';
 import { MessageService } from 'primeng/api';
 import { Toast } from 'primeng/toast';
 import { interval, map, Subscription } from 'rxjs';
@@ -68,7 +69,8 @@ export class CatalogComponent {
   constructor(
     private messageService: MessageService,
     private itemService: ItemService,
-    private subastaService: SubastaService
+    private subastaService: SubastaService,
+    private router: Router
   ) {}
 
   ngOnInit() {
@@ -291,6 +293,10 @@ export class CatalogComponent {
     if (this.locationSelect) this.locationSelect.reset();
     if (this.datePicker) this.datePicker.reset();
     if (this.closedCheckbox) this.closedCheckbox.reset();
+  }
+
+  goToMap() {
+    this.router.navigate(['/mapa']);
   }
 
 }

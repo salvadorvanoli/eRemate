@@ -134,6 +134,7 @@ Route::prefix('auction')->group(function () {
     Route::get('/ordered', [SubastaController::class, 'obtenerSubastasOrdenadas']);
     Route::get('/filtered', [SubastaController::class, 'obtenerSubastasFiltradas']);
     Route::get('/locations', [SubastaController::class, 'obtenerUbicaciones']);
+    Route::get('/map-data', [SubastaController::class, 'obtenerDatosParaMapa']);
     Route::get('/tipos', [SubastaController::class, 'obtenerTipos']);
     Route::get('/{id}', [SubastaController::class, 'obtenerSubasta']);
     Route::get('/{id}/lots', [SubastaController::class, 'obtenerLotes']);

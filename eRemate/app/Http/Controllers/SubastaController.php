@@ -481,4 +481,27 @@ class SubastaController extends Controller
             ], 500);
         }
     }
+
+    public function obtenerDatosParaMapa()
+    {
+        try {
+            $datosOptimizados = $this->subastaService->obtenerDatosParaMapa();
+
+            if ($datosOptimizados instanceof JsonResponse) {
+                return $datosOptimizados;
+            }
+
+            return response()->json([
+                'success' => true,
+                'data' => $datosOptimizados,
+                'message' => 'Datos del mapa obtenidos correctamente'
+            ], 200);
+        
+        } catch (\Exception $e) {
+            return response()->json([
+                'success' => false,
+                'message' => 'Error al obtener datos del mapa: ' . $e->getMessage()
+            ], 500);
+        }
+    }
 }

@@ -403,6 +403,38 @@ class SubastaService implements SubastaServiceInterface
         return $ubicaciones;
     }
 
+    public function obtenerDatosParaMapa()
+    {
+        $datosOptimizados = Subasta::select('id', 'ubicacion')
+            ->where(function($query) {
+                $query->whereNotNull('ubicacion')
+                      ->where('ubicacion', '!=', '');
+            })
+            ->get()
+            ->map(function ($subasta) {
+                return [
+                    'id' => $subasta->id,
+                    'ubicacion' => $subasta->ubicacion
+                ];
+            })
+            ->filter(function ($item) {
+                return !empty($item['ubicacion']) && 
+                       trim($item['ubicacion']) !== '' &&
+                       strtolower($item['ubicacion']) !== 'null' &&
+                       strtolower($item['ubicacion']) !== 'undefined';
+            })
+            ->values();
+        
+        if ($datosOptimizados->isEmpty()) {
+            return response()->json([
+                'success' => false,
+                'message' => 'No hay subastas con ubicación disponible'
+            ], 404);
+        }
+        
+        return $datosOptimizados->toArray();
+    }
+
     public function obtenerSubastasOrdenadasPorCierre($pagina = 1, $cantidad = 10)
     {
         $subastas = Subasta::where('fechaCierre', '>', now())
