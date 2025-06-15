@@ -3,9 +3,9 @@ import { CommonModule } from '@angular/common';
 import { Router } from '@angular/router';
 import * as L from 'leaflet';
 import * as MarkerClusterGroup from 'leaflet.markercluster';
-import { SubastaService } from '../../core/services/subasta.service';
+import { SubastaService } from '../../../../core/services/subasta.service';
+import { UseInfoComponent } from '../use-info/use-info.component';
 
-// Just extend options if needed
 declare module 'leaflet' {
   export interface MarkerClusterGroupOptions {
     spiderfyOnMaxZoom?: boolean;
@@ -36,13 +36,17 @@ interface AuctionLocation {
 }
 
 @Component({
-  selector: 'app-map-page',
+  selector: 'app-map',
   standalone: true,
-  imports: [CommonModule],
+  imports: [CommonModule,
+    UseInfoComponent
+  ],
   templateUrl: './map.component.html',
   styleUrls: ['./map.component.scss']
+
 })
-export class MapPageComponent implements OnInit, AfterViewInit, OnDestroy {
+
+export class MapComponent implements OnInit, AfterViewInit, OnDestroy {
   private map: L.Map | null = null;
   private tileLayer: L.TileLayer | null = null;
   auctions: AuctionLocation[] = []; 
@@ -471,7 +475,5 @@ export class MapPageComponent implements OnInit, AfterViewInit, OnDestroy {
     }
   }
 
-  goBack() {
-    this.router.navigate(['/subastas']);
-  }
+
 }

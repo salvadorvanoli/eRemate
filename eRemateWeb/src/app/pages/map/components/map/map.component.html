@@ -1,18 +1,14 @@
-<div class="container mx-auto px-4 py-8">
   <div class="mb-6">
     <div class="flex items-center justify-between mb-4">
       <div>
         <h1 class="text-3xl font-bold text-gray-900 mb-2">Mapa de Subastas</h1>
         <p class="text-gray-600">Encuentra todas las subastas disponibles en el mapa</p>
       </div>
-      <button 
-        (click)="goBack()"
-        class="flex items-center bg-gray-500 hover:bg-gray-700 text-white font-bold py-2 px-4 rounded transition-colors duration-200">
-        <span class="pi pi-arrow-left mr-2"></span>
-        Volver al Catálogo
-      </button>
+      
     </div>
-  </div>  <div class="bg-white rounded-lg shadow-lg p-6">
+  </div>  
+  
+  <div class="bg-white rounded-lg shadow-lg p-6">
     <div class="w-full h-full relative">
 
       <div id="main-map" 
@@ -45,27 +41,5 @@
       </div>
     </div>
   </div>
-  
-  <div class="mt-6 bg-blue-50 border border-blue-200 rounded-lg p-4">
-    <div class="flex items-start">
-      <span class="pi pi-info-circle text-blue-500 mt-1 mr-3"></span>
-      <div>
-        <h3 class="text-blue-800 font-semibold mb-2">Instrucciones de uso:</h3>
-        <ul class="text-blue-700 text-sm space-y-1">
-          <li class="flex items-start">
-            <span class="mr-1">•</span>
-            <span>Haz clic en cualquier marcador para ver información de la subasta</span>
-          </li>
-          <li class="flex items-start">
-            <span class="mr-1">•</span>
-            <span>Usa los controles de zoom (+/-) para acercar o alejar el mapa</span>
-          </li>
-          <li class="flex items-start">
-            <span class="mr-1">•</span>
-            <span>Arrastra el mapa para explorar diferentes ubicaciones</span>
-          </li>
-        </ul>
-      </div>
-    </div>
-  </div>
-</div>
+
+  <app-use-info>  </app-use-info>
