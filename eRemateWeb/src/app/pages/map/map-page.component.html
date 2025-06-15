@@ -1,12 +1,17 @@
 
 <div class="container mx-auto px-8 py-8">
-
-<div class="flex justify-start mb-4">
-    <app-primary-button label="Volver al Catálogo" classes="bg-green-600 hover:bg-green-700 flex items-center rounded-md" (onClick)="goBack()">
-        </app-primary-button>
+ <div class="flex items-center justify-between mb-4"> 
+    <app-title-and-description
+        title="Mapa de Subastas"
+        description="Encuentra todas las subastas disponibles en el mapa"> 
+    </app-title-and-description>
 </div>
+    <div class="flex justify-start mb-4">
+        <app-primary-button label="Volver al Catálogo" classes="bg-green-600 hover:bg-green-700 flex items-center rounded-md" (onClick)="goBack()">
+            </app-primary-button>
+    </div>
 
-<app-map></app-map>
+    <app-map></app-map>
 
 </div>
 

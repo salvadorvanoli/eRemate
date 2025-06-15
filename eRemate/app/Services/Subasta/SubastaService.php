@@ -408,7 +408,8 @@ class SubastaService implements SubastaServiceInterface
         $datosOptimizados = Subasta::select('id', 'ubicacion')
             ->where(function($query) {
                 $query->whereNotNull('ubicacion')
-                      ->where('ubicacion', '!=', '');
+                      ->where('ubicacion', '!=', '')
+                      ->whereNotIn('estado', [EstadoSubasta::CERRADA, EstadoSubasta::CANCELADA]);
             })
             ->get()
             ->map(function ($subasta) {
