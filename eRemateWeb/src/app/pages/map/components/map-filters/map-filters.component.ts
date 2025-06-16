@@ -41,9 +41,8 @@ export class MapFiltersComponent implements OnInit {
   showFilters = false;
   loading = false;
 
-  constructor(private categoryService: CategoryService) {}
-  ngOnInit() {
-    this.loadCategorias();
+  constructor(private categoryService: CategoryService) {}  ngOnInit() {
+    this.loadCategoriasForFilter(); 
     this.initializeDefaultFilters();
   }
   private initializeDefaultFilters() {
@@ -54,7 +53,6 @@ export class MapFiltersComponent implements OnInit {
     
     this.applyFilters();
   }
-
   loadCategorias() {
     this.categoryService.getAllCategoriesTree().subscribe({
       next: (categorias: CategoriaNodo[]) => {
@@ -62,14 +60,21 @@ export class MapFiltersComponent implements OnInit {
       },
       error: (error) => {
         console.error('Error al cargar categorías:', error);
-
-        this.categorias = [
-          { value: 1, label: 'Arte y Antigüedades' },
-          { value: 2, label: 'Vehículos' },
-          { value: 3, label: 'Inmuebles' },
-          { value: 4, label: 'Electrónicos' },
-          { value: 5, label: 'Otros' }
-        ];
+        this.loadCategoriasForFilter();
+      }
+    });
+  }
+ 
+  
+  loadCategoriasForFilter() {
+    this.categoryService.getCategoriesForFilter().subscribe({
+      next: (categorias: {value: number, label: string}[]) => {
+        console.log('Categorías planas cargadas:', categorias);
+        this.categorias = categorias;
+      },
+      error: (error) => {
+        console.error('Error al cargar categorías planas:', error);
+        this.categorias = [];
       }
     });
   }
