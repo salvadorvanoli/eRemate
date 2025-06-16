@@ -1,5 +1,5 @@
 import { Injectable } from '@angular/core';
-import { HttpClient, HttpHeaders } from '@angular/common/http';
+import { HttpClient, HttpHeaders, HttpParams } from '@angular/common/http';
 import { map, Observable, switchMap, catchError, of } from 'rxjs';
 import { BaseHttpService } from './base-http.service';
 import { Subasta } from '../models/subasta';
@@ -220,6 +220,54 @@ export class SubastaService extends BaseHttpService<any, Subasta> {
         }
         // Si ya es un Error personalizado del map anterior, mantenerlo
         throw error;
+      })
+    );
+  }
+  getSubastasParaMapaFiltradas(filtros: {tipoSubasta?: string, estado?: string[], categoria?: number}): Observable<{id: number, ubicacion: string, tipoSubasta: string, estado: string}[]> {
+    let params = new HttpParams();
+    
+    if (filtros.tipoSubasta) {
+      params = params.set('tipoSubasta', filtros.tipoSubasta);
+    }
+    
+    if (filtros.estado && filtros.estado.length > 0) {
+      params = params.set('estado', filtros.estado.join(','));
+    }
+    
+    if (filtros.categoria) {
+      params = params.set('categoria', filtros.categoria.toString());
+    }
+
+    return this.http.get<any>(`${this.baseUrl}/auction/map-data-filtered`, { params }).pipe(
+      map(response => {
+        console.log('Respuesta del backend para mapa filtrado:', response);
+        
+        if (response.success && response.data) {
+          return response.data.map((item: any) => ({
+            id: item.id,
+            ubicacion: item.ubicacion || '',
+            tipoSubasta: item.tipoSubasta,
+            estado: item.estado
+          })).filter((item: any) => item.ubicacion && item.ubicacion.trim());
+        }
+        
+        throw new Error('Formato de respuesta no válido');
+      }),      catchError((error: any) => {
+        console.error('Error al obtener subastas filtradas para mapa:', error);
+        
+        // Si es un error de servidor real (no 404), usar fallback
+        if (error.status !== 404) {
+          return this.getSubastasParaMapa().pipe(
+            map((auctions: any[]) => auctions.map(auction => ({
+              ...auction,
+              tipoSubasta: 'PRESENCIAL',
+              estado: 'INICIADA'
+            })))
+          );
+        }
+        
+        // Si es 404 (no hay resultados), devolver array vacío
+        return of([]);
       })
     );
   }

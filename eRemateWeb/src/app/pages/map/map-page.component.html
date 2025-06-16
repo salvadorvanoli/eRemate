@@ -11,7 +11,14 @@
             </app-primary-button>
     </div>
 
-    <app-map></app-map>
+    <!-- Map Filters -->
+    <app-map-filters 
+        (filtersChanged)="onFiltersChanged($event)"
+        (filtersCleared)="onFiltersCleared()">
+    </app-map-filters>
+
+    <!-- Map Component -->
+    <app-map [filters]="activeFilters"></app-map>
 
 </div>
 

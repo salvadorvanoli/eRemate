@@ -405,7 +405,7 @@ class SubastaService implements SubastaServiceInterface
 
     public function obtenerDatosParaMapa()
     {
-        $datosOptimizados = Subasta::select('id', 'ubicacion')
+        $datosOptimizados = Subasta::select('id', 'ubicacion', 'tipoSubasta', 'estado')
             ->where(function($query) {
                 $query->whereNotNull('ubicacion')
                       ->where('ubicacion', '!=', '')
@@ -415,7 +415,9 @@ class SubastaService implements SubastaServiceInterface
             ->map(function ($subasta) {
                 return [
                     'id' => $subasta->id,
-                    'ubicacion' => $subasta->ubicacion
+                    'ubicacion' => $subasta->ubicacion,
+                    'tipoSubasta' => $subasta->tipoSubasta,
+                    'estado' => $subasta->estado
                 ];
             })
             ->filter(function ($item) {
@@ -1077,10 +1079,8 @@ class SubastaService implements SubastaServiceInterface
             return $subasta;
         }
 
-        // Obtener todos los lotes con sus artículos que tengan imágenes
         $lotes = $subasta->lotes()->with('articulos')->get();
         
-        // Recopilar todas las imágenes disponibles con información de contexto
         $todasLasImagenes = [];
         
         foreach ($lotes as $lote) {
@@ -1106,7 +1106,6 @@ class SubastaService implements SubastaServiceInterface
             }
         }
 
-        // Verificar si hay imágenes disponibles
         if (empty($todasLasImagenes)) {
             return response()->json([
                 'success' => false,
@@ -1114,7 +1113,6 @@ class SubastaService implements SubastaServiceInterface
             ], 404);
         }
 
-        // Seleccionar una imagen aleatoria
         $imagenAleatoria = $todasLasImagenes[array_rand($todasLasImagenes)];
 
         return response()->json([
@@ -1193,7 +1191,6 @@ class SubastaService implements SubastaServiceInterface
                 ], 404);
             }
 
-            // Marcar lote como sin ganador
             $lote->update(['ganador_id' => null]);
             
             return response()->json([
@@ -1212,5 +1209,51 @@ class SubastaService implements SubastaServiceInterface
                 'error' => 'Error al manejar lote sin ganadores'
             ], 500);
         }
+    }
+
+    public function obtenerDatosParaMapaFiltrados(array $filtros = [])
+    {
+        $query = Subasta::select('id', 'ubicacion', 'tipoSubasta', 'estado')
+            ->whereNotNull('ubicacion')
+            ->where('ubicacion', '!=', '');
+
+        if (isset($filtros['tipoSubasta']) && $filtros['tipoSubasta'] !== null && $filtros['tipoSubasta'] !== "null") {
+            $query->where('tipoSubasta', $filtros['tipoSubasta']);
+        }
+
+        if (isset($filtros['estado']) && $filtros['estado'] !== null && $filtros['estado'] !== "null") {
+            if (is_array($filtros['estado'])) {
+                $query->whereIn('estado', $filtros['estado']);
+            } else {
+                $query->where('estado', $filtros['estado']);
+            }
+        } else {
+            $query->whereNotIn('estado', [EstadoSubasta::CERRADA, EstadoSubasta::CANCELADA]);
+        }
+
+        if (isset($filtros['categoria']) && $filtros['categoria'] !== null && $filtros['categoria'] !== "null") {
+            $query->whereHas('lotes.articulos', function($q) use ($filtros) {
+                $q->where('categoria_id', $filtros['categoria']);
+            });
+        }
+
+        $datosOptimizados = $query->get()
+            ->map(function ($subasta) {
+                return [
+                    'id' => $subasta->id,
+                    'ubicacion' => $subasta->ubicacion,
+                    'tipoSubasta' => $subasta->tipoSubasta,
+                    'estado' => $subasta->estado
+                ];
+            })
+            ->filter(function ($item) {
+                return !empty($item['ubicacion']) && 
+                       trim($item['ubicacion']) !== '' &&
+                       strtolower($item['ubicacion']) !== 'null' &&
+                       strtolower($item['ubicacion']) !== 'undefined';
+            })
+            ->values();
+        
+        return $datosOptimizados->toArray();
     }
 }

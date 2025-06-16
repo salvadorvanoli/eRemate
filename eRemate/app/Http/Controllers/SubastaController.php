@@ -504,4 +504,42 @@ class SubastaController extends Controller
             ], 500);
         }
     }
+
+    public function obtenerDatosParaMapaFiltrados(Request $request)
+    {
+        try {
+            $tipoSubasta = $request->query('tipoSubasta', null);
+            $estado = $request->query('estado', null);
+            $categoria = $request->query('categoria', null);
+            
+            if ($estado && is_string($estado) && str_contains($estado, ',')) {
+                $estado = explode(',', $estado);
+                $estado = array_map('trim', $estado);
+            }
+            
+            $filtros = [
+                'tipoSubasta' => $tipoSubasta,
+                'estado' => $estado,
+                'categoria' => $categoria,
+            ];
+
+            $datosOptimizados = $this->subastaService->obtenerDatosParaMapaFiltrados($filtros);
+
+            if ($datosOptimizados instanceof JsonResponse) {
+                return $datosOptimizados;
+            }
+
+            return response()->json([
+                'success' => true,
+                'data' => $datosOptimizados,
+                'message' => 'Datos del mapa filtrados obtenidos correctamente'
+            ], 200);
+        
+        } catch (\Exception $e) {
+            return response()->json([
+                'success' => false,
+                'message' => 'Error al obtener datos del mapa filtrados: ' . $e->getMessage()
+            ], 500);
+        }
+    }
 }

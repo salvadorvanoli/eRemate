@@ -1,10 +1,12 @@
-import { Component, OnInit, OnDestroy, AfterViewInit, HostListener, NgZone, inject } from '@angular/core';
+import { Component, OnInit, OnDestroy, AfterViewInit, HostListener, NgZone, inject, Input, OnChanges, SimpleChanges } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { Router } from '@angular/router';
+import { map } from 'rxjs/operators';
 import * as L from 'leaflet';
 import * as MarkerClusterGroup from 'leaflet.markercluster';
 import { SubastaService } from '../../../../core/services/subasta.service';
 import { UseInfoComponent } from '../use-info/use-info.component';
+import { MapFilters } from '../map-filters/map-filters.component';
 
 declare module 'leaflet' {
   export interface MarkerClusterGroupOptions {
@@ -31,6 +33,8 @@ interface AuctionLocation {
   id: number;
   ubicacion: string;
   titulo: string;
+  tipoSubasta?: string;
+  estado?: string;
   lat?: number;
   lng?: number;
 }
@@ -46,7 +50,9 @@ interface AuctionLocation {
 
 })
 
-export class MapComponent implements OnInit, AfterViewInit, OnDestroy {
+export class MapComponent implements OnInit, AfterViewInit, OnDestroy, OnChanges {
+  @Input() filters: MapFilters = {};
+  
   private map: L.Map | null = null;
   private tileLayer: L.TileLayer | null = null;
   auctions: AuctionLocation[] = []; 
@@ -67,6 +73,13 @@ export class MapComponent implements OnInit, AfterViewInit, OnDestroy {
     private subastaService: SubastaService
   ) {}
   ngOnInit() {
+  }
+
+  ngOnChanges(changes: SimpleChanges) {
+    if (changes['filters'] && !changes['filters'].firstChange) {
+      console.log('Filtros cambiaron:', changes['filters'].currentValue);
+      this.loadAuctions();
+    }
   }
 
   ngAfterViewInit() {
@@ -240,12 +253,36 @@ export class MapComponent implements OnInit, AfterViewInit, OnDestroy {
       this.map?.invalidateSize();
       this.tileLayer?.redraw();
     }, 100);
-  }private loadAuctions() {
+  }  
+  
+  private loadAuctions() {
     this.loading = true;
     console.log('Iniciando carga de subastas optimizada para mapa...');
+    console.log('Filtros activos:', this.filters);
     
-    this.subastaService.getSubastasParaMapa().subscribe({      next: (auctions: {id: number, ubicacion: string, titulo: string}[]) => {
-        console.log('Respuesta del servicio optimizado:', auctions);
+    if (this.markerClusterGroup) {
+      this.markerClusterGroup.clearLayers();
+      this.markersLoaded = 0;
+    }
+    
+    const hasFilters = this.filters && (
+      this.filters.tipoSubasta || 
+      (this.filters.estado && this.filters.estado.length > 0) || 
+      this.filters.categoria
+    );
+      const serviceCall = hasFilters 
+      ? this.subastaService.getSubastasParaMapaFiltradas(this.filters)
+      : this.subastaService.getSubastasParaMapa().pipe(
+          map((auctions: any[]) => auctions.map((auction: any) => ({
+            ...auction,
+            tipoSubasta: 'PRESENCIAL',
+            estado: 'INICIADA'
+          })))
+        );
+    
+    serviceCall.subscribe({
+      next: (auctions: any[]) => {
+        console.log('Respuesta del servicio:', auctions);
         
         this.auctions = auctions.filter(auction => {
           const hasLocation = auction.ubicacion && 
@@ -254,12 +291,13 @@ export class MapComponent implements OnInit, AfterViewInit, OnDestroy {
                              auction.ubicacion.toLowerCase() !== 'null';
           console.log(`Validando subasta ${auction.id}: incluir = ${hasLocation} (ubicacion: "${auction.ubicacion}")`);
           return hasLocation;
-        });
-
-        console.log('Subastas válidas para el mapa:', this.auctions.length);
+        }).map(auction => ({
+          ...auction,
+          titulo: auction.titulo || `Subasta #${auction.id}`
+        }));        console.log('Subastas válidas para el mapa:', this.auctions.length);
         console.log('Detalle de subastas:', this.auctions);
           
-        if (this.auctions.length === 0) {
+        if (this.auctions.length === 0 && !hasFilters) {
           console.warn('No se encontraron subastas con ubicación. Agregando datos de ejemplo...');
           this.auctions = [
             {
@@ -273,6 +311,8 @@ export class MapComponent implements OnInit, AfterViewInit, OnDestroy {
               titulo: 'Subasta de Ejemplo 2'
             }
           ];
+        } else if (this.auctions.length === 0 && hasFilters) {
+          console.log('No se encontraron subastas que coincidan con los filtros aplicados.');
         }
         
         this.getCoordinatesForAuctions();
@@ -448,18 +488,57 @@ export class MapComponent implements OnInit, AfterViewInit, OnDestroy {
     }
 
     this.fixTiles();
-  }
-  private createPopupContent(auction: AuctionLocation): string {
+  }  private createPopupContent(auction: AuctionLocation): string {
+    const tipoLabel = auction.tipoSubasta ? this.getTipoLabel(auction.tipoSubasta) : '';
+    const estadoLabel = auction.estado ? this.getEstadoLabel(auction.estado) : '';
+    
     return `
-      <div class="p-2">
-        <h3 class="font-bold text-lg mb-2">${auction.titulo}</h3>
-        <p class="text-sm mb-2"><strong>Ubicación:</strong> ${auction.ubicacion}</p>
-        <button class="bg-blue-500 hover:bg-blue-700 text-white font-bold py-1 px-2 rounded text-xs" 
+      <div class="p-3 min-w-[250px]">
+        <h3 class="font-bold text-lg mb-2 text-gray-800">${auction.titulo}</h3>
+        <div class="space-y-1 mb-3">
+          <p class="text-sm"><strong>Ubicación:</strong> ${auction.ubicacion}</p>
+          ${tipoLabel ? `<p class="text-sm"><strong>Tipo:</strong> <span class="inline-block px-2 py-1 text-xs rounded-full bg-blue-100 text-blue-800">${tipoLabel}</span></p>` : ''}
+          ${estadoLabel ? `<p class="text-sm"><strong>Estado:</strong> <span class="inline-block px-2 py-1 text-xs rounded-full ${this.getEstadoBadgeClass(auction.estado)} text-white">${estadoLabel}</span></p>` : ''}
+        </div>
+        <button class="bg-blue-500 hover:bg-blue-700 text-white font-bold py-2 px-3 rounded text-sm transition-colors duration-200 w-full" 
                 onclick="event.stopPropagation(); window.location.href='/subasta/${auction.id}'">
           Ver Subasta
         </button>
       </div>
     `;
+  }
+
+  private getTipoLabel(tipo: string): string {
+    switch (tipo) {
+      case 'PRESENCIAL': return 'Presencial';
+      case 'HIBRIDA': return 'Híbrida';
+      case 'REMOTA': return 'Remota';
+      default: return tipo;
+    }
+  }
+
+  private getEstadoLabel(estado: string): string {
+    switch (estado) {
+      case 'PENDIENTE_APROBACION': return 'Pendiente Aprobación';
+      case 'PENDIENTE': return 'Pendiente';
+      case 'ACEPTADA': return 'Aceptada';
+      case 'INICIADA': return 'Iniciada';
+      case 'CERRADA': return 'Cerrada';
+      case 'CANCELADA': return 'Cancelada';
+      default: return estado;
+    }
+  }
+
+  private getEstadoBadgeClass(estado?: string): string {
+    switch (estado) {
+      case 'INICIADA': return 'bg-green-500';
+      case 'ACEPTADA': return 'bg-blue-500';
+      case 'PENDIENTE': return 'bg-yellow-500';
+      case 'PENDIENTE_APROBACION': return 'bg-orange-500';
+      case 'CERRADA': return 'bg-gray-500';
+      case 'CANCELADA': return 'bg-red-500';
+      default: return 'bg-gray-400';
+    }
   }
 
   ngOnDestroy() {
