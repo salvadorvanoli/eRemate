@@ -149,12 +149,9 @@ export class ImageUploadInputComponent implements OnChanges {
     this.imagesValue.emit([]);
     this.validateImages();
   }
-
   ngOnChanges(changes: SimpleChanges) {
     if (changes['resetTrigger'] && changes['resetTrigger'].currentValue) {
-      this.selectedFiles.set([]);
-      this.localImages.set([]);
-      this.isProcessing.set(false);
+      this.reset();
     }
   }
 }

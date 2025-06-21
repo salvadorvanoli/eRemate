@@ -105,6 +105,8 @@ export class TableLotsComponent implements OnInit, OnChanges {
     
     resetImagesTrigger: boolean = false;
     
+    readonly MAX_IMAGES = 5;
+    
     constructor(
         private messageService: MessageService,
         private confirmationService: ConfirmationService,
@@ -329,11 +331,14 @@ export class TableLotsComponent implements OnInit, OnChanges {
         this.articlesManagementDialog = false;
         this.selectedLotForArticles = null;
     }
-    
+      
     addNewArticle() {
       this.articleDialog = false;
       setTimeout(() => {
         this.submittedArticle = false;
+        this.editingArticleIndex = -1;
+        
+        // Crear un artículo completamente nuevo
         this.currentArticle = {
           nombre: '',
           lote_id: this.selectedLotForArticles?.id ? parseInt(this.selectedLotForArticles.id) : 0,
@@ -343,10 +348,13 @@ export class TableLotsComponent implements OnInit, OnChanges {
           categoria_id: undefined,
           categoria: undefined
         };
-        this.editingArticleIndex = -1;
+        
+        // Forzar reinicio del componente de imágenes
+        this.resetImagesTrigger = true;
         setTimeout(() => {
+          this.resetImagesTrigger = false;
           this.articleDialog = true;
-        }, 100);
+        }, 150);
       }, 100);
     }
 
@@ -366,16 +374,15 @@ export class TableLotsComponent implements OnInit, OnChanges {
         this.vendedorExternoOption = ''; 
         this.submitted = false;
         this.lotDialog = true;
-    }
-    
-    editArticle(index: number) {
+    }    editArticle(index: number) {
       if (!this.selectedLotForArticles) return;
 
       this.submittedArticle = false;
-
       this.editingArticleIndex = index;
 
       const articuloOriginal = this.selectedLotForArticles.articulos[index];
+      
+      // Crear una copia completamente nueva del artículo para evitar referencias
       this.currentArticle = {
         id: articuloOriginal.id,
         nombre: articuloOriginal.nombre || '',
@@ -387,10 +394,29 @@ export class TableLotsComponent implements OnInit, OnChanges {
         categoria: articuloOriginal.categoria ? {...articuloOriginal.categoria} : undefined
       };
 
+      // Forzar reinicio del componente de imágenes
       this.resetImagesTrigger = true;
-      setTimeout(() => this.resetImagesTrigger = false, 100);
+      setTimeout(() => {
+        this.resetImagesTrigger = false;
+        this.articleDialog = true;
+      }, 150);
+    }
 
-      this.articleDialog = true;
+    // Método para verificar si se pueden agregar más imágenes
+    canAddMoreImages(): boolean {
+      return this.currentArticle.imagenes.length < this.MAX_IMAGES;
+    }
+
+    // Método para obtener el número de imágenes restantes que se pueden agregar
+    getRemainingImageSlots(): number {
+      return this.MAX_IMAGES - this.currentArticle.imagenes.length;
+    }
+
+    // Método para eliminar una imagen específica del artículo actual
+    removeImageFromCurrentArticle(index: number): void {
+      if (this.currentArticle.imagenes && index >= 0 && index < this.currentArticle.imagenes.length) {
+        this.currentArticle.imagenes.splice(index, 1);
+      }
     }
 
     saveArticle(articulo?: Articulo) {
@@ -904,31 +930,16 @@ export class TableLotsComponent implements OnInit, OnChanges {
                     });
             }
         });
-    }
-    
-    onUpload(event: any) {
-        const files = event.files;
-        if (files && files.length > 0) {
-            const file = files[0];
-            const reader = new FileReader();
-            
-            reader.readAsDataURL(file);
-            reader.onload = () => {
-                if (!this.currentArticle.imagenes) {
-                    this.currentArticle.imagenes = [];
-                }
-                
-                if (this.currentArticle.imagenes.length === 0) {
-                    this.currentArticle.imagenes.push(reader.result as string);
-                } else {
-                    this.currentArticle.imagenes[0] = reader.result as string;
-                }
-            };
-        }
-    }
+    }    // Métodos adicionales para pasar al componente AddItem
+    onImageRemoved = (index: number) => {
+        this.removeImageFromCurrentArticle(index);
+    };
+
+    onImagesUpdated = (images: string[]) => {
+        this.currentArticle.imagenes = [...images];
+    };
 
     hasEditableLots(): boolean {
-    return this.lots.length === 0 || this.lots.some(lot => lot.esEditable === true);
-}
-    
+        return this.lots.length === 0 || this.lots.some(lot => lot.esEditable === true);
+    }
 }

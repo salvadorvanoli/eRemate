@@ -70,33 +70,50 @@
       rows="3" class="w-full" placeholder="Detalle las características técnicas del artículo..."></textarea>
     <small class="text-red-500" *ngIf="submitted && !articulo.especificacionesTecnicas?.trim()">Las especificaciones técnicas son obligatorias.</small>
   </div>
-
   <div class="field mt-4">
-    <label class="block font-bold mb-2">Imágenes <span class="text-red-500">*</span></label> <!-- ✅ Agregar asterisco -->
+    <label class="block font-bold mb-2">Imágenes <span class="text-red-500">*</span></label>
     
-    <!-- ✅ Mostrar imágenes existentes -->
+    <!-- Mostrar contador de imágenes -->
+    <div class="mb-2 p-2 bg-blue-50 border border-blue-200 rounded">
+      <div class="flex justify-between items-center text-sm">
+        <span class="text-blue-700">
+          📷 Imágenes: {{ (articulo.imagenes || []).length }} / {{ MAX_IMAGES }}
+        </span>
+        <span class="text-blue-600" *ngIf="canAddMoreImages()">
+          Puedes agregar {{ getAvailableImageSlots() }} más
+        </span>
+        <span class="text-orange-600" *ngIf="!canAddMoreImages()">
+          Límite alcanzado
+        </span>
+      </div>
+    </div>
+    
+    <!-- Mostrar imágenes existentes -->
     <div *ngIf="articulo.imagenes && articulo.imagenes.length > 0" class="mb-3">
       <p class="text-sm text-gray-600 mb-2">Imágenes actuales:</p>
       <div class="flex flex-wrap gap-2">
-        <div *ngFor="let imagen of articulo.imagenes; let i = index" class="relative">
-          <img [src]="imagen" alt="Imagen {{i+1}}" class="w-20 h-20 object-cover rounded border">
+        <div *ngFor="let imagen of articulo.imagenes; let i = index" class="relative group">
+          <img [src]="imagen" alt="Imagen {{i+1}}" class="w-20 h-20 object-cover rounded border border-gray-300 hover:border-blue-400 transition-colors">
           <button type="button" 
-                  class="absolute -top-2 -right-2 bg-red-500 text-white rounded-full w-6 h-6 flex items-center justify-center text-xs"
+                  class="absolute -top-2 -right-2 bg-red-500 hover:bg-red-600 text-white rounded-full w-6 h-6 flex items-center justify-center text-xs transition-colors shadow-lg"
                   (click)="removeExistingImage(i)"
                   title="Eliminar imagen">
             ×
           </button>
+          <div class="absolute bottom-0 left-0 right-0 bg-black bg-opacity-50 text-white text-xs text-center py-1 rounded-b">
+            {{i + 1}}
+          </div>
         </div>
       </div>
     </div>
     
-    <!-- ✅ Componente para agregar nuevas imágenes -->
-    <div>
+    <!-- Componente para agregar nuevas imágenes -->
+    <div *ngIf="canAddMoreImages()">
       <p class="text-sm text-gray-600 mb-2">
         {{(articulo.imagenes && articulo.imagenes.length > 0) ? 'Agregar más imágenes:' : 'Agregar imágenes (requerido):'}}
       </p>
       <app-image-upload-input
-        [maxFiles]="5"
+        [maxFiles]="getAvailableImageSlots()"
         [maxFileSize]="5242880"
         [acceptedTypes]="'image/*'"
         [formSubmitted]="formSubmitted"
@@ -106,7 +123,15 @@
       </app-image-upload-input>
     </div>
     
-    <!-- ✅ Mostrar error si no hay imágenes -->
+    <!-- Mensaje cuando ya no se pueden agregar más imágenes -->
+    <div *ngIf="!canAddMoreImages() && (articulo.imagenes && articulo.imagenes.length > 0)" class="p-3 bg-gray-50 border border-gray-200 rounded text-center">
+      <i class="pi pi-info-circle text-blue-500 mr-2"></i>
+      <span class="text-gray-700">Has alcanzado el límite máximo de {{ MAX_IMAGES }} imágenes.</span>
+      <br>
+      <small class="text-gray-500">Elimina una imagen existente si deseas agregar una nueva.</small>
+    </div>
+    
+    <!-- Mostrar error si no hay imágenes -->
     <small class="text-red-500" *ngIf="submitted && (!articulo.imagenes || articulo.imagenes.length === 0) && selectedImages().length === 0">
       Debe agregar al menos una imagen.
     </small>

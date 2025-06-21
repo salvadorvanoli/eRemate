@@ -60,30 +60,40 @@ export class AddItemComponent implements OnInit, OnChanges {
   formSubmitted = signal<boolean>(false);
   
   resetImagesTrigger = false;
+  
+  // Constante para el máximo de imágenes
+  readonly MAX_IMAGES = 5;
 
   constructor(
     private imageService: ImageService,
     private itemService: ItemService,
     private messageService: MessageService
   ) {}
+  
   ngOnInit() {
     this.loadCategorias();
     this.loadEstados();
     this.initializeArticuloData();
-  }
-
+  }  
+  
   ngOnChanges(changes: SimpleChanges) {
     if (changes['articulo']) {
-      const isNewCleanArticle = !this.articulo.id && 
-          (!this.articulo.nombre || this.articulo.nombre.trim() === '') &&
-          (!this.articulo.estado || this.articulo.estado.trim() === '') &&
-          (!this.articulo.especificacionesTecnicas || this.articulo.especificacionesTecnicas.trim() === '') &&
-          (!this.articulo.imagenes || this.articulo.imagenes.length === 0);
+      const currentArticulo = changes['articulo'].currentValue;
+      const previousArticulo = changes['articulo'].previousValue;
       
-      if (isNewCleanArticle) {
+      // Si es un artículo completamente nuevo o vacío
+      const isNewCleanArticle = !currentArticulo.id && 
+          (!currentArticulo.nombre || currentArticulo.nombre.trim() === '') &&
+          (!currentArticulo.estado || currentArticulo.estado.trim() === '') &&
+          (!currentArticulo.especificacionesTecnicas || currentArticulo.especificacionesTecnicas.trim() === '') &&
+          (!currentArticulo.imagenes || currentArticulo.imagenes.length === 0);
+      
+      // Si cambia el ID del artículo (edición de diferente artículo) o es nuevo
+      const isArticleChange = !previousArticulo || 
+          previousArticulo.id !== currentArticulo.id;
+      
+      if (isNewCleanArticle || isArticleChange) {
         this.resetComponent();
-        this.resetImagesTrigger = true;
-        setTimeout(() => this.resetImagesTrigger = false, 100);
       }
       
       this.initializeArticuloData();
@@ -96,11 +106,9 @@ export class AddItemComponent implements OnInit, OnChanges {
     if (changes['submitted']) {
       this.formSubmitted.set(changes['submitted'].currentValue || false);
     }
-  }
-  private initializeArticuloData() {
-    if (!this.articulo.id && (!this.articulo.imagenes || this.articulo.imagenes.length === 0)) {
-      this.selectedImages.set([]);
-    }
+  }private initializeArticuloData() {
+    // Siempre reiniciar las nuevas imágenes seleccionadas cuando se inicializa un artículo
+    this.selectedImages.set([]);
     
     if (this.articulo.categoria) {
       this.selectedCategoria = this.articulo.categoria;
@@ -178,9 +186,47 @@ export class AddItemComponent implements OnInit, OnChanges {
         }
       });
   }
-
   onImagesSelected(images: File[]) {
-    this.selectedImages.set(images);
+    // Verificar cuántas imágenes podemos agregar
+    const currentImageCount = (this.articulo.imagenes || []).length;
+    const availableSlots = this.MAX_IMAGES - currentImageCount;
+    
+    if (availableSlots <= 0) {
+      this.messageService.add({
+        severity: 'warn',
+        summary: 'Límite alcanzado',
+        detail: `Ya tienes el máximo de ${this.MAX_IMAGES} imágenes`,
+        life: 3000
+      });
+      this.selectedImages.set([]);
+      return;
+    }
+    
+    // Limitar las imágenes seleccionadas a los slots disponibles
+    if (images.length > availableSlots) {
+      const limitedImages = images.slice(0, availableSlots);
+      this.selectedImages.set(limitedImages);
+      
+      this.messageService.add({
+        severity: 'info',
+        summary: 'Imágenes limitadas',
+        detail: `Solo se pueden agregar ${availableSlots} imágenes más. Se seleccionaron las primeras ${limitedImages.length}.`,
+        life: 3000
+      });
+    } else {
+      this.selectedImages.set(images);
+    }
+  }
+
+  // Método para obtener el número de slots disponibles para nuevas imágenes
+  getAvailableImageSlots(): number {
+    const currentImageCount = (this.articulo.imagenes || []).length;
+    return Math.max(0, this.MAX_IMAGES - currentImageCount);
+  }
+
+  // Método para verificar si se pueden agregar más imágenes
+  canAddMoreImages(): boolean {
+    return this.getAvailableImageSlots() > 0;
   }
 
   onImageValidationChange(isInvalid: boolean) {
@@ -236,6 +282,7 @@ export class AddItemComponent implements OnInit, OnChanges {
     
     const hasExistingImages = this.articulo.imagenes && this.articulo.imagenes.length > 0;
     const hasNewImages = this.selectedImages().length > 0;
+    const totalImages = (this.articulo.imagenes || []).length + this.selectedImages().length;
     
     if (!this.articulo.nombre?.trim() || 
         !this.selectedEstado || 
@@ -258,6 +305,17 @@ export class AddItemComponent implements OnInit, OnChanges {
       return;
     }
 
+    // Verificar que no exceda el límite de imágenes
+    if (totalImages > this.MAX_IMAGES) {
+      this.messageService.add({
+        severity: 'error',
+        summary: 'Demasiadas imágenes',
+        detail: `El máximo permitido es ${this.MAX_IMAGES} imágenes. Actualmente tienes ${totalImages}.`,
+        life: 3000
+      });
+      return;
+    }
+
     if (this.imagesInvalid()) {
       return;
     }
@@ -268,8 +326,8 @@ export class AddItemComponent implements OnInit, OnChanges {
       if (this.selectedImages().length > 0) {
         const uploadedUrls = await this.uploadImages();
         imagenesFinales = [...imagenesFinales, ...uploadedUrls];
-      }
-
+      }      
+      
       const articuloToSave: Articulo = {
         ...this.articulo,
         estado: this.selectedEstado,
@@ -279,12 +337,18 @@ export class AddItemComponent implements OnInit, OnChanges {
       };
 
       this.save.emit(articuloToSave);
+      
+      // Reiniciar el componente después de emitir el guardado
+      // Esto evita que las imágenes se acumulen para la próxima edición
+      this.resetComponent();
+      
     } catch (error) {
       console.error('Error al guardar el artículo:', error);
     }
   }
 
   onCancel() {
+    this.resetComponent();
     this.cancel.emit();
   }
 
@@ -295,13 +359,30 @@ export class AddItemComponent implements OnInit, OnChanges {
   removeExistingImage(index: number) {
     if (this.articulo.imagenes && this.articulo.imagenes.length > index) {
       this.articulo.imagenes.splice(index, 1);
+      
+      // Mostrar mensaje informativo
+      this.messageService.add({
+        severity: 'success',
+        summary: 'Imagen eliminada',
+        detail: `Imagen eliminada. Ahora puedes agregar ${this.getAvailableImageSlots()} imagen(es) más.`,
+        life: 3000
+      });
     }
-  }
+  }  
+  
   resetComponent() {
     this.selectedImages.set([]);
     this.imagesInvalid.set(false);
     this.formSubmitted.set(false);
     this.selectedCategoria = null;
     this.selectedEstado = null;
+    
+    // Forzar reinicio del componente de upload de imágenes
+    this.forceImageReset();
+  }
+  
+  private forceImageReset() {
+    this.resetImagesTrigger = true;
+    setTimeout(() => this.resetImagesTrigger = false, 100);
   }
 }
