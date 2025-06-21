@@ -804,6 +804,7 @@ export class TableLotsComponent implements OnInit, OnChanges {
         }
         
         const updateData = {
+            subasta_id: this.auctionId,
             nombre: this.editingLot.nombre,
             descripcion: this.editingLot.descripcion,
             valorBase: this.editingLot.valorBase,
