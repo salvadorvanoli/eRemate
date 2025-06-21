@@ -253,6 +253,8 @@ export class TableComponent implements OnInit {
             message: '¿Está seguro de que desea eliminar los rematadores seleccionados?',
             header: 'Confirmar',
             icon: 'pi pi-exclamation-triangle',
+            acceptLabel: 'Aceptar',
+            rejectLabel: 'Cancelar',
             accept: () => {
                 this.products = this.products.filter(val => !this.selectedProducts?.includes(val));
                 this.selectedProducts = null;
@@ -438,6 +440,8 @@ removeRematador(rematador: any) {
         message: `¿Está seguro de que desea eliminar a ${rematador.nombre} ${rematador.apellido}?`,
         header: 'Confirmar eliminación',
         icon: 'pi pi-exclamation-triangle',
+        acceptLabel: 'Aceptar',
+        rejectLabel: 'Cancelar',
         accept: () => {
             this.loading = true;
             this.auctionHouseService.removeAuctioneerFromHouse(this.casaId!, rematador.id)
@@ -462,7 +466,7 @@ removeRematador(rematador: any) {
                         this.messageService.add({
                             severity: 'error',
                             summary: 'Error',
-                            detail: 'No se pudo eliminar el rematador',
+                            detail: error.error.message || error.error.error || 'No se pudo eliminar el rematador',
                             life: 3000
                         });
                     }

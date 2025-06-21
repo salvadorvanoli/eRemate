@@ -558,6 +558,8 @@ export class TableLotsComponent implements OnInit, OnChanges {
             message: `¿Está seguro de que desea eliminar el lote "${this.selectedLots.lote}"?`,
             header: 'Confirmar',
             icon: 'pi pi-exclamation-triangle',
+            acceptLabel: 'Aceptar',
+            rejectLabel: 'Cancelar',
             accept: () => {
                 const lotToDelete = this.selectedLots!;
                 this.lots = this.lots.filter(val => val.id !== lotToDelete.id);
@@ -580,6 +582,8 @@ export class TableLotsComponent implements OnInit, OnChanges {
             message: `¿Está seguro de que desea eliminar el lote?`,
             header: 'Confirmar eliminación',
             icon: 'pi pi-exclamation-triangle',
+            acceptLabel: 'Aceptar',
+            rejectLabel: 'Cancelar',
             accept: () => {
                 this.loading = true;
                 
@@ -865,6 +869,8 @@ export class TableLotsComponent implements OnInit, OnChanges {
             message: '¿Está seguro de que desea eliminar este artículo?',
             header: 'Confirmar eliminación',
             icon: 'pi pi-exclamation-triangle',
+            acceptLabel: 'Aceptar',
+            rejectLabel: 'Cancelar',
             accept: () => {
                 if (!articulo.id) {
                     this.selectedLotForArticles!.articulos.splice(index, 1);

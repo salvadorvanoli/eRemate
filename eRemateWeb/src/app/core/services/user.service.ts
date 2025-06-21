@@ -29,5 +29,9 @@ export class UserService extends BaseHttpService<AccesoUsuario, UsuarioSimple> {
 
     return this.http.get<any>(`${this.baseUrl}/usuarios/${id}/perfil`);
   }
+
+  getEmailsByIds(ids: number[]): Observable<any> {
+    return this.http.post(`${this.baseUrl}/usuarios/emails-by-ids`, { ids });
+  }
   
 }

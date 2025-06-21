@@ -52,4 +52,31 @@ class UsuarioController extends Controller
 
         return response()->json($perfil);
     }
+
+    public function obtenerEmailsPorIds(Request $request)
+    {
+        try {
+            $ids = $request->input('ids', []);
+            
+            $usuarios = $this->usuarioService->obtenerEmailsPorIds($ids);
+
+            if (!$usuarios || !is_array($usuarios) || empty($usuarios)) {
+                return response()->json([
+                    'success' => false,
+                    'message' => 'No se encontraron usuarios o los IDs proporcionados son inválidos'
+                ], 400);
+            }
+
+            return response()->json([
+                'success' => true,
+                'data' => $usuarios
+            ]);
+
+        } catch (\Exception $e) {
+            return response()->json([
+                'success' => false,
+                'message' => 'Error al obtener emails de usuarios'
+            ], 500);
+        }
+    }
 }

@@ -9,6 +9,7 @@ use App\Models\Rematador;
 use App\Models\Usuario;
 use App\Models\UsuarioRegistrado;
 use App\Models\Subasta;
+use App\Models\Lote;
 use App\Enums\EstadoSubasta;
 use App\Enums\EstadoArticulo;
 use Illuminate\Support\Facades\Auth;
@@ -81,6 +82,45 @@ class ArticuloService implements ArticuloServiceInterface
 
         return $articulo;
     }
+
+    private function buscarLotePorId(int $id)
+    {
+        $lote = Lote::find($id);
+        
+        if (!$lote) {
+            return response()->json([
+                'success' => false,
+                'message' => 'Lote no encontrado'
+            ], 404);
+        }
+
+        return $lote;
+    }
+
+    private function validarSubasta($subastaId)
+    {
+        $subasta = Subasta::find($subastaId);
+
+        if (!$subasta) {
+            return response()->json([
+                'success' => false,
+                'error' => 'Subasta no encontrada'
+            ], 404);
+        }
+
+        if (in_array($subasta->estado, [
+            EstadoSubasta::INICIADA,
+            EstadoSubasta::CERRADA,
+            EstadoSubasta::CANCELADA
+        ])) {
+            return response()->json([
+                'success' => false,
+                'error' => 'No se pueden operar artículos de una subasta que ya fue iniciada, cerrada o cancelada'
+            ], 400);
+        }
+
+        return $subasta;
+    }
     
     public function crearArticulo(array $data): mixed
     {
@@ -95,6 +135,16 @@ class ArticuloService implements ArticuloServiceInterface
                 'success' => false,
                 'error' => 'La casa de remates especificada no existe.'
             ], 422);
+        }
+
+        $lote = $this->buscarLotePorId($data['lote_id']);
+        if (!$lote instanceof Lote) {
+            return $lote;
+        }
+
+        $subasta = $this->validarSubasta($lote->subasta_id);
+        if (!$subasta instanceof Subasta) {
+            return $subasta;
         }
 
         return Articulo::create([
@@ -139,6 +189,16 @@ class ArticuloService implements ArticuloServiceInterface
         $articulo = $this->buscarArticuloPorId($id);
         if (!$articulo instanceof Articulo) {
             return $articulo;
+        }
+
+        $lote = $this->buscarLotePorId($articulo->lote_id);
+        if (!$lote instanceof Lote) {
+            return $lote;
+        }
+
+        $subasta = $this->validarSubasta($lote->subasta_id);
+        if (!$subasta instanceof Subasta) {
+            return $subasta;
         }
 
         $chequeo = $this->verificarUsuario($usuario, $articulo->lote->subasta);

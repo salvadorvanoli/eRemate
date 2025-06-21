@@ -9,3 +9,8 @@ Artisan::command('inspire', function () {
 })->purpose('Display an inspiring quote');
 
 Schedule::command('auctions:send-reminders')->everyMinute();
+
+Schedule::command('subastas:cancelar-expiradas')
+    ->everyTenMinutes()
+    ->withoutOverlapping()
+    ->runInBackground();

@@ -111,6 +111,7 @@ Route::get('/auction/page', [SubastaController::class, 'obtenerSubastasOrdenadas
 // Rutas para usuarios
 Route::get('/usuarios/{id}', [UsuarioController::class, 'obtenerUsuario']);
 Route::get('/usuarios/{id}/perfil', [UsuarioController::class, 'obtenerPerfil']);
+Route::post('/usuarios/emails-by-ids', [UsuarioController::class, 'obtenerEmailsPorIds']);
 Route::put('registered-users/{id}', [UsuarioRegistradoController::class, 'update']);
 
 // Rutas de Casa de Remates

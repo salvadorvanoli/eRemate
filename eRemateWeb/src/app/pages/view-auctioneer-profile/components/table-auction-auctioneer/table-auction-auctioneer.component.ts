@@ -228,6 +228,8 @@ export class TableAuctionAuctioneerComponent implements OnInit, OnChanges {
       message: `¿Está seguro de aceptar la solicitud de subasta "${auction.tipoSubasta}"?`,
       header: 'Confirmar Aceptación',
       icon: 'pi pi-check-circle',
+      acceptLabel: 'Aceptar',
+      rejectLabel: 'Cancelar',
       accept: () => {
         this.loading = true;
         
@@ -265,6 +267,8 @@ export class TableAuctionAuctioneerComponent implements OnInit, OnChanges {
       message: `¿Está seguro de rechazar la solicitud de subasta "${auction.tipoSubasta}"?`,
       header: 'Confirmar Rechazo',
       icon: 'pi pi-times-circle',
+      acceptLabel: 'Aceptar',
+      rejectLabel: 'Cancelar',
       accept: () => {
         this.loading = true;
         
@@ -300,6 +304,8 @@ export class TableAuctionAuctioneerComponent implements OnInit, OnChanges {
       message: '¿Está seguro de cancelar esta subasta?',
       header: 'Confirmar Cancelación',
       icon: 'pi pi-exclamation-triangle',
+      acceptLabel: 'Aceptar',
+      rejectLabel: 'Cancelar',
       accept: () => {
         if (!this.rematadorId) return;
         

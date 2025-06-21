@@ -21,6 +21,7 @@ import { UsuarioRematador, RematadorResponse } from '../../../../core/models/usu
 import { SecurityService } from '../../../../core/services/security.service';
 import { Router } from '@angular/router';
 import { TipoSubasta, TipoOption, TIPOS_SUBASTA } from '../../../../core/enums/tipo-subasta.enum';
+import { UserService } from '../../../../core/services/user.service';
 
 @Component({
   selector: 'app-table-auction',
@@ -96,6 +97,7 @@ export class TableAuctionComponent implements OnInit, AfterViewInit, OnDestroy {
         private messageService: MessageService,
         private confirmationService: ConfirmationService,
         private auctionHouseService: AuctionHouseService,
+        private userService: UserService,
         private subastaService: SubastaService,
         private securityService: SecurityService,
         private router: Router
@@ -337,18 +339,58 @@ export class TableAuctionComponent implements OnInit, AfterViewInit, OnDestroy {
                         this.auctions = [];
                     }
                     
-                    // Add virtual field for rematador email to make it searchable
-                    this.auctions.forEach(auction => {
-                        const email = this.rematadorEmails[auction.rematador_id];
-                        if (email) {
-                            (auction as any).rematadorEmail = email;
-                        }
-                    });
+                    this.loadMissingRematadorEmails();
                 },
                 error: (error) => {
                     this.auctions = [];
                 }
             });
+    }
+
+    private loadMissingRematadorEmails() {
+        const missingRematadorIds = this.auctions
+            .filter(auction => auction.rematador_id && !this.rematadorEmails[auction.rematador_id])
+            .map(auction => auction.rematador_id)
+            .filter((id, index, array) => array.indexOf(id) === index);
+
+        if (missingRematadorIds.length === 0) {
+            this.updateAuctionEmailFields();
+            return;
+        }
+
+        this.userService.getEmailsByIds(missingRematadorIds)
+            .subscribe({
+                next: (response: any) => {
+                    if (response && response.data) {
+                        response.data.forEach((item: any) => {
+                            if (item.id && item.email) {
+                                this.rematadorEmails[item.id] = item.email + ' (desasignado)';
+                            }
+                        });
+                    }
+                    this.updateAuctionEmailFields();
+                },
+                error: (error) => {
+                    console.error('Error al cargar emails de rematadores:', error);
+                    missingRematadorIds.forEach(id => {
+                        this.rematadorEmails[id] = `ID: ${id} (email desconocido)`;
+                    });
+                    this.updateAuctionEmailFields();
+                }
+            });
+    }
+
+    private updateAuctionEmailFields() {
+        this.auctions.forEach(auction => {
+            if (auction.rematador_id) {
+                const email = this.rematadorEmails[auction.rematador_id];
+                if (email) {
+                    (auction as any).rematadorEmail = email;
+                } else {
+                    (auction as any).rematadorEmail = `ID: ${auction.rematador_id}`;
+                }
+            }
+        });
     }
     
     loadRematadores() {
@@ -466,6 +508,8 @@ export class TableAuctionComponent implements OnInit, AfterViewInit, OnDestroy {
             message: '¿Está seguro de que desea eliminar la subasta seleccionada?',
             header: 'Confirmar',
             icon: 'pi pi-exclamation-triangle',
+            acceptLabel: 'Aceptar',
+            rejectLabel: 'Cancelar',
             accept: () => {
                 if (this.selectedAuction) {
                     this.auctions = this.auctions.filter(val => val.id !== this.selectedAuction?.id);
@@ -482,6 +526,8 @@ export class TableAuctionComponent implements OnInit, AfterViewInit, OnDestroy {
             message: `¿Está seguro de que desea eliminar la subasta con ID "${auction.id}"?`,
             header: 'Confirmar eliminación',
             icon: 'pi pi-exclamation-triangle',
+            acceptLabel: 'Aceptar',
+            rejectLabel: 'Cancelar',
             accept: () => {
                 if (auction.id) {
                     this.auctionHouseService.deleteAuction(auction.id.toString()).subscribe({

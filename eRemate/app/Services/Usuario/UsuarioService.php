@@ -58,4 +58,35 @@ class UsuarioService implements UsuarioServiceInterface
             'usuario' => $usuario
         ];
     }
+
+    public function obtenerEmailsPorIds($ids)
+    {
+        if (empty($ids) || !is_array($ids)) {
+            return response()->json([
+                'success' => false,
+                'message' => 'IDs de rematadores requeridos'
+            ], 400);
+        }
+
+        $usuarios = Usuario::whereIn('id', $ids)
+            ->get()
+            ->map(function ($usuario) {
+                return [
+                    'id' => $usuario->id,
+                    'email' => $usuario->email ?? null
+                ];
+            })
+            ->filter(function ($item) {
+                return $item['email'] !== null;
+            });
+
+        if ($usuarios->isEmpty()) {
+            return response()->json([
+                'success' => false,
+                'message' => 'No se encontraron usuarios con los IDs proporcionados'
+            ], 404);
+        }
+
+        return $usuarios->values()->toArray();
+    }
 }

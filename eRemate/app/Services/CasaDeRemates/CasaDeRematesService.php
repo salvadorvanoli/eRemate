@@ -160,6 +160,28 @@ class CasaDeRematesService implements CasaDeRematesServiceInterface
             ], 422);
         }
 
+        $subastasConfirmadas = Subasta::where('casaDeRemates_id', $id)
+            ->where('rematador_id', $rematadorId)
+            ->whereIn('estado', [EstadoSubasta::ACEPTADA, EstadoSubasta::INICIADA])
+            ->get();
+
+        if ($subastasConfirmadas->count() > 0) {
+            return response()->json([
+                'success' => false,
+                'message' => 'No se puede desasignar el rematador porque tiene subastas aceptadas y/o iniciadas'
+            ], 422);
+        }
+
+        $subastasNoCerradas = Subasta::where('casaDeRemates_id', $id)
+            ->where('rematador_id', $rematadorId)
+            ->whereNot('estado', EstadoSubasta::CERRADA)
+            ->get();
+
+        foreach ($subastasNoCerradas as $subasta) {
+            $subasta->rematador_id = null;
+            $subasta->save();
+        }
+
         $casaDeRemates->rematadores()->detach($rematadorId);
 
         return response()->json([

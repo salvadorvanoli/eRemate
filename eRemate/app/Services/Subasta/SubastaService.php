@@ -94,6 +94,27 @@ class SubastaService implements SubastaServiceInterface
 
         return $subasta;
     }
+
+    private function validarSubasta($subastaId)
+    {
+        $subasta = $this->buscarSubastaPorId($subastaId);
+        if (!$subasta instanceof Subasta) {
+            return $subasta;
+        }
+
+        if (in_array($subasta->estado, [
+            EstadoSubasta::INICIADA,
+            EstadoSubasta::CERRADA,
+            EstadoSubasta::CANCELADA
+        ])) {
+            return response()->json([
+                'success' => false,
+                'error' => 'No se pueden operar lotes de una subasta que ya fue iniciada, cerrada o cancelada'
+            ], 400);
+        }
+
+        return $subasta;
+    }
     
     public function crearSubasta(array $data): mixed
     {
@@ -160,7 +181,7 @@ class SubastaService implements SubastaServiceInterface
             return $usuario;
         }
         
-        $subasta = $this->buscarSubastaPorId($id);
+        $subasta = $this->validarSubasta($id);
         if (!$subasta instanceof Subasta) {
             return $subasta;
         }

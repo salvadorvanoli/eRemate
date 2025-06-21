@@ -13,6 +13,7 @@ use App\Models\GanadorPotencial;
 use App\Models\Puja;
 use Illuminate\Support\Facades\Log;  
 use App\Models\Chat;
+use App\Models\Subasta;
 
 class LoteService implements LoteServiceInterface
 {
@@ -67,6 +68,50 @@ class LoteService implements LoteServiceInterface
         return $lote;
     }
 
+    private function validarSubasta($subastaId)
+    {
+        $subasta = Subasta::find($subastaId);
+
+        if (!$subasta) {
+            return response()->json([
+                'success' => false,
+                'error' => 'Subasta no encontrada'
+            ], 404);
+        }
+
+        if (in_array($subasta->estado, [
+            EstadoSubasta::INICIADA,
+            EstadoSubasta::CERRADA,
+            EstadoSubasta::CANCELADA
+        ])) {
+            return response()->json([
+                'success' => false,
+                'error' => 'No se pueden operar lotes de una subasta que ya fue iniciada, cerrada o cancelada'
+            ], 400);
+        }
+
+        return $subasta;
+    }
+
+    private function validarDatosLote($data)
+    {
+        if ($data['valorBase'] <= 0) {
+            return response()->json([
+                'success' => false,
+                'error' => 'El valor base no puede ser negativo'
+            ], 400);
+        }
+
+        if ($data['pujaMinima'] <= 0) {
+            return response()->json([
+                'success' => false,
+                'error' => 'La puja mínima no puede ser negativa'
+            ], 400);
+        }
+
+        return true;
+    }
+
     public function crearLote(array $data): mixed
     {
         $usuario = $this->validarUsuario();
@@ -78,6 +123,23 @@ class LoteService implements LoteServiceInterface
         $lote = Lote::where('subasta_id', $data['subasta_id'])
             ->where('nombre', $data['nombre'])
             ->first();
+        
+        if ($lote) {
+            return response()->json([
+                'success' => false,
+                'error' => 'Ya existe un lote con el mismo nombre en esta subasta'
+            ], 400);
+        }
+
+        $subasta = $this->validarSubasta($data['subasta_id']);
+        if (!$subasta instanceof Subasta) {
+            return $subasta;
+        }
+
+        $result = $this->validarDatosLote($data);
+        if ($result != true) {
+            return $result;
+        }
 
         return Lote::create([
             'subasta_id' => $data['subasta_id'],
@@ -103,6 +165,28 @@ class LoteService implements LoteServiceInterface
         $lote = $this->buscarLotePorId($id);
         if (!$lote instanceof Lote) {
             return $lote;
+        }
+
+        $nombreLoteExistente = Lote::where('subasta_id', $data['subasta_id'])
+            ->where('nombre', $data['nombre'])
+            ->where('id', '!=', $id)
+            ->first();
+        
+        if ($nombreLoteExistente) {
+            return response()->json([
+                'success' => false,
+                'error' => 'Ya existe un lote con el mismo nombre en esta subasta'
+            ], 400);
+        }
+
+        $subasta = $this->validarSubasta($data['subasta_id']);
+        if (!$subasta instanceof Subasta) {
+            return $subasta;
+        }
+
+        $result = $this->validarDatosLote($data);
+        if ($result != true) {
+            return $result;
         }
 
         if ($lote->compra_id) {
@@ -157,6 +241,11 @@ class LoteService implements LoteServiceInterface
             return $lote;
         }
 
+        $subasta = $this->validarSubasta(subastaId: $lote->subasta_id);
+        if (!$subasta instanceof Subasta) {
+            return $subasta;
+        }
+
         $lote->articulos()->attach($articuloId);
 
         return response()->json([
@@ -179,6 +268,11 @@ class LoteService implements LoteServiceInterface
                 'success' => false,
                 'error' => 'Lote no encontrado'
             ], 404);
+        }
+
+        $subasta = $this->validarSubasta(subastaId: $lote->subasta_id);
+        if (!$subasta instanceof Subasta) {
+            return $subasta;
         }
 
         $articulo = \App\Models\Articulo::where('id', $articuloId)
@@ -224,6 +318,12 @@ class LoteService implements LoteServiceInterface
                 'message' => 'Lote no encontrado'
             ], 404);
         }
+
+        $subasta = $this->validarSubasta(subastaId: $lote->subasta_id);
+        if (!$subasta instanceof Subasta) {
+            return $subasta;
+        }
+
         $lote->delete();
         return response()->json([
             'success' => true,
