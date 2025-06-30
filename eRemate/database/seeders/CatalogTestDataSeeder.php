@@ -210,7 +210,7 @@ class CatalogTestDataSeeder extends Seeder
             'estado' => EstadoSubasta::PENDIENTE, // ← Usando enum
             'fechaInicio' => now()->addDays(2),
             'fechaCierre' => now()->addDays(3),
-            'ubicacion' => 'Santa Lucía, Canelones',
+            'ubicacion' => 'Uruguay, Canelones, Santa Lucía',
         ]);
 
         // Lote 1: Teléfono
@@ -229,7 +229,7 @@ class CatalogTestDataSeeder extends Seeder
         Articulo::create([
             'lote_id' => $lote1_1->id,
             'nombre' => 'Teléfono Rotativo Naranja',
-            'imagenes' => [url('api/images/serve/articulos/telefonoNaranja.webp')],
+            'imagenes' => ['http://127.0.0.1:8000/api/images/serve/articulos/telefonoNaranja.webp'],
             'especificacionesTecnicas' => 'Teléfono rotativo vintage, funcionamiento verificado, cable original incluido',
             'estado' => EstadoArticulo::MUY_BUENO, // ← Usando enum (antes: 'Muy bueno')
             'categoria_id' => $catElectronica->id,
@@ -251,7 +251,7 @@ class CatalogTestDataSeeder extends Seeder
         Articulo::create([
             'lote_id' => $lote1_2->id,
             'nombre' => 'Gorro de Lana Vintage',
-            'imagenes' => [url('api/images/serve/articulos/GorroLanaVintage.jpg')],
+            'imagenes' => ['http://127.0.0.1:8000/api/images/serve/articulos/GorroLanaVintage.jpg'],
             'especificacionesTecnicas' => 'Gorro de lana tejido a mano, estilo vintage años 70',
             'estado' => EstadoArticulo::BUENO, // ← Usando enum
             'categoria_id' => $catModa->id,
@@ -261,8 +261,8 @@ class CatalogTestDataSeeder extends Seeder
             'lote_id' => $lote1_2->id,
             'nombre' => 'Camiseta Band Vintage',
             'imagenes' => [
-                url('api/images/serve/articulos/CamisetaVintage1.jpeg'),
-                url('api/images/serve/articulos/CamisetaVintage2.jpeg')
+                'http://127.0.0.1:8000/api/images/serve/articulos/CamisetaVintage1.jpeg',
+                'http://127.0.0.1:8000/api/images/serve/articulos/CamisetaVintage2.jpeg'
             ],
             'especificacionesTecnicas' => 'Camiseta original de banda de rock, años 80, talla M',
             'estado' => EstadoArticulo::BUENO, // ← Usando enum (antes: 'Usado - Bueno')
@@ -279,7 +279,7 @@ class CatalogTestDataSeeder extends Seeder
             'estado' => EstadoSubasta::PENDIENTE, // ← Usando enum
             'fechaInicio' => now()->addDays(5),
             'fechaCierre' => now()->addDays(6),
-            'ubicacion' => 'San José de Mayo, San José',
+            'ubicacion' => 'Uruguay, San José, San José de Mayo',
         ]);
 
         // Lote 1: Celular
@@ -299,9 +299,9 @@ class CatalogTestDataSeeder extends Seeder
             'lote_id' => $lote2_1->id,
             'nombre' => 'iPhone 13 Pro',
             'imagenes' => [
-                url('api/images/serve/articulos/iphone1.webp'),
-                url('api/images/serve/articulos/iphone2.webp'),
-                url('api/images/serve/articulos/iphone3.jpeg')
+                'http://127.0.0.1:8000/api/images/serve/articulos/iphone1.webp',
+                'http://127.0.0.1:8000/api/images/serve/articulos/iphone2.webp',
+                'http://127.0.0.1:8000/api/images/serve/articulos/iphone3.jpeg'
             ],
             'especificacionesTecnicas' => 'iPhone 13 Pro 256GB, color Azul Sierra, incluye cargador original y caja',
             'estado' => EstadoArticulo::MUY_BUENO, // ← Usando enum (antes: 'Excelente')
@@ -318,7 +318,7 @@ class CatalogTestDataSeeder extends Seeder
             'estado' => EstadoSubasta::ACEPTADA, // ← Usando enum
             'fechaInicio' => now()->addDays(7),
             'fechaCierre' => now()->addDays(8),
-            'ubicacion' => 'Pocitos, Montevideo',
+            'ubicacion' => 'Uruguay, Montevideo, Pocitos',
         ]);
 
         // Lote 1: Busos
@@ -338,8 +338,8 @@ class CatalogTestDataSeeder extends Seeder
             'lote_id' => $lote3_1->id,
             'nombre' => 'Buso Azul',
             'imagenes' => [
-                url('api/images/serve/articulos/buzoAzul1.webp'),
-                url('api/images/serve/articulos/buzoAzul2.webp')
+                'http://127.0.0.1:8000/api/images/serve/articulos/busoAzul1.webp',
+                'http://127.0.0.1:8000/api/images/serve/articulos/busoAzul2.webp'
             ],
             'especificacionesTecnicas' => 'Buso deportivo azul marino, talla L, 100% algodón',
             'estado' => EstadoArticulo::NUEVO, // ← Usando enum
@@ -350,8 +350,8 @@ class CatalogTestDataSeeder extends Seeder
             'lote_id' => $lote3_1->id,
             'nombre' => 'Buso Rojo',
             'imagenes' => [
-                url('api/images/serve/articulos/BuzoRojo1.jpeg'),
-                url('api/images/serve/articulos/buzoRojo2.jpg')
+                'http://127.0.0.1:8000/api/images/serve/articulos/BusoRojo1.jpeg',
+                'http://127.0.0.1:8000/api/images/serve/articulos/busoRojo2.jpg'
             ],
             'especificacionesTecnicas' => 'Buso casual rojo, talla M, mezcla algodón-poliéster',
             'estado' => EstadoArticulo::NUEVO, // ← Usando enum
@@ -362,7 +362,7 @@ class CatalogTestDataSeeder extends Seeder
             'lote_id' => $lote3_1->id,
             'nombre' => 'Buso Violeta',
             'imagenes' => [
-                url('api/images/serve/articulos/buzoVioleta.jpeg')
+                'http://127.0.0.1:8000/api/images/serve/articulos/busoVioleta.jpeg'
             ],
             'especificacionesTecnicas' => 'Buso con capucha violeta, talla S, material premium',
             'estado' => EstadoArticulo::NUEVO, // ← Usando enum
@@ -386,7 +386,7 @@ class CatalogTestDataSeeder extends Seeder
             'lote_id' => $lote3_2->id,
             'nombre' => 'Jean Azul Clásico',
             'imagenes' => [
-                url('api/images/serve/articulos/jeanAzul.jpg')
+                'http://127.0.0.1:8000/api/images/serve/articulos/jeanAzul.jpg'
             ],
             'especificacionesTecnicas' => 'Jean azul clásico, corte slim fit, talla 32, marca premium',
             'estado' => EstadoArticulo::NUEVO, // ← Usando enum
@@ -397,8 +397,8 @@ class CatalogTestDataSeeder extends Seeder
             'lote_id' => $lote3_2->id,
             'nombre' => 'Jean Negro Elegante',
             'imagenes' => [
-                url('api/images/serve/articulos/jeanNegro1.jpeg'),
-                url('api/images/serve/articulos/jeanNegro2.jpg')
+                'http://127.0.0.1:8000/api/images/serve/articulos/jeanNegro1.jpeg',
+                'http://127.0.0.1:8000/api/images/serve/articulos/jeanNegro2.jpg'
             ],
             'especificacionesTecnicas' => 'Jean negro elegante, corte regular, talla 34, mezclilla premium',
             'estado' => EstadoArticulo::NUEVO, // ← Usando enum
@@ -422,7 +422,7 @@ class CatalogTestDataSeeder extends Seeder
             'lote_id' => $lote3_3->id,
             'nombre' => 'Cinturón Cuero Marrón',
             'imagenes' => [
-                url('api/images/serve/articulos/cinturonCuero.jpg')
+                'http://127.0.0.1:8000/api/images/serve/articulos/cinturonCuero.jpg'
             ],
             'especificacionesTecnicas' => 'Cinturón de cuero genuino marrón, hebilla metálica, longitud ajustable',
             'estado' => EstadoArticulo::NUEVO, // ← Usando enum
@@ -439,7 +439,7 @@ class CatalogTestDataSeeder extends Seeder
             'estado' => EstadoSubasta::INICIADA, // ← Usando enum
             'fechaInicio' => now()->addDays(10),
             'fechaCierre' => now()->addDays(11),
-            'ubicacion' => 'Canelones, Canelones',
+            'ubicacion' => 'Uruguay, Canelones, Canelones',
         ]);
 
         // Lote 1: Heladera
@@ -459,8 +459,8 @@ class CatalogTestDataSeeder extends Seeder
             'lote_id' => $lote4_1->id,
             'nombre' => 'Heladera Samsung 450L',
             'imagenes' => [
-                url('api/images/serve/articulos/Heladera1.png'),
-                url('api/images/serve/articulos/Heladera2.jpeg')
+                'http://127.0.0.1:8000/api/images/serve/articulos/Heladera1.png',
+                'http://127.0.0.1:8000/api/images/serve/articulos/Heladera2.jpeg'
             ],
             'especificacionesTecnicas' => 'Refrigerador Samsung 450L, doble puerta, dispensador de agua, eficiencia energética A+',
             'estado' => EstadoArticulo::MUY_BUENO, // ← Usando enum (antes: 'Muy bueno')
@@ -484,7 +484,7 @@ class CatalogTestDataSeeder extends Seeder
             'lote_id' => $lote4_2->id,
             'nombre' => 'Freezer Horizontal 300L',
             'imagenes' => [
-                url('api/images/serve/articulos/freezer.jpg')
+                'http://127.0.0.1:8000/api/images/serve/articulos/freezer.jpg'
             ],
             'especificacionesTecnicas' => 'Congelador horizontal 300L, control de temperatura digital, bajo consumo energético',
             'estado' => EstadoArticulo::MUY_BUENO, // ← Usando enum (antes: 'Excelente')
